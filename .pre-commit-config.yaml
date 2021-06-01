@@ -28,8 +28,3 @@ repos:
     entry: "commitlint -x=@commitlint/config-conventional -e"
     always_run: true
     stages: [commit-msg]
-  - id: nbstrip
-    name: strip jupyter notebooks
-    types: [jupyter]
-    language: script
-    entry: .githooks/nbstrip

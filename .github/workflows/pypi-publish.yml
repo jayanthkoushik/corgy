@@ -1,4 +1,4 @@
-name: Add wheel to GitHub release
+name: Publish package to pypi
 
 on:
   push:
@@ -12,15 +12,12 @@ jobs:
     - uses: actions/checkout@master
     - uses: actions/setup-python@master
       with:
-        python-version: 3.7
+        python-version: 3.9
     - name: Install poetry
       run: curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
     - name: Build dist
       run: $HOME/.poetry/bin/poetry build
-    - name: Add wheel to release
-      uses: svenstaro/upload-release-action@master
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: dist/*.whl
-        tag: ${{ github.ref }}
-        file_glob: true
+    - name: Publish to pypi
+      run: $HOME/.poetry/bin/poetry publish -u jayanth_koushik -p $PYPI_PASSWORD
+      env:
+        PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
