@@ -1,0 +1,3 @@
+.git*                       export-ignore
+.version*                   export-ignore
+.pre-commit-config.yaml     export-ignore

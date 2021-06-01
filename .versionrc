@@ -1,0 +1,13 @@
+{
+  "bumpFiles": [
+    {
+      "filename": ".version",
+      "type": "plain-text"
+    }
+  ],
+  "scripts": {
+    "postbump": "poetry version $(< .version); echo __version__ = \\\"$(< .version)\\\" > $(find . -name _version.py)",
+    "precommit": "git add pyproject.toml $(find . -name _version.py)"
+  },
+  "commit-all": true
+}

@@ -1,0 +1,33 @@
+name: Run tests
+
+on:
+  push:
+    branches:
+    - master
+    paths:
+    - '**.py'
+    - 'pyproject.toml'
+    - '.github/workflows/test-package.yml'
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@master
+    - name: Setup Python
+      uses: actions/setup-python@master
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install Poetry
+      run: curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
+    - name: Install dependencies
+      run: $HOME/.poetry/bin/poetry install --no-dev
+    - name: Run tests
+      run: $HOME/.poetry/bin/poetry run python -m unittest
+      env:
+        PYTHONDEVMODE: 1

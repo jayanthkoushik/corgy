@@ -1,0 +1,78 @@
+[tool.poetry]
+name = "<<PROJECT>>"
+version = "0.0.0"
+description = "<<DESCRIPTION>>"
+authors = ["Jayanth Koushik <jnkoushik@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/jayanthkoushik/<<REPO>>"
+packages = [
+    { include = "<<PROJECT>>" },
+    { include = "tests", format = "sdist" }
+]
+include = ["CHANGELOG.md"]
+
+# keywords = [
+# ]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+]
+
+[tool.poetry.dependencies]
+python = "^3.6.1"
+# shinyutils = { version = "^5.0.0", extras = ["color", "plotting"] }
+
+[tool.poetry.extras]
+
+[tool.poetry.dev-dependencies]
+black = { version = ">=19.3b0", allow-prereleases = true }
+pylint = "^2.3"
+pre-commit = "^2.0"
+isort = "^4.3"
+mypy = "^0.770"
+
+[tool.black]
+line-length = 88
+
+[tool.isort]
+line_length = 88
+force_grid_wrap = 0
+multi_line_output = 3
+use_parentheses = true
+include_trailing_comma = true
+combine_as_imports = true
+force_alphabetical_sort_within_sections = true
+
+[tool.pylint.MASTER]
+extension-pkg-whitelist = "torch"
+
+[tool.pylint.TYPECHECK]
+generated-members = "torch.*"
+
+[tool.pylint.FORMAT]
+max-line-length = "88"
+
+[tool.pylint.'MESSAGES CONTROL']
+disable = """
+    too-few-public-methods,
+    too-many-instance-attributes,
+    too-many-arguments,
+    too-many-locals,
+    too-many-statements,
+    too-many-branches,
+    bad-continuation,
+    missing-docstring,
+    invalid-name,
+    protected-access,
+    wrong-import-position,
+    logging-format-interpolation,
+    logging-fstring-interpolation,
+    arguments-differ,
+    abstract-method,
+"""
+
+[build-system]
+requires = ["poetry>=1.0"]
+build-backend = "poetry.masonry.api"

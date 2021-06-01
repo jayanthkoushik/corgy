@@ -1,0 +1,35 @@
+repos:
+- repo: local
+  hooks:
+  - id: black
+    name: black
+    entry: poetry run black
+    language: system
+    types: [python]
+  - id: isort
+    name: isort
+    entry: poetry run isort
+    language: system
+    types: [python]
+  - id: pylint
+    name: pylint
+    entry: poetry run pylint
+    language: system
+    types: [python]
+  - id: mypy
+    name: mypy
+    entry: poetry run mypy --ignore-missing-imports .
+    language: system
+    types: [python]
+    pass_filenames: false
+  - id: commitlint
+    name: lint commit message
+    language: system
+    entry: "commitlint -x=@commitlint/config-conventional -e"
+    always_run: true
+    stages: [commit-msg]
+  - id: nbstrip
+    name: strip jupyter notebooks
+    types: [jupyter]
+    language: script
+    entry: .githooks/nbstrip
