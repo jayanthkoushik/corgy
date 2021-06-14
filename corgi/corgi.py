@@ -4,6 +4,8 @@ from collections.abc import Collection, Mapping
 from contextlib import suppress
 from typing import Any, Literal, Optional, Type, Union
 
+__all__ = ["Corgi"]
+
 
 class _CorgiMeta(type):
     """Metaclass for Corgi.
