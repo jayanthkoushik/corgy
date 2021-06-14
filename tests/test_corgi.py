@@ -63,6 +63,18 @@ class TestCorgiClass(unittest.TestCase):
                     f"spurious annotations: {_x_prop.fset.__annotations__}",
                 )
 
+    def test_corgi_cls_bad_help(self):
+        with self.assertRaises(TypeError):
+
+            # pylint: disable=unused-variable
+            class C1(Corgi):
+                x: Annotated[int, 1]
+
+        class C2(Corgi):
+            x: Annotated[int, "x help", "blah", 3]
+
+        self.assertEqual(C2.x.__doc__, "x help")
+
 
 class TestCorgiParserGeneration(unittest.TestCase):
     # pylint: disable=too-many-public-methods
