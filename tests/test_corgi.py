@@ -101,6 +101,15 @@ class TestCorgiParserGeneration(unittest.TestCase):
             "--the-x-arg", type=int, required=True
         )
 
+    def test_parsing_name_with_prefix(self):
+        class C(Corgi):
+            x: int
+
+        C.add_args_to_parser(self.parser, "prefix")
+        self.parser.add_argument.assert_called_once_with(
+            "--prefix:x", type=int, required=True
+        )
+
     def test_parsing_required_int(self):
         class C(Corgi):
             x: int
@@ -295,6 +304,33 @@ class TestCorgiParserGeneration(unittest.TestCase):
             "--x", type=int, required=True, nargs="*"
         )
 
+    def test_parsing_argument_group(self):
+        class G(Corgi):
+            x: int
+
+        G.add_args_to_parser = MagicMock()
+
+        class C(Corgi):
+            g: Annotated[G, "group G"]
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument_group.assert_called_once_with("g", "group G")
+        G.add_args_to_parser.assert_called_once_with(
+            self.parser.add_argument_group.return_value, "g"
+        )
+
+    def test_parsing_argument_group_with_other_param(self):
+        class G(Corgi):
+            x: int
+
+        class C(Corgi):
+            x: int
+            g: G
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with("--x", type=int, required=True)
+        self.parser.add_argument_group.assert_called_once_with("g", None)
+
 
 class TestCorgiParsing(unittest.TestCase):
 
@@ -331,3 +367,44 @@ class TestCorgiParsing(unittest.TestCase):
         self.assertIs(type(c.x), list)
         self.assertIs(type(c.y), set)
         self.assertIs(type(c.z), tuple)
+
+    def test_corgi_argument_group_retrieval(self):
+        class G(Corgi):
+            x: int
+            y: str
+
+        class C(Corgi):
+            x: int
+            y: int
+            g: G
+
+        self.parser.parse_args = lambda: self.orig_parse_args(
+            self.parser, ["--x", "1", "--y", "2", "--g:x", "3", "--g:y", "four"]
+        )
+        c = C.parse_from_cmdline(self.parser)
+        self.assertEqual(c.x, 1)
+        self.assertEqual(c.y, 2)
+        self.assertEqual(c.g.x, 3)
+        self.assertEqual(c.g.y, "four")
+
+    def test_corgi_nested_argument_group_retrieval(self):
+        class G1(Corgi):
+            x: int
+
+        class G2(Corgi):
+            x: int
+            g: G1
+
+        class C(Corgi):
+            x: int
+            g1: G1
+            g2: G2
+
+        self.parser.parse_args = lambda: self.orig_parse_args(
+            self.parser, ["--x", "1", "--g1:x", "2", "--g2:x", "3", "--g2:g:x", "4"]
+        )
+        c = C.parse_from_cmdline(self.parser)
+        self.assertEqual(c.x, 1)
+        self.assertEqual(c.g1.x, 2)
+        self.assertEqual(c.g2.x, 3)
+        self.assertEqual(c.g2.g.x, 4)

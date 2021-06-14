@@ -1,4 +1,5 @@
 import argparse
+from collections import defaultdict
 from collections.abc import Collection, Mapping
 from contextlib import suppress
 from typing import Any, Literal, Optional, Type, Union
@@ -77,16 +78,18 @@ class Corgi(metaclass=_CorgiMeta):
         raise AttributeError
 
     @classmethod
-    def add_args_to_parser(cls, parser: argparse.ArgumentParser):
+    def add_args_to_parser(cls, parser: argparse.ArgumentParser, name_prefix: str = ""):
         for var_name, var_type in cls.__annotations__.items():
             var_dashed_name = var_name.replace("_", "-")
+            if name_prefix:
+                var_dashed_name = name_prefix.replace("_", "-") + ":" + var_dashed_name
             var_help = getattr(cls, var_name).__doc__  # doc is stored in the property
 
             # Check if 'var_name' is also CorgiType
             if type(var_type) is type(cls):
                 # Create an argument group using 'var_type'
                 grp_parser = parser.add_argument_group(var_dashed_name, var_help)
-                var_type._add_args_to_parser(grp_parser)
+                var_type.add_args_to_parser(grp_parser, var_dashed_name)
                 continue
 
             # Check if 'var_name' is optional
@@ -188,13 +191,29 @@ class Corgi(metaclass=_CorgiMeta):
             )
 
     @classmethod
+    def _new_with_args(cls, **args):
+        obj = cls()
+        grp_args_map = defaultdict(dict)
+
+        for arg_name, arg_val in args.items():
+            if ":" in arg_name:
+                grp_name, arg_name = arg_name.split(":", maxsplit=1)
+                grp_args_map[grp_name][arg_name] = arg_val
+            else:
+                arg_type = getattr(cls, arg_name).fget.__annotations__["return"]
+                setattr(obj, arg_name, arg_type(arg_val))
+
+        for grp_name, grp_args in grp_args_map.items():
+            grp_type = getattr(cls, grp_name).fget.__annotations__["return"]
+            grp_obj = grp_type._new_with_args(**grp_args)
+            setattr(obj, grp_name, grp_obj)
+
+        return obj
+
+    @classmethod
     def parse_from_cmdline(cls, parser=None, **parser_args):
         if parser is None:
             parser = argparse.ArgumentParser(**parser_args)
         cls.add_args_to_parser(parser)
-        args = parser.parse_args()
-        c = cls()
-        for k, v in vars(args).items():
-            k_type = getattr(cls, k).fget.__annotations__["return"]
-            setattr(c, k, k_type(v))
-        return c
+        args = vars(parser.parse_args())
+        return cls._new_with_args(**args)
