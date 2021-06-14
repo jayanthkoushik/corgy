@@ -27,10 +27,7 @@ class TestCorgiClass(unittest.TestCase):
         corgi_inst = self._CorgiCls()
         for _x, _d in zip(["x3", "x4"], [3, "4"]):
             with self.subTest(var=_x):
-                try:
-                    _x_default = getattr(corgi_inst, _x)
-                except AttributeError:
-                    self.fail("default value not returned")
+                _x_default = getattr(corgi_inst, _x)
                 self.assertEqual(_x_default, _d, "incorrect default value")
 
         for _x in ["x1", "x2"]:
@@ -41,11 +38,7 @@ class TestCorgiClass(unittest.TestCase):
     def test_corgi_cls_property_docstrings(self):
         for _x in ["x1", "x2", "x3", "x4"]:
             with self.subTest(var=_x):
-                try:
-                    _x_prop = getattr(self._CorgiCls, _x)
-                except AttributeError:
-                    self.fail(f"{_x} property not found")
-
+                _x_prop = getattr(self._CorgiCls, _x)
                 if _x in ["x1", "x3"]:
                     self.assertIsNone(_x_prop.__doc__)
                 else:
@@ -54,15 +47,8 @@ class TestCorgiClass(unittest.TestCase):
     def test_corgi_cls_property_annotations(self):
         for _x, _type in zip(["x1", "x2", "x3", "x4"], [list[int], int, int, str]):
             with self.subTest(var=_x):
-                try:
-                    _x_prop = getattr(self._CorgiCls, _x)
-                except AttributeError:
-                    self.fail(f"{_x} property not found")
-
-                try:
-                    self.assertEqual(_x_prop.fget.__annotations__["return"], _type)
-                except (KeyError, AttributeError):
-                    self.fail("no return annotation in property getter")
+                _x_prop = getattr(self._CorgiCls, _x)
+                self.assertEqual(_x_prop.fget.__annotations__["return"], _type)
 
                 self.assertEqual(
                     len(_x_prop.fget.__annotations__),
@@ -70,11 +56,7 @@ class TestCorgiClass(unittest.TestCase):
                     f"spurious annotations: {_x_prop.fget.__annotations__}",
                 )
 
-                try:
-                    self.assertEqual(_x_prop.fset.__annotations__["val"], _type)
-                except (KeyError, AttributeError):
-                    self.fail("no value annotation in property setter")
-
+                self.assertEqual(_x_prop.fset.__annotations__["val"], _type)
                 self.assertEqual(
                     len(_x_prop.fset.__annotations__),
                     1,
