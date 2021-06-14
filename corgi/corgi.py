@@ -15,7 +15,7 @@ class _CorgiMeta(type):
         if "__annotations__" not in namespace:
             return super().__new__(cls, name, bases, namespace, **kwds)
 
-        namespace["_defaults"] = dict()
+        namespace["__defaults"] = dict()
         for var_name, var_ano in namespace["__annotations__"].items():
             # Check if help string is present
             #   i.e. var_name: Annotated[var_type, (var_help,...)]
@@ -35,7 +35,7 @@ class _CorgiMeta(type):
 
             # Add default value to dedicated dict
             with suppress(KeyError):
-                namespace["_defaults"][var_name] = namespace[var_name]
+                namespace["__defaults"][var_name] = namespace[var_name]
 
             # Create 'var' property
             namespace[var_name] = cls._create_var_property(var_name, var_type, var_help)
@@ -44,12 +44,12 @@ class _CorgiMeta(type):
 
     @staticmethod
     def _create_var_property(var_name, var_type, var_doc):
-        # Properties are stored in private variables prefixed with "_"
+        # Properties are stored in private variables prefixed with "__"
         def _var_fget(self) -> var_type:
-            return getattr(self, f"_{var_name}")
+            return getattr(self, f"__{var_name}")
 
         def _var_fset(self, val: var_type):
-            setattr(self, f"_{var_name}", val)
+            setattr(self, f"__{var_name}", val)
 
         return property(_var_fget, _var_fset, doc=var_doc)
 
@@ -69,12 +69,10 @@ class Corgi(metaclass=_CorgiMeta):
     and will provide methods to parse them from command line arguments.
     """
 
-    _defaults: dict[str, Any]
-
     def __getattr__(self, name):
         # Hook to return default value when property access fails
         with suppress(KeyError):
-            return self._defaults[name]
+            return getattr(self, "__defaults")[name]
         raise AttributeError
 
     @classmethod
@@ -104,7 +102,7 @@ class Corgi(metaclass=_CorgiMeta):
                 var_required = False
             else:
                 var_base_type = var_type
-                var_required = var_name not in cls._defaults
+                var_required = var_name not in getattr(cls, "__defaults")
 
             # Check if 'var_name' is a collection
             # Only non-mapping single-type collections are supported
@@ -180,8 +178,8 @@ class Corgi(metaclass=_CorgiMeta):
                 _kwargs["action"] = var_action
             if var_choices is not None:
                 _kwargs["choices"] = var_choices
-            if var_name in cls._defaults:
-                _kwargs["default"] = cls._defaults[var_name]
+            if var_name in (_defaults := getattr(cls, "__defaults")):
+                _kwargs["default"] = _defaults[var_name]
             if var_required:
                 _kwargs["required"] = True
             parser.add_argument(

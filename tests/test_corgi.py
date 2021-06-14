@@ -75,6 +75,28 @@ class TestCorgiClass(unittest.TestCase):
 
         self.assertEqual(C2.x.__doc__, "x help")
 
+    def test_corgi_cls_param_name_default(self):
+        class C(Corgi):
+            __defaults: int
+            x: int = 0
+
+        self.assertTrue(hasattr(C, "__defaults"))
+        self.assertIsInstance(getattr(C, "__defaults"), dict)
+        self.assertTrue(hasattr(C, "_C__defaults"))
+        self.assertIsInstance(C._C__defaults, property)
+        self.assertEqual(C().x, 0)
+
+    def test_corgi_cls_dunder_var(self):
+        class C(Corgi):
+            x: int = 0
+            __x = 2
+
+        c = C()
+        self.assertEqual(c.x, 0)
+        c.x = 1
+        self.assertEqual(c.x, 1)
+        self.assertEqual(c._C__x, 2)
+
 
 class TestCorgiParserGeneration(unittest.TestCase):
     # pylint: disable=too-many-public-methods
