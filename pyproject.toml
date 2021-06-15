@@ -1,13 +1,13 @@
 [tool.poetry]
-name = "corgi"
+name = "corgy"
 version = "1.0.0-beta.0"
 description = "Elegant command line parsing"
 authors = ["Jayanth Koushik <jnkoushik@gmail.com>"]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/jayanthkoushik/corgi"
+repository = "https://github.com/jayanthkoushik/corgy"
 packages = [
-    { include = "corgi" },
+    { include = "corgy" },
     { include = "tests", format = "sdist" }
 ]
 include = ["CHANGELOG.md"]

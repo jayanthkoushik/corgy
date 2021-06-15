@@ -4,11 +4,11 @@ from collections.abc import Collection, Mapping
 from contextlib import suppress
 from typing import Any, Literal, Optional, Type, Union
 
-__all__ = ["Corgi"]
+__all__ = ["Corgy"]
 
 
-class _CorgiMeta(type):
-    """Metaclass for Corgi.
+class _CorgyMeta(type):
+    """Metaclass for Corgy.
 
     Modifies class creation by parsing annotations, and creating variable properties.
     """
@@ -56,13 +56,13 @@ class _CorgiMeta(type):
         return property(_var_fget, _var_fset, doc=var_doc)
 
 
-class Corgi(metaclass=_CorgiMeta):
+class Corgy(metaclass=_CorgyMeta):
     """Base class for collections of arguments.
 
-    User-defined classes inheriting from Corgi should declare their
+    User-defined classes inheriting from Corgy should declare their
     arguments as type annotations. For example,
 
-    class A(Corgi):
+    class A(Corgy):
         x: int
         y: str
         z: Annotated[str, "this is z"]
@@ -85,7 +85,7 @@ class Corgi(metaclass=_CorgiMeta):
                 var_dashed_name = name_prefix.replace("_", "-") + ":" + var_dashed_name
             var_help = getattr(cls, var_name).__doc__  # doc is stored in the property
 
-            # Check if 'var_name' is also CorgiType
+            # Check if 'var_name' is also CorgyType
             if type(var_type) is type(cls):
                 # Create an argument group using 'var_type'
                 grp_parser = parser.add_argument_group(var_dashed_name, var_help)
