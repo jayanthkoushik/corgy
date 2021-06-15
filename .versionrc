@@ -6,8 +6,8 @@
     }
   ],
   "scripts": {
-    "postbump": "poetry version $(< .version); echo __version__ = \\\"$(< .version)\\\" > $(find . -name _version.py)",
-    "precommit": "git add pyproject.toml $(find . -name _version.py)"
+    "postbump": "poetry version $(< .version); echo __version__ = \\\"$(< .version)\\\" > corgi/_version.py",
+    "precommit": "git add pyproject.toml corgi/_version.py"
   },
   "commit-all": true
 }
