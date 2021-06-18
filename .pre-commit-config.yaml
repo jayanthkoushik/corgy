@@ -28,3 +28,9 @@ repos:
     entry: "commitlint -x=@commitlint/config-conventional -e"
     always_run: true
     stages: [commit-msg]
+  - id: test
+    name: run unittests
+    language: system
+    entry: poetry run python -m unittest
+    always_run: true
+    pass_filenames: false
