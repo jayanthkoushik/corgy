@@ -2,9 +2,10 @@ import argparse
 from collections import defaultdict
 from collections.abc import Collection, Mapping
 from contextlib import suppress
-from typing import Any, Literal, Optional, Type, Union
+from typing import Any, Literal, Optional, Type, TypeVar, Union
 
 __all__ = ["Corgy"]
+_T = TypeVar("_T", bound="Corgy")
 
 
 class _CorgyMeta(type):
@@ -191,9 +192,9 @@ class Corgy(metaclass=_CorgyMeta):
             )
 
     @classmethod
-    def _new_with_args(cls, **args):
+    def _new_with_args(cls: type[_T], **args) -> _T:
         obj = cls()
-        grp_args_map = defaultdict(dict)
+        grp_args_map: dict[str, Any] = defaultdict(dict)
 
         for arg_name, arg_val in args.items():
             if ":" in arg_name:
@@ -211,7 +212,7 @@ class Corgy(metaclass=_CorgyMeta):
         return obj
 
     @classmethod
-    def parse_from_cmdline(cls, parser=None, **parser_args):
+    def parse_from_cmdline(cls: type[_T], parser=None, **parser_args) -> _T:
         if parser is None:
             parser = argparse.ArgumentParser(**parser_args)
         cls.add_args_to_parser(parser)
