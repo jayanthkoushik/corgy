@@ -92,6 +92,17 @@ class TestCorgyClass(unittest.TestCase):
                 x: int = 0
                 __x = 2
 
+    def test_corgy_cls_name_startswith_underscore_dunder_vars(self):
+        self.assertTrue(hasattr(self._CorgyCls, "_CorgyCls__x1"))
+
+        class __C(Corgy):
+            x: int
+
+        self.assertTrue(hasattr(__C, "_C__x"))
+        c = __C()
+        c.x = 3
+        self.assertEqual(c.x, 3)
+
     def test_corgy_cls_non_slot_access(self):
         c = self._CorgyCls()
         with self.assertRaises(AttributeError):

@@ -21,7 +21,7 @@ class _CorgyMeta(type):
 
         namespace["__defaults"] = dict()
         for var_name, var_ano in namespace["__annotations__"].items():
-            if f"_{name}__{var_name}" in namespace:
+            if f"_{name.lstrip('_')}__{var_name}" in namespace:
                 raise TypeError(
                     f"cannot use name '__{var_name}': internal clash with '{var_name}'"
                 )
@@ -60,13 +60,13 @@ class _CorgyMeta(type):
         #   and must be accessed as _cls__var_name
         def _var_fget(self) -> var_type:
             with suppress(AttributeError):
-                return getattr(self, f"_{cls_name}__{var_name}")
+                return getattr(self, f"_{cls_name.lstrip('_')}__{var_name}")
             with suppress(KeyError):
                 return getattr(self, "__defaults")[var_name]
             raise AttributeError(f"no value available for attribute '{var_name}'")
 
         def _var_fset(self, val: var_type):
-            setattr(self, f"_{cls_name}__{var_name}", val)
+            setattr(self, f"_{cls_name.lstrip('_')}__{var_name}", val)
 
         return property(_var_fget, _var_fset, doc=var_doc)
 
