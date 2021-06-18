@@ -259,9 +259,9 @@ class TestCorgyParserGeneration(unittest.TestCase):
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with("--x", type=int, nargs="*")
 
-    def test_parsing_non_empty_required_list(self):
+    def test_parsing_non_empty_required_tuple(self):
         class C(Corgy):
-            x: list[int, ...]
+            x: tuple[int, ...]
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(

@@ -122,8 +122,8 @@ class Corgy(metaclass=_CorgyMeta):
                     len(var_base_type.__args__) == 2
                     and var_base_type.__args__[1] is Ellipsis
                 ):
-                    # '...' is used to represent non-empty lists
-                    #   e.g. list[int, ...]
+                    # '...' is used to represent non-empty collections
+                    #   e.g. tuple[int, ...]
                     var_nargs = "+"
                 else:
                     # Ensure single type
