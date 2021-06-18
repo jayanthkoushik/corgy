@@ -1,7 +1,6 @@
 import argparse
 import unittest
 from typing import Annotated, Literal, Optional
-from unittest.case import expectedFailure
 from unittest.mock import MagicMock
 
 from corgy import Corgy
@@ -139,14 +138,6 @@ class TestCorgyParserGeneration(unittest.TestCase):
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with("--x", type=int, default=0)
-
-    @expectedFailure
-    def test_parsing_optional_int_with_bad_default(self):
-        class C(Corgy):
-            x: int = "0"
-
-        with self.assertRaises(TypeError):
-            C.add_args_to_parser(self.parser)
 
     def test_parsing_optional_int_without_default(self):
         class C(Corgy):
