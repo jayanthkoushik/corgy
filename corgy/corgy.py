@@ -222,6 +222,22 @@ class Corgy(metaclass=_CorgyMeta):
 
         return obj
 
+    def __str__(self) -> str:
+        s = f"{self.__class__.__name__}("
+        for i, arg_name in enumerate(
+            self.__class__.__annotations__  # pylint: disable=no-member
+        ):
+            if i != 0:
+                s = s + ", "
+            s = s + f"{arg_name}="
+            try:
+                _val_s = repr(getattr(self, arg_name))
+            except AttributeError:
+                _val_s = "<unset>"
+            s = s + _val_s
+        s = s + ")"
+        return s
+
     @classmethod
     def parse_from_cmdline(cls: type[_T], parser=None, **parser_args) -> _T:
         if parser is None:

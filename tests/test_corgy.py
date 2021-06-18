@@ -108,6 +108,17 @@ class TestCorgyClass(unittest.TestCase):
         with self.assertRaises(AttributeError):
             c.z = 0  # pylint: disable=attribute-defined-outside-init
 
+    def test_repr_with_all_values_set(self):
+        c = self._CorgyCls()
+        c.x1 = [0, 1]
+        c.x2 = 2
+        c.x4 = "8"
+        self.assertEqual(str(c), "_CorgyCls(x1=[0, 1], x2=2, x3=3, x4='8')")
+
+    def test_repr_with_unset_values(self):
+        c = self._CorgyCls()
+        self.assertEqual(str(c), "_CorgyCls(x1=<unset>, x2=<unset>, x3=3, x4='4')")
+
 
 class TestCorgyParserGeneration(unittest.TestCase):
     # pylint: disable=too-many-public-methods
