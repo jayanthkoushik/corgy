@@ -86,7 +86,7 @@ class TestCorgyClass(unittest.TestCase):
         self.assertEqual(C().x, 0)
 
     def test_corgy_cls_dunder_var(self):
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ValueError):
 
             class _(Corgy):
                 x: int = 0
