@@ -82,19 +82,20 @@ class TestCorgyClass(unittest.TestCase):
         self.assertTrue(hasattr(C, "__defaults"))
         self.assertIsInstance(getattr(C, "__defaults"), dict)
         self.assertTrue(hasattr(C, "_C__defaults"))
-        self.assertIsInstance(C._C__defaults, property)
+        self.assertIsInstance(C._C__defaults, property)  # pylint: disable=no-member
         self.assertEqual(C().x, 0)
 
     def test_corgy_cls_dunder_var(self):
-        class C(Corgy):
-            x: int = 0
-            __x = 2
+        with self.assertRaises(TypeError):
 
-        c = C()
-        self.assertEqual(c.x, 0)
-        c.x = 1
-        self.assertEqual(c.x, 1)
-        self.assertEqual(c._C__x, 2)
+            class _(Corgy):
+                x: int = 0
+                __x = 2
+
+    def test_corgy_cls_non_slot_access(self):
+        c = self._CorgyCls()
+        with self.assertRaises(AttributeError):
+            c.z = 0  # pylint: disable=attribute-defined-outside-init
 
 
 class TestCorgyParserGeneration(unittest.TestCase):

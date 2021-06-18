@@ -15,11 +15,17 @@ class _CorgyMeta(type):
     """
 
     def __new__(cls, name, bases, namespace, **kwds):
+        namespace["__slots__"] = []
         if "__annotations__" not in namespace:
             return super().__new__(cls, name, bases, namespace, **kwds)
 
         namespace["__defaults"] = dict()
         for var_name, var_ano in namespace["__annotations__"].items():
+            if f"_{name}__{var_name}" in namespace:
+                raise TypeError(
+                    f"cannot use name '__{var_name}': internal clash with '{var_name}'"
+                )
+
             # Check if help string is present
             #   i.e. var_name: Annotated[var_type, (var_help,...)]
             if hasattr(var_ano, "__metadata__"):
@@ -41,18 +47,26 @@ class _CorgyMeta(type):
                 namespace["__defaults"][var_name] = namespace[var_name]
 
             # Create 'var' property
-            namespace[var_name] = cls._create_var_property(var_name, var_type, var_help)
+            namespace[var_name] = cls._create_var_property(
+                name, var_name, var_type, var_help
+            )
+            namespace["__slots__"].append(f"__{var_name}")
 
         return super().__new__(cls, name, bases, namespace, **kwds)
 
     @staticmethod
-    def _create_var_property(var_name, var_type, var_doc):
-        # Properties are stored in private variables prefixed with "__"
+    def _create_var_property(cls_name, var_name, var_type, var_doc):
+        # Properties are stored in private instance variables prefixed with "__",
+        #   and must be accessed as _cls__var_name
         def _var_fget(self) -> var_type:
-            return getattr(self, f"__{var_name}")
+            with suppress(AttributeError):
+                return getattr(self, f"_{cls_name}__{var_name}")
+            with suppress(KeyError):
+                return getattr(self, "__defaults")[var_name]
+            raise AttributeError(f"no value available for attribute '{var_name}'")
 
         def _var_fset(self, val: var_type):
-            setattr(self, f"__{var_name}", val)
+            setattr(self, f"_{cls_name}__{var_name}", val)
 
         return property(_var_fget, _var_fset, doc=var_doc)
 
@@ -72,15 +86,12 @@ class Corgy(metaclass=_CorgyMeta):
     and will provide methods to parse them from command line arguments.
     """
 
-    def __getattr__(self, name):
-        # Hook to return default value when property access fails
-        with suppress(KeyError):
-            return getattr(self, "__defaults")[name]
-        raise AttributeError
-
     @classmethod
     def add_args_to_parser(cls, parser: argparse.ArgumentParser, name_prefix: str = ""):
-        for var_name, var_type in cls.__annotations__.items():
+        for (
+            var_name,
+            var_type,
+        ) in cls.__annotations__.items():  # pylint: disable=no-member
             var_dashed_name = var_name.replace("_", "-")
             if name_prefix:
                 var_dashed_name = name_prefix.replace("_", "-") + ":" + var_dashed_name
