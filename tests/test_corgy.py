@@ -86,11 +86,18 @@ class TestCorgyClass(unittest.TestCase):
         self.assertEqual(C().x, 0)
 
     def test_corgy_cls_dunder_var(self):
-        with self.assertRaises(ValueError):
+        # pylint: disable=unused-variable
+        with self.assertRaises(TypeError):
 
-            class _(Corgy):
+            class C1(Corgy):
                 x: int = 0
                 __x = 2
+
+        with self.assertRaises(TypeError):
+
+            class C2(Corgy):
+                x: int
+                __x: int
 
     def test_corgy_cls_name_startswith_underscore_dunder_vars(self):
         self.assertTrue(hasattr(self._CorgyCls, "_CorgyCls__x1"))

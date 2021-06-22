@@ -21,7 +21,9 @@ class _CorgyMeta(type):
 
         namespace["__defaults"] = dict()
         for var_name, var_ano in namespace["__annotations__"].items():
-            if f"_{name.lstrip('_')}__{var_name}" in namespace:
+            if f"_{name.lstrip('_')}__{var_name}" in (
+                namespace | namespace["__annotations__"]
+            ):
                 raise TypeError(
                     f"cannot use name '__{var_name}': internal clash with '{var_name}'"
                 )
