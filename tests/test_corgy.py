@@ -1,8 +1,9 @@
 import argparse
 import unittest
 from typing import Annotated, Literal, Optional
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
+import corgy
 from corgy import Corgy
 
 
@@ -445,3 +446,18 @@ class TestCorgyParsing(unittest.TestCase):
         self.assertEqual(c.g1.x, 2)
         self.assertEqual(c.g2.x, 3)
         self.assertEqual(c.g2.g.x, 4)
+
+    def test_corgy_parse_no_default_parser_additional_args(self):
+        class C(Corgy):
+            x: int
+
+        self.parser.parse_args = lambda: self.orig_parse_args(self.parser, ["--x", "1"])
+        with patch(
+            "corgy.corgy.argparse.ArgumentParser", MagicMock(return_value=self.parser)
+        ):
+            C.parse_from_cmdline(
+                formatter_class=argparse.ArgumentDefaultsHelpFormatter, add_help=False
+            )
+            corgy.corgy.argparse.ArgumentParser.assert_called_once_with(  # pylint: disable=no-member
+                formatter_class=argparse.ArgumentDefaultsHelpFormatter, add_help=False
+            )
