@@ -30,7 +30,7 @@ class _CorgyMeta(type):
 
             # Check if help string is present
             #   i.e. var_name: Annotated[var_type, (var_help,...)]
-            if hasattr(var_ano, "__metadata__"):
+            if hasattr(var_ano, "__origin__") and hasattr(var_ano, "__metadata__"):
                 var_type = var_ano.__origin__
                 var_help = var_ano.__metadata__[0]
                 if not isinstance(var_help, str):
@@ -60,17 +60,17 @@ class _CorgyMeta(type):
     def _create_var_property(cls_name, var_name, var_type, var_doc):
         # Properties are stored in private instance variables prefixed with "__",
         #   and must be accessed as _cls__var_name
-        def _var_fget(self) -> var_type:
+        def var_fget(self) -> var_type:
             with suppress(AttributeError):
                 return getattr(self, f"_{cls_name.lstrip('_')}__{var_name}")
             with suppress(KeyError):
                 return getattr(self, "__defaults")[var_name]
             raise AttributeError(f"no value available for attribute '{var_name}'")
 
-        def _var_fset(self, val: var_type):
+        def var_fset(self, val: var_type):
             setattr(self, f"_{cls_name.lstrip('_')}__{var_name}", val)
 
-        return property(_var_fget, _var_fset, doc=var_doc)
+        return property(var_fget, var_fset, doc=var_doc)
 
 
 class Corgy(metaclass=_CorgyMeta):
@@ -93,13 +93,13 @@ class Corgy(metaclass=_CorgyMeta):
         for (
             var_name,
             var_type,
-        ) in cls.__annotations__.items():  # pylint: disable=no-member
+        ) in getattr(cls, "__annotations__").items():
             var_dashed_name = var_name.replace("_", "-")
             if name_prefix:
                 var_dashed_name = name_prefix.replace("_", "-") + ":" + var_dashed_name
             var_help = getattr(cls, var_name).__doc__  # doc is stored in the property
 
-            # Check if 'var_name' is also CorgyType
+            # Check if 'var_name' is also Corgy type
             if type(var_type) is type(cls):
                 # Create an argument group using 'var_type'
                 grp_parser = parser.add_argument_group(var_dashed_name, var_help)
@@ -112,6 +112,7 @@ class Corgy(metaclass=_CorgyMeta):
             if (
                 hasattr(var_type, "__origin__")
                 and var_type.__origin__ is Union
+                and len(var_type.__args__) == 2
                 and var_type.__args__[1] is type(None)
             ):
                 var_base_type = var_type.__args__[0]
@@ -121,7 +122,7 @@ class Corgy(metaclass=_CorgyMeta):
                 var_required = var_name not in getattr(cls, "__defaults")
 
             # Check if 'var_name' is a sequence
-            var_nargs: Optional[Union[int, Literal["+", "*"]]]
+            var_nargs: Union[int, Literal["+", "*"], None]
             if hasattr(var_base_type, "__origin__") and (
                 var_base_type.__origin__ is Sequence
                 or var_base_type.__origin__ is AbstractSequence
@@ -159,7 +160,7 @@ class Corgy(metaclass=_CorgyMeta):
                 # All choices must be of the same type
                 if any(
                     type(_a) is not type(var_base_type.__args__[0])
-                    for _a in var_base_type.__args__
+                    for _a in var_base_type.__args__[1:]
                 ):
                     raise TypeError(
                         f"choices for '{var_name}' not same type: "
@@ -182,9 +183,7 @@ class Corgy(metaclass=_CorgyMeta):
                 var_action = None
 
             # Add 'var_name' to parser
-            # 'add_argument' does not always accept all args
-            #    these are passed if needed through '_kwargs'
-            _kwargs: Any = {}
+            _kwargs: dict[str, Any] = {}
             if var_help is not None:
                 _kwargs["help"] = var_help
             if var_nargs is not None:
@@ -205,7 +204,7 @@ class Corgy(metaclass=_CorgyMeta):
 
     @classmethod
     def _new_with_args(cls: type[_T], **args) -> _T:
-        obj = cls()
+        obj = object.__new__(cls)
         grp_args_map: dict[str, Any] = defaultdict(dict)
 
         for arg_name, arg_val in args.items():
@@ -224,9 +223,7 @@ class Corgy(metaclass=_CorgyMeta):
 
     def __str__(self) -> str:
         s = f"{self.__class__.__name__}("
-        for i, arg_name in enumerate(
-            self.__class__.__annotations__  # pylint: disable=no-member
-        ):
+        for i, arg_name in enumerate(getattr(self.__class__, "__annotations__")):
             if i != 0:
                 s = s + ", "
             s = s + f"{arg_name}="

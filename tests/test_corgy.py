@@ -117,14 +117,14 @@ class TestCorgyClass(unittest.TestCase):
         with self.assertRaises(AttributeError):
             c.z = 0  # pylint: disable=attribute-defined-outside-init
 
-    def test_repr_with_all_values_set(self):
+    def test_corgy_cls_repr_with_all_values_set(self):
         c = self._CorgyCls()
         c.x1 = [0, 1]
         c.x2 = 2
         c.x4 = "8"
         self.assertEqual(str(c), "_CorgyCls(x1=[0, 1], x2=2, x3=3, x4='8')")
 
-    def test_repr_with_unset_values(self):
+    def test_corgy_cls_repr_with_unset_values(self):
         c = self._CorgyCls()
         self.assertEqual(str(c), "_CorgyCls(x1=<unset>, x2=<unset>, x3=3, x4='4')")
 
@@ -300,7 +300,7 @@ class TestCorgyParserGeneration(unittest.TestCase):
             "--x", type=int, nargs="*", default=[1, 2, 3]
         )
 
-    def test_parsing_required_int_Sequence_with_choices(self):
+    def test_parsing_required_int_sequence_with_choices(self):
         class C(Corgy):
             x: Sequence[Literal[1, 2, 3]]
 
