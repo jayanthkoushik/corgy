@@ -1,8 +1,8 @@
 import argparse
 from collections import defaultdict
-from collections.abc import Collection, Mapping
+from collections.abc import Sequence as AbstractSequence
 from contextlib import suppress
-from typing import Any, Literal, Optional, Type, TypeVar, Union
+from typing import Any, Literal, Optional, Sequence, Type, TypeVar, Union
 
 __all__ = ["Corgy"]
 _T = TypeVar("_T", bound="Corgy")
@@ -120,14 +120,11 @@ class Corgy(metaclass=_CorgyMeta):
                 var_base_type = var_type
                 var_required = var_name not in getattr(cls, "__defaults")
 
-            # Check if 'var_name' is a collection
-            # Only non-mapping single-type collections are supported
+            # Check if 'var_name' is a sequence
             var_nargs: Optional[Union[int, Literal["+", "*"]]]
-            if (
-                hasattr(var_base_type, "__origin__")
-                and isinstance(var_base_type.__origin__, type)
-                and issubclass(var_base_type.__origin__, Collection)
-                and not issubclass(var_base_type.__origin__, Mapping)
+            if hasattr(var_base_type, "__origin__") and (
+                var_base_type.__origin__ is Sequence
+                or var_base_type.__origin__ is AbstractSequence
             ):
                 if len(var_base_type.__args__) == 1:
                     var_nargs = "*"
@@ -136,7 +133,7 @@ class Corgy(metaclass=_CorgyMeta):
                     and var_base_type.__args__[1] is Ellipsis
                 ):
                     # '...' is used to represent non-empty collections
-                    #   e.g. tuple[int, ...]
+                    #   e.g. Sequence[int, ...]
                     var_nargs = "+"
                 else:
                     # Ensure single type
@@ -146,7 +143,7 @@ class Corgy(metaclass=_CorgyMeta):
                     ):
                         raise TypeError(
                             f"'{var_name}' has unsupported type '{var_base_type}': "
-                            f"only single-type collections are supported"
+                            f"only single-type sequences are supported"
                         )
                     var_nargs = len(var_base_type.__args__)
                 var_base_type = var_base_type.__args__[0]
@@ -172,6 +169,9 @@ class Corgy(metaclass=_CorgyMeta):
                 var_base_type = type(var_base_type.__args__[0])
             else:
                 var_choices = None
+
+            if type(var_base_type) is not type:  # pylint: disable=unidiomatic-typecheck
+                raise TypeError(f"{var_base_type} is not a valid type")
 
             # Check if 'var_name' is boolean
             # Boolean variables are converted to '--var-name'/'--no-var-name' arguments
@@ -214,8 +214,7 @@ class Corgy(metaclass=_CorgyMeta):
                 grp_name, arg_name = arg_name.split(":", maxsplit=1)
                 grp_args_map[grp_name][arg_name] = arg_val
             else:
-                arg_type = getattr(cls, arg_name).fget.__annotations__["return"]
-                setattr(obj, arg_name, arg_type(arg_val))
+                setattr(obj, arg_name, arg_val)
 
         for grp_name, grp_args in grp_args_map.items():
             grp_type = getattr(cls, grp_name).fget.__annotations__["return"]

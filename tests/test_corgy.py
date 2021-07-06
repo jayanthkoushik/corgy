@@ -1,5 +1,6 @@
 import argparse
 import unittest
+from collections.abc import Sequence
 from typing import Annotated, Literal, Optional
 from unittest.mock import MagicMock, patch
 
@@ -12,7 +13,7 @@ class TestCorgyClass(unittest.TestCase):
     """Tests to check validity of classes inheriting from Corgy."""
 
     class _CorgyCls(Corgy):
-        x1: list[int]
+        x1: Sequence[int]
         x2: Annotated[int, "x2 docstr"]
         x3: int = 3
         x4: Annotated[str, "x4 docstr"] = "4"
@@ -45,7 +46,7 @@ class TestCorgyClass(unittest.TestCase):
                     self.assertEqual(_x_prop.__doc__, f"{_x} docstr")
 
     def test_corgy_cls_property_annotations(self):
-        for _x, _type in zip(["x1", "x2", "x3", "x4"], [list[int], int, int, str]):
+        for _x, _type in zip(["x1", "x2", "x3", "x4"], [Sequence[int], int, int, str]):
             with self.subTest(var=_x):
                 _x_prop = getattr(self._CorgyCls, _x)
                 self.assertEqual(_x_prop.fget.__annotations__["return"], _type)
@@ -265,82 +266,73 @@ class TestCorgyParserGeneration(unittest.TestCase):
             "--x", type=bool, action=argparse.BooleanOptionalAction, default=False
         )
 
-    def test_parsing_required_int_list(self):
+    def test_parsing_required_int_sequence(self):
         class C(Corgy):
-            x: list[int]
+            x: Sequence[int]
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
             "--x", type=int, nargs="*", required=True
         )
 
-    def test_parsing_optional_int_list(self):
+    def test_parsing_optional_int_sequence(self):
         class C(Corgy):
-            x: Optional[list[int]]
+            x: Optional[Sequence[int]]
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with("--x", type=int, nargs="*")
 
-    def test_parsing_non_empty_required_tuple(self):
+    def test_parsing_non_empty_required_sequence(self):
         class C(Corgy):
-            x: tuple[int, ...]
+            x: Sequence[int, ...]
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
             "--x", type=int, nargs="+", required=True
         )
 
-    def test_parsing_int_list_with_default(self):
+    def test_parsing_int_sequence_with_default(self):
         class C(Corgy):
-            x: list[int] = [1, 2, 3]
+            x: Sequence[int] = [1, 2, 3]
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
             "--x", type=int, nargs="*", default=[1, 2, 3]
         )
 
-    def test_parsing_required_int_list_with_choices(self):
+    def test_parsing_required_int_Sequence_with_choices(self):
         class C(Corgy):
-            x: list[Literal[1, 2, 3]]
+            x: Sequence[Literal[1, 2, 3]]
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
             "--x", type=int, nargs="*", required=True, choices=(1, 2, 3)
         )
 
-    def test_parsing_fixed_length_required_int_list(self):
+    def test_parsing_fixed_length_required_int_sequence(self):
         class C(Corgy):
-            x: list[int, int, int]
+            x: Sequence[int, int, int]
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
             "--x", type=int, nargs=3, required=True
         )
 
-    def test_parsing_length_2_required_int_list(self):
+    def test_parsing_length_2_required_int_sequence(self):
         class C(Corgy):
-            x: list[int, int]
+            x: Sequence[int, int]
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
             "--x", type=int, nargs=2, required=True
         )
 
-    def test_parsing_fixed_length_required_multi_type_list(self):
+    def test_parsing_fixed_length_required_multi_type_sequence(self):
         class C(Corgy):
-            x: list[int, str, int]
+            x: Sequence[int, str, int]
 
         with self.assertRaises(TypeError):
             C.add_args_to_parser(self.parser)
-
-    def test_parsing_required_int_tuple(self):
-        class C(Corgy):
-            x: tuple[int]
-
-        C.add_args_to_parser(self.parser)
-        self.parser.add_argument.assert_called_once_with(
-            "--x", type=int, required=True, nargs="*"
-        )
 
     def test_parsing_argument_group(self):
         class G(Corgy):
@@ -382,7 +374,7 @@ class TestCorgyParsing(unittest.TestCase):
         class C(Corgy):
             x: int
             y: str
-            z: list[int]
+            z: Sequence[int]
 
         self.parser.parse_args = lambda: self.orig_parse_args(
             self.parser, ["--x", "1", "--y", "2", "--z", "3", "4"]
@@ -391,20 +383,6 @@ class TestCorgyParsing(unittest.TestCase):
         self.assertEqual(c.x, 1)
         self.assertEqual(c.y, "2")
         self.assertListEqual(c.z, [3, 4])
-
-    def test_corgy_sequence_type_conversion_after_parse(self):
-        class C(Corgy):
-            x: list[int]
-            y: set[int]
-            z: tuple[int]
-
-        self.parser.parse_args = lambda: self.orig_parse_args(
-            self.parser, ["--x", "1", "2", "--y", "3", "4", "5", "--z", "6", "7"]
-        )
-        c = C.parse_from_cmdline(self.parser)
-        self.assertIs(type(c.x), list)
-        self.assertIs(type(c.y), set)
-        self.assertIs(type(c.z), tuple)
 
     def test_corgy_argument_group_retrieval(self):
         class G(Corgy):
