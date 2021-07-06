@@ -176,7 +176,7 @@ class Corgy(metaclass=_CorgyMeta):
             # Check if 'var_name' is boolean
             # Boolean variables are converted to '--var-name'/'--no-var-name' arguments
             var_action: Optional[Type[argparse.Action]]
-            if var_base_type is bool:
+            if var_base_type is bool and var_nargs is None:
                 var_action = argparse.BooleanOptionalAction
             else:
                 var_action = None
