@@ -254,7 +254,7 @@ class TestCorgyParserGeneration(unittest.TestCase):
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
-            "--x", type=bool, action=argparse.BooleanOptionalAction
+            "--x", type=bool, action=argparse.BooleanOptionalAction, required=True
         )
 
     def test_parsing_bool_with_default(self):

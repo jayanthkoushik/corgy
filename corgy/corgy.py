@@ -178,7 +178,6 @@ class Corgy(metaclass=_CorgyMeta):
             var_action: Optional[Type[argparse.Action]]
             if var_base_type is bool:
                 var_action = argparse.BooleanOptionalAction
-                var_required = False
             else:
                 var_action = None
 
