@@ -1,14 +1,14 @@
 import argparse
 import unittest
 from collections.abc import Sequence
-from typing import Annotated, Literal, Optional
+from typing import Annotated, Literal, Optional, Sequence as SequenceType
 from unittest.mock import MagicMock, patch
 
 import corgy
 from corgy import Corgy
 
 
-class TestCorgyClass(unittest.TestCase):
+class TestCorgyMeta(unittest.TestCase):
 
     """Tests to check validity of classes inheriting from Corgy."""
 
@@ -18,25 +18,27 @@ class TestCorgyClass(unittest.TestCase):
         x3: int = 3
         x4: Annotated[str, "x4 docstr"] = "4"
 
-    def test_corgy_cls_generated_properties(self):
+    def test_corgy_cls_has_properties_from_type_hints(self):
         for _x in ["x1", "x2", "x3", "x4"]:
             with self.subTest(var=_x):
                 self.assertTrue(hasattr(self._CorgyCls, _x))
                 self.assertIsInstance(getattr(self._CorgyCls, _x), property)
 
-    def test_corgy_cls_default_values(self):
+    def test_corgy_instance_returns_correct_defaults(self):
         corgy_inst = self._CorgyCls()
         for _x, _d in zip(["x3", "x4"], [3, "4"]):
             with self.subTest(var=_x):
                 _x_default = getattr(corgy_inst, _x)
-                self.assertEqual(_x_default, _d, "incorrect default value")
+                self.assertEqual(_x_default, _d)
 
+    def test_corgy_instance_raises_on_unset_attr_access_without_default(self):
+        corgy_inst = self._CorgyCls()
         for _x in ["x1", "x2"]:
             with self.subTest(var=_x):
                 with self.assertRaises(AttributeError):
                     _x_default = getattr(corgy_inst, _x)
 
-    def test_corgy_cls_property_docstrings(self):
+    def test_corgy_cls_adds_hint_metadata_as_property_docstrings(self):
         for _x in ["x1", "x2", "x3", "x4"]:
             with self.subTest(var=_x):
                 _x_prop = getattr(self._CorgyCls, _x)
@@ -45,7 +47,7 @@ class TestCorgyClass(unittest.TestCase):
                 else:
                     self.assertEqual(_x_prop.__doc__, f"{_x} docstr")
 
-    def test_corgy_cls_property_annotations(self):
+    def test_corgy_cls_properties_have_correct_type_annotations(self):
         for _x, _type in zip(["x1", "x2", "x3", "x4"], [Sequence[int], int, int, str]):
             with self.subTest(var=_x):
                 _x_prop = getattr(self._CorgyCls, _x)
@@ -64,19 +66,20 @@ class TestCorgyClass(unittest.TestCase):
                     f"spurious annotations: {_x_prop.fset.__annotations__}",
                 )
 
-    def test_corgy_cls_bad_help(self):
+    def test_corgy_cls_raises_if_help_annotation_not_str(self):
         with self.assertRaises(TypeError):
 
             # pylint: disable=unused-variable
             class C1(Corgy):
                 x: Annotated[int, 1]
 
+    def test_corgy_cls_uses_only_frist_element_of_variadic_annotation(self):
         class C2(Corgy):
             x: Annotated[int, "x help", "blah", 3]
 
         self.assertEqual(C2.x.__doc__, "x help")
 
-    def test_corgy_cls_param_name_default(self):
+    def test_corgy_cls_allows_dunder_defaults_as_var_name(self):
         class C(Corgy):
             __defaults: int
             x: int = 0
@@ -87,7 +90,7 @@ class TestCorgyClass(unittest.TestCase):
         self.assertIsInstance(C._C__defaults, property)  # pylint: disable=no-member
         self.assertEqual(C().x, 0)
 
-    def test_corgy_cls_dunder_var(self):
+    def test_corgy_cls_raises_if_var_name_is_dunder_another_var(self):
         # pylint: disable=unused-variable
         with self.assertRaises(TypeError):
 
@@ -101,7 +104,7 @@ class TestCorgyClass(unittest.TestCase):
                 x: int
                 __x: int
 
-    def test_corgy_cls_name_startswith_underscore_dunder_vars(self):
+    def test_corgy_cls_can_have_dunder_name(self):
         self.assertTrue(hasattr(self._CorgyCls, "_CorgyCls__x1"))
 
         class __C(Corgy):
@@ -112,24 +115,24 @@ class TestCorgyClass(unittest.TestCase):
         c.x = 3
         self.assertEqual(c.x, 3)
 
-    def test_corgy_cls_non_slot_access(self):
+    def test_corgy_cls_raises_on_setting_undefined_attribute(self):
         c = self._CorgyCls()
         with self.assertRaises(AttributeError):
             c.z = 0  # pylint: disable=attribute-defined-outside-init
 
-    def test_corgy_cls_repr_with_all_values_set(self):
+    def test_corgy_cls_has_correct_repr(self):
         c = self._CorgyCls()
         c.x1 = [0, 1]
         c.x2 = 2
         c.x4 = "8"
         self.assertEqual(str(c), "_CorgyCls(x1=[0, 1], x2=2, x3=3, x4='8')")
 
-    def test_corgy_cls_repr_with_unset_values(self):
+    def test_corgy_cls_repr_handles_unset_values(self):
         c = self._CorgyCls()
         self.assertEqual(str(c), "_CorgyCls(x1=<unset>, x2=<unset>, x3=3, x4='4')")
 
 
-class TestCorgyParserGeneration(unittest.TestCase):
+class TestCorgyAddArgsToParser(unittest.TestCase):
     # pylint: disable=too-many-public-methods
 
     """Tests to check that Corgy properly adds arguments to ArgumentParsers."""
@@ -139,7 +142,7 @@ class TestCorgyParserGeneration(unittest.TestCase):
         self.parser.add_argument = MagicMock()
         self.parser.add_argument_group = MagicMock()
 
-    def test_parsing_multi_word_name(self):
+    def test_add_args_replaces_underscores_with_hyphens(self):
         class C(Corgy):
             the_x_arg: int
 
@@ -148,51 +151,51 @@ class TestCorgyParserGeneration(unittest.TestCase):
             "--the-x-arg", type=int, required=True
         )
 
-    def test_parsing_name_with_prefix(self):
+    def test_add_args_handles_provided_prefix(self):
         class C(Corgy):
-            x: int
+            the_x_arg: int
 
         C.add_args_to_parser(self.parser, "prefix")
         self.parser.add_argument.assert_called_once_with(
-            "--prefix:x", type=int, required=True
+            "--prefix:the-x-arg", type=int, required=True
         )
 
-    def test_parsing_required_int(self):
+    def test_add_args_handles_plain_type_annotation(self):
         class C(Corgy):
             x: int
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with("--x", type=int, required=True)
 
-    def test_parsing_optional_int_with_default(self):
+    def test_add_args_handles_default_value(self):
         class C(Corgy):
             x: int = 0
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with("--x", type=int, default=0)
 
-    def test_parsing_optional_int_without_default(self):
+    def test_add_args_handles_annotated_optional(self):
         class C(Corgy):
             x: Optional[int]
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with("--x", type=int)
 
-    def test_parsing_explicit_optional_int_with_default(self):
+    def test_add_args_handles_annotated_optional_with_default(self):
         class C(Corgy):
             x: Optional[int] = 0
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with("--x", type=int, default=0)
 
-    def test_parsing_optional_int_with_none_default(self):
+    def test_add_args_allows_incorrectly_typed_default(self):
         class C(Corgy):
-            x: int = None
+            x: int = "x"
 
         C.add_args_to_parser(self.parser)
-        self.parser.add_argument.assert_called_once_with("--x", type=int, default=None)
+        self.parser.add_argument.assert_called_once_with("--x", type=int, default="x")
 
-    def test_parsing_required_int_with_docstring(self):
+    def test_add_args_uses_metadata_as_help(self):
         class C(Corgy):
             x: Annotated[int, "x docstring"]
 
@@ -201,16 +204,7 @@ class TestCorgyParserGeneration(unittest.TestCase):
             "--x", type=int, required=True, help="x docstring"
         )
 
-    def test_parsing_optional_int_with_docstring(self):
-        class C(Corgy):
-            x: Annotated[Optional[int], "x docstring"]
-
-        C.add_args_to_parser(self.parser)
-        self.parser.add_argument.assert_called_once_with(
-            "--x", type=int, help="x docstring"
-        )
-
-    def test_parsing_required_int_with_choices(self):
+    def test_add_args_converts_literal_to_choices(self):
         class C(Corgy):
             x: Literal[1, 2, 3]
 
@@ -219,14 +213,14 @@ class TestCorgyParserGeneration(unittest.TestCase):
             "--x", type=int, required=True, choices=(1, 2, 3)
         )
 
-    def test_parsing_int_with_choices_bad_type(self):
+    def test_add_args_raises_if_choices_not_same_type(self):
         class C(Corgy):
             x: Literal[1, 2, "3"]
 
         with self.assertRaises(TypeError):
             C.add_args_to_parser(self.parser)
 
-    def test_parsing_required_custom_type(self):
+    def test_add_args_handles_user_defined_class_as_type(self):
         class T:
             pass
 
@@ -236,7 +230,7 @@ class TestCorgyParserGeneration(unittest.TestCase):
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with("--x", type=T, required=True)
 
-    def test_parsing_optional_custom_type_with_default(self):
+    def test_add_args_handles_user_defined_object_as_default(self):
         class T:
             pass
 
@@ -248,7 +242,7 @@ class TestCorgyParserGeneration(unittest.TestCase):
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with("--x", type=T, default=t)
 
-    def test_parsing_bool(self):
+    def test_add_args_converts_bool_to_action(self):
         class C(Corgy):
             x: bool
 
@@ -257,7 +251,7 @@ class TestCorgyParserGeneration(unittest.TestCase):
             "--x", type=bool, action=argparse.BooleanOptionalAction, required=True
         )
 
-    def test_parsing_bool_with_default(self):
+    def test_add_args_handles_default_for_bool_type(self):
         class C(Corgy):
             x: bool = False
 
@@ -266,7 +260,7 @@ class TestCorgyParserGeneration(unittest.TestCase):
             "--x", type=bool, action=argparse.BooleanOptionalAction, default=False
         )
 
-    def test_parsing_bool_sequence(self):
+    def test_add_args_does_not_convert_bool_sequence_to_action(self):
         class C(Corgy):
             x: Sequence[bool]
 
@@ -275,7 +269,7 @@ class TestCorgyParserGeneration(unittest.TestCase):
             "--x", type=bool, required=True, nargs="*"
         )
 
-    def test_parsing_required_int_sequence(self):
+    def test_add_args_sets_nargs_to_asterisk_for_sequence_type(self):
         class C(Corgy):
             x: Sequence[int]
 
@@ -284,14 +278,23 @@ class TestCorgyParserGeneration(unittest.TestCase):
             "--x", type=int, nargs="*", required=True
         )
 
-    def test_parsing_optional_int_sequence(self):
+    def test_add_args_handles_sequence_type_as_well_as_abstract_sequence(self):
+        class C(Corgy):
+            x: SequenceType[int]
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with(
+            "--x", type=int, nargs="*", required=True
+        )
+
+    def test_add_args_handles_optional_sequence_type(self):
         class C(Corgy):
             x: Optional[Sequence[int]]
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with("--x", type=int, nargs="*")
 
-    def test_parsing_non_empty_required_sequence(self):
+    def test_add_args_sets_nargs_to_plus_for_non_empty_sequence_type(self):
         class C(Corgy):
             x: Sequence[int, ...]
 
@@ -300,7 +303,7 @@ class TestCorgyParserGeneration(unittest.TestCase):
             "--x", type=int, nargs="+", required=True
         )
 
-    def test_parsing_int_sequence_with_default(self):
+    def test_add_args_handles_sequence_with_default(self):
         class C(Corgy):
             x: Sequence[int] = [1, 2, 3]
 
@@ -309,7 +312,7 @@ class TestCorgyParserGeneration(unittest.TestCase):
             "--x", type=int, nargs="*", default=[1, 2, 3]
         )
 
-    def test_parsing_required_int_sequence_with_choices(self):
+    def test_add_args_converts_literal_sequence_to_choices_with_nargs(self):
         class C(Corgy):
             x: Sequence[Literal[1, 2, 3]]
 
@@ -318,7 +321,7 @@ class TestCorgyParserGeneration(unittest.TestCase):
             "--x", type=int, nargs="*", required=True, choices=(1, 2, 3)
         )
 
-    def test_parsing_fixed_length_required_int_sequence_with_choices(self):
+    def test_add_args_handles_fixed_length_sequence_with_chocies(self):
         class C(Corgy):
             x: Sequence[Literal[1, 2, 3], Literal[1, 2, 3]]
 
@@ -327,14 +330,14 @@ class TestCorgyParserGeneration(unittest.TestCase):
             "--x", type=int, nargs=2, required=True, choices=(1, 2, 3)
         )
 
-    def test_parsing_required_int_sequence_with_inconsistent_choices(self):
+    def test_add_args_raises_if_fixed_length_sequence_choices_not_all_same(self):
         class C(Corgy):
             x: Sequence[Literal[1, 2, 3], Literal[1, 2]]
 
         with self.assertRaises(TypeError):
             C.add_args_to_parser(self.parser)
 
-    def test_parsing_fixed_length_required_int_sequence(self):
+    def test_add_args_handles_fixed_length_typed_sequence(self):
         class C(Corgy):
             x: Sequence[int, int, int]
 
@@ -343,7 +346,7 @@ class TestCorgyParserGeneration(unittest.TestCase):
             "--x", type=int, nargs=3, required=True
         )
 
-    def test_parsing_length_2_required_int_sequence(self):
+    def test_add_args_handles_length_2_typed_sequence(self):
         class C(Corgy):
             x: Sequence[int, int]
 
@@ -352,14 +355,14 @@ class TestCorgyParserGeneration(unittest.TestCase):
             "--x", type=int, nargs=2, required=True
         )
 
-    def test_parsing_fixed_length_required_multi_type_sequence(self):
+    def test_add_args_raises_if_fixed_length_sequence_types_not_all_same(self):
         class C(Corgy):
             x: Sequence[int, str, int]
 
         with self.assertRaises(TypeError):
             C.add_args_to_parser(self.parser)
 
-    def test_parsing_argument_group(self):
+    def test_add_args_converts_corgy_var_to_argument_group(self):
         class G(Corgy):
             x: int
 
@@ -374,7 +377,7 @@ class TestCorgyParserGeneration(unittest.TestCase):
             self.parser.add_argument_group.return_value, "g"
         )
 
-    def test_parsing_argument_group_with_other_param(self):
+    def test_add_args_allows_repeated_name_in_group(self):
         class G(Corgy):
             x: int
 
@@ -386,7 +389,7 @@ class TestCorgyParserGeneration(unittest.TestCase):
         self.parser.add_argument.assert_called_once_with("--x", type=int, required=True)
         self.parser.add_argument_group.assert_called_once_with("g", None)
 
-    def test_parsing_base_type_inference(self):
+    def test_add_args_infers_correct_base_type_from_complex_type_hint(self):
         class C(Corgy):
             x: Annotated[Optional[Sequence[str]], "x"]
 
@@ -395,28 +398,28 @@ class TestCorgyParserGeneration(unittest.TestCase):
             "--x", type=str, help="x", nargs="*"
         )
 
-    def test_parsing_bad_base_type_optional(self):
+    def test_add_args_raises_if_base_type_is_optional(self):
         class C(Corgy):
             x: Sequence[Optional[int]]
 
         with self.assertRaises(TypeError):
             C.add_args_to_parser(self.parser)
 
-    def test_parsing_bad_base_type_nontype(self):
+    def test_add_args_raises_if_base_type_not_valid(self):
         class C(Corgy):
             x: Sequence["int"]
 
         with self.assertRaises(TypeError):
             C.add_args_to_parser(self.parser)
 
-    def test_parsing_bad_base_type_generic_list(self):
+    def test_add_args_raises_if_base_type_generic(self):
         class C(Corgy):
             x: Annotated[list[str], "x"]
 
         with self.assertRaises(TypeError):
             C.add_args_to_parser(self.parser)
 
-    def test_parsing_list_base_type(self):
+    def test_add_args_allows_list_base_type(self):
         class C(Corgy):
             x: Annotated[list, "x"]
 
@@ -426,7 +429,7 @@ class TestCorgyParserGeneration(unittest.TestCase):
         )
 
 
-class TestCorgyParsing(unittest.TestCase):
+class TestCorgyCmdlineParsing(unittest.TestCase):
 
     """Test cases to check parsing of command line arguments by Corgy."""
 
@@ -434,7 +437,7 @@ class TestCorgyParsing(unittest.TestCase):
         self.parser = argparse.ArgumentParser()
         self.orig_parse_args = argparse.ArgumentParser.parse_args
 
-    def test_corgy_property_retrieval_after_parse(self):
+    def test_cmdline_args_are_parsed_to_corgy_cls_properties(self):
         class C(Corgy):
             x: int
             y: str
@@ -448,7 +451,7 @@ class TestCorgyParsing(unittest.TestCase):
         self.assertEqual(c.y, "2")
         self.assertListEqual(c.z, [3, 4])
 
-    def test_corgy_argument_group_retrieval(self):
+    def test_cmdline_parsing_handles_group_arguments(self):
         class G(Corgy):
             x: int
             y: str
@@ -467,7 +470,7 @@ class TestCorgyParsing(unittest.TestCase):
         self.assertEqual(c.g.x, 3)
         self.assertEqual(c.g.y, "four")
 
-    def test_corgy_nested_argument_group_retrieval(self):
+    def test_cmdline_parsing_handles_nested_groups(self):
         class G1(Corgy):
             x: int
 
@@ -489,7 +492,7 @@ class TestCorgyParsing(unittest.TestCase):
         self.assertEqual(c.g2.x, 3)
         self.assertEqual(c.g2.g.x, 4)
 
-    def test_corgy_base_type_list_retrieval(self):
+    def test_cmdline_parsing_handles_list_base_type(self):
         class C(Corgy):
             x: list
 
@@ -499,7 +502,7 @@ class TestCorgyParsing(unittest.TestCase):
         c = C.parse_from_cmdline(self.parser)
         self.assertListEqual(c.x, ["1", "2", "3"])
 
-    def test_corgy_custom_type_retrieval(self):
+    def test_cmdline_parsing_handles_custom_base_type(self):
         class A:
             def __init__(self, s):
                 x, y = s.split(",")
@@ -516,7 +519,7 @@ class TestCorgyParsing(unittest.TestCase):
         self.assertEqual(c.a.x, 1)
         self.assertEqual(c.a.y, 2.3)
 
-    def test_corgy_parse_no_default_parser_additional_args(self):
+    def test_parse_from_cmdline_passes_extra_args_to_parser_constructor(self):
         class C(Corgy):
             x: int
 
@@ -527,6 +530,8 @@ class TestCorgyParsing(unittest.TestCase):
             C.parse_from_cmdline(
                 formatter_class=argparse.ArgumentDefaultsHelpFormatter, add_help=False
             )
-            corgy.corgy.argparse.ArgumentParser.assert_called_once_with(  # pylint: disable=no-member
-                formatter_class=argparse.ArgumentDefaultsHelpFormatter, add_help=False
+            # pylint: disable=no-member
+            corgy.corgy.argparse.ArgumentParser.assert_called_once_with(
+                formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+                add_help=False,
             )
