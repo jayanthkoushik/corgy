@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "corgy"
-version = "1.0.0-beta.1"
+version = "1.0.0-beta.2"
 description = "Elegant command line parsing"
 authors = ["Jayanth Koushik <jnkoushik@gmail.com>"]
 license = "MIT"
