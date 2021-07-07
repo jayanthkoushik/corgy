@@ -266,6 +266,15 @@ class TestCorgyParserGeneration(unittest.TestCase):
             "--x", type=bool, action=argparse.BooleanOptionalAction, default=False
         )
 
+    def test_parsing_bool_sequence(self):
+        class C(Corgy):
+            x: Sequence[bool]
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with(
+            "--x", type=bool, required=True, nargs="*"
+        )
+
     def test_parsing_required_int_sequence(self):
         class C(Corgy):
             x: Sequence[int]
@@ -308,6 +317,22 @@ class TestCorgyParserGeneration(unittest.TestCase):
         self.parser.add_argument.assert_called_once_with(
             "--x", type=int, nargs="*", required=True, choices=(1, 2, 3)
         )
+
+    def test_parsing_fixed_length_required_int_sequence_with_choices(self):
+        class C(Corgy):
+            x: Sequence[Literal[1, 2, 3], Literal[1, 2, 3]]
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with(
+            "--x", type=int, nargs=2, required=True, choices=(1, 2, 3)
+        )
+
+    def test_parsing_required_int_sequence_with_inconsistent_choices(self):
+        class C(Corgy):
+            x: Sequence[Literal[1, 2, 3], Literal[1, 2]]
+
+        with self.assertRaises(TypeError):
+            C.add_args_to_parser(self.parser)
 
     def test_parsing_fixed_length_required_int_sequence(self):
         class C(Corgy):
@@ -360,6 +385,45 @@ class TestCorgyParserGeneration(unittest.TestCase):
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with("--x", type=int, required=True)
         self.parser.add_argument_group.assert_called_once_with("g", None)
+
+    def test_parsing_base_type_inference(self):
+        class C(Corgy):
+            x: Annotated[Optional[Sequence[str]], "x"]
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with(
+            "--x", type=str, help="x", nargs="*"
+        )
+
+    def test_parsing_bad_base_type_optional(self):
+        class C(Corgy):
+            x: Sequence[Optional[int]]
+
+        with self.assertRaises(TypeError):
+            C.add_args_to_parser(self.parser)
+
+    def test_parsing_bad_base_type_nontype(self):
+        class C(Corgy):
+            x: Sequence["int"]
+
+        with self.assertRaises(TypeError):
+            C.add_args_to_parser(self.parser)
+
+    def test_parsing_bad_base_type_generic_list(self):
+        class C(Corgy):
+            x: Annotated[list[str], "x"]
+
+        with self.assertRaises(TypeError):
+            C.add_args_to_parser(self.parser)
+
+    def test_parsing_list_base_type(self):
+        class C(Corgy):
+            x: Annotated[list, "x"]
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with(
+            "--x", type=list, required=True, help="x"
+        )
 
 
 class TestCorgyParsing(unittest.TestCase):
@@ -424,6 +488,33 @@ class TestCorgyParsing(unittest.TestCase):
         self.assertEqual(c.g1.x, 2)
         self.assertEqual(c.g2.x, 3)
         self.assertEqual(c.g2.g.x, 4)
+
+    def test_corgy_base_type_list_retrieval(self):
+        class C(Corgy):
+            x: list
+
+        self.parser.parse_args = lambda: self.orig_parse_args(
+            self.parser, ["--x", "123"]
+        )
+        c = C.parse_from_cmdline(self.parser)
+        self.assertListEqual(c.x, ["1", "2", "3"])
+
+    def test_corgy_custom_type_retrieval(self):
+        class A:
+            def __init__(self, s):
+                x, y = s.split(",")
+                self.x = int(x)
+                self.y = float(y)
+
+        class C(Corgy):
+            a: A
+
+        self.parser.parse_args = lambda: self.orig_parse_args(
+            self.parser, ["--a", "1,2.3"]
+        )
+        c = C.parse_from_cmdline(self.parser)
+        self.assertEqual(c.a.x, 1)
+        self.assertEqual(c.a.y, 2.3)
 
     def test_corgy_parse_no_default_parser_additional_args(self):
         class C(Corgy):
