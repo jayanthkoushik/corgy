@@ -2,9 +2,20 @@ import argparse
 from collections import defaultdict
 from collections.abc import Sequence as AbstractSequence
 from contextlib import suppress
-from typing import Any, Literal, Optional, Sequence, Type, TypeVar, Union
+from functools import partial
+from typing import (
+    Any,
+    Callable,
+    Literal,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Type,
+    TypeVar,
+    Union,
+)
 
-__all__ = ["Corgy"]
+__all__ = ["Corgy", "corgyparser"]
 _T = TypeVar("_T", bound="Corgy")
 
 
@@ -53,6 +64,16 @@ class _CorgyMeta(type):
                 name, var_name, var_type, var_help
             )
             namespace["__slots__"].append(f"__{var_name}")
+
+        namespace["__parsers"] = dict()
+        for _, v in namespace.items():
+            if not isinstance(v, _CorgyParser):
+                continue
+            var_name = v.var_name
+            if (var_name in namespace) and isinstance(namespace[var_name], property):
+                namespace["__parsers"][var_name] = v.fparse
+            else:
+                raise TypeError(f"invalid target for corgyparser: {v.var_name}")
 
         return super().__new__(cls, name, bases, namespace, **kwds)
 
@@ -121,6 +142,19 @@ class Corgy(metaclass=_CorgyMeta):
                 var_base_type = var_type
                 var_required = var_name not in getattr(cls, "__defaults")
 
+            # Check if 'var_name' has a custom parser
+            if var_name in (_parsers := getattr(cls, "__parsers")):
+                var_fparse = _parsers[var_name]
+                _kwargs: dict[str, Any] = {}
+                if var_help is not None:
+                    _kwargs["help"] = var_help
+                if var_name in (_defaults := getattr(cls, "__defaults")):
+                    _kwargs["default"] = _defaults[var_name]
+                if var_required:
+                    _kwargs["required"] = True
+                parser.add_argument(f"--{var_dashed_name}", type=var_fparse, **_kwargs)
+                continue
+
             # Check if 'var_name' is a sequence
             var_nargs: Union[int, Literal["+", "*"], None]
             if hasattr(var_base_type, "__origin__") and (
@@ -183,7 +217,7 @@ class Corgy(metaclass=_CorgyMeta):
                 var_action = None
 
             # Add 'var_name' to parser
-            _kwargs: dict[str, Any] = {}
+            _kwargs = {}
             if var_help is not None:
                 _kwargs["help"] = var_help
             if var_nargs is not None:
@@ -242,3 +276,29 @@ class Corgy(metaclass=_CorgyMeta):
         cls.add_args_to_parser(parser)
         args = vars(parser.parse_args())
         return cls._new_with_args(**args)
+
+
+class _CorgyParser(NamedTuple):
+    """Class to represent custom parsers.
+
+    This class is returned by the @corgyparser decorator,
+    and is used by Corgy to keep track of parsers.
+    """
+
+    var_name: str
+    fparse: Callable[[str], Any]
+
+
+def corgyparser(
+    var_name: str,
+) -> Callable[[Callable[[str], Any]], _CorgyParser]:
+    if not isinstance(var_name, str):
+        raise TypeError(
+            "corgyparser should be passed the name of an argument: "
+            "decorate using @corgyparser(<argument>)"
+        )
+
+    def wrapper(var_name: str, fparse: Callable[[str], Any]):
+        return _CorgyParser(var_name, fparse)
+
+    return partial(wrapper, var_name)

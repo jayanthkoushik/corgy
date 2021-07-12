@@ -1,2 +1,2 @@
 from ._version import __version__
-from .corgy import Corgy
+from .corgy import Corgy, corgyparser
