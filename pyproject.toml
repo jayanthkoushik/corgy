@@ -12,12 +12,20 @@ packages = [
 ]
 include = ["CHANGELOG.md"]
 
-# keywords = [
-# ]
+keywords = [
+    "argparse",
+    "argument parsing",
+    "command line parsing",
+    "cli",
+]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Natural Language :: English",
     "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.9",
+    "IntendedAudience :: Developers",
+    "Topic :: Software Development :: User Interfaces",
+    "Topic :: Utilities",
 ]
 
 [tool.poetry.dependencies]
