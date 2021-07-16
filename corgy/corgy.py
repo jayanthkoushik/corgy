@@ -290,7 +290,9 @@ class Corgy(metaclass=_CorgyMeta):
         return s
 
     @classmethod
-    def parse_from_cmdline(cls: type[_T], parser=None, **parser_args) -> _T:
+    def parse_from_cmdline(
+        cls: type[_T], parser: Optional[argparse.ArgumentParser] = None, **parser_args
+    ) -> _T:
         """Parse an object of the class from command line arguments.
 
         Arguments:
