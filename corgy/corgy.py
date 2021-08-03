@@ -15,6 +15,8 @@ from typing import (
     Union,
 )
 
+from .helpfmt import CorgyHelpFormatter
+
 # The main interface is the `Corgy` class.
 # `_CorgyMeta` modifies creation of `Corgy` (and its subclasses) by converting
 # annotations to properties, and setting up utilities for command line parsing.
@@ -302,6 +304,8 @@ class Corgy(metaclass=_CorgyMeta):
             Ignored if `parser` is not None.
         """
         if parser is None:
+            if "formatter_class" not in parser_args:
+                parser_args["formatter_class"] = CorgyHelpFormatter
             parser = argparse.ArgumentParser(**parser_args)
         cls.add_args_to_parser(parser)
         args = vars(parser.parse_args())

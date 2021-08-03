@@ -5,7 +5,7 @@ from typing import Annotated, Literal, Optional, Sequence as SequenceType
 from unittest.mock import MagicMock, patch
 
 import corgy
-from corgy import Corgy, corgyparser
+from corgy import Corgy, CorgyHelpFormatter, corgyparser
 
 
 class TestCorgyMeta(unittest.TestCase):
@@ -534,6 +534,22 @@ class TestCorgyCmdlineParsing(unittest.TestCase):
             corgy.corgy.argparse.ArgumentParser.assert_called_once_with(
                 formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                 add_help=False,
+            )
+
+    def test_parse_from_cmdline_uses_corgy_help_formatter_if_no_formatter_specified(
+        self,
+    ):
+        class C(Corgy):
+            x: int
+
+        self.parser.parse_args = lambda: self.orig_parse_args(self.parser, ["--x", "1"])
+        with patch(
+            "corgy.corgy.argparse.ArgumentParser", MagicMock(return_value=self.parser)
+        ):
+            C.parse_from_cmdline(add_help=False)
+            # pylint: disable=no-member
+            corgy.corgy.argparse.ArgumentParser.assert_called_once_with(
+                formatter_class=CorgyHelpFormatter, add_help=False
             )
 
 
