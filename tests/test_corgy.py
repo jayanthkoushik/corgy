@@ -9,7 +9,6 @@ from corgy import Corgy, CorgyHelpFormatter, corgyparser
 
 
 class TestCorgyMeta(unittest.TestCase):
-
     """Tests to check validity of classes inheriting from Corgy."""
 
     # pylint: disable=unused-variable, unused-private-member
@@ -428,7 +427,6 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
 
 
 class TestCorgyCmdlineParsing(unittest.TestCase):
-
     """Test cases to check parsing of command line arguments by Corgy."""
 
     def setUp(self):
@@ -550,7 +548,7 @@ class TestCorgyCmdlineParsing(unittest.TestCase):
 
 
 class TestCorgyCustomParsers(unittest.TestCase):
-    """Tests to check usage of the @corgyparser decorator"""
+    """Tests to check usage of the @corgyparser decorator."""
 
     # pylint: disable=no-self-argument, unused-variable
 

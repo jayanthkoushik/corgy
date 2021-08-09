@@ -22,6 +22,11 @@ repos:
     language: system
     types: [python]
     pass_filenames: false
+  - id: pydocstyle
+    name: pydocstyle
+    entry: poetry run pydocstyle
+    language: system
+    types: [python]
   - id: commitlint
     name: lint commit message
     language: system

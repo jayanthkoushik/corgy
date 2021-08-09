@@ -324,7 +324,7 @@ class _CorgyParser(NamedTuple):
 def corgyparser(
     var_name: str,
 ) -> Callable[[Callable[[str], Any]], _CorgyParser]:
-    """Decorator to mark a function as a custom parser for a variable.
+    """Decorate a function as a custom parser for a variable.
 
     Arguments:
     - var_name: The argument associated with the decorated parser.

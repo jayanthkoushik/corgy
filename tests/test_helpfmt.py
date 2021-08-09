@@ -190,8 +190,10 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
         self.maxDiff = None  # color codes can lead to very long diffs
 
     def _get_arg_help(self, *args, **kwargs):
-        """Add a parser argument using `args` and `kwargs`, and return the help output,
-        with boilerplate and trailing newline removed."""
+        """Add a parser argument using `args` and `kwargs`, and return the help output.
+
+        Only the output for the particular argument is returned.
+        """
         self.parser.add_argument(*args, **kwargs)
         _help = self.parser.format_help()
         if _help:
@@ -678,7 +680,6 @@ class TestCorgyHelpFormatterMultiArgs(TestCase):
 
 
 class _NoColorTestMeta(type):
-
     """Metaclass to create versions of test classes that don't use colors."""
 
     def __new__(cls, name, bases, namespace, **kwds):
@@ -697,6 +698,8 @@ class _NoColorTestMeta(type):
 class TestCorgyHelpFormatterSingleArgsNoColor(
     TestCorgyHelpFormatterSingleArgs, metaclass=_NoColorTestMeta
 ):
+    """Tests to check formatting of single arguments without colors."""
+
     # The metaclass removes the base class from the inheritance chain, so we need to
     # manually inherit needed base class methods.
     _get_arg_help = TestCorgyHelpFormatterSingleArgs._get_arg_help
@@ -710,6 +713,8 @@ class TestCorgyHelpFormatterSingleArgsNoColor(
 class TestCorgyHelpFormatterMultiArgsNoColor(
     TestCorgyHelpFormatterMultiArgs, metaclass=_NoColorTestMeta
 ):
+    """Tests to check formatting of multiple arguments together without colors."""
+
     def setUp(self):
         _COLOR_HELPER.crayons = None
         CorgyHelpFormatter.use_colors = False

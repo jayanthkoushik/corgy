@@ -82,9 +82,11 @@ class _ColorHelper:
 
 
 class _CorgyHelpFormatterMeta(type):
-    """Metaclass for `CorgyHelpFormatter` which adds a `__setattr__` method to prevent
-    new attributes from being set, primarily to prevent potential user errors caused by
-    using an incorrect name to configure the class."""
+    """Metaclass for `CorgyHelpFormatter` which adds a `__setattr__` method.
+
+    The method prevents new attributes from being set, primarily to prevent potential
+    user errors caused by using an incorrect name to configure the class.
+    """
 
     def __setattr__(cls, name: str, value: Any):
         """Prevent new attributes from being set."""
@@ -167,8 +169,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     def _sub_non_ws_with_colored_repl(
         self, match: re.Match, replacement: Optional[str], color: str
     ) -> str:
-        """Replace non-whitespace characters in the match using colored version of the
-        replacement.
+        """Replace non-whitespace characters in the match using colored replacement.
 
         For example, if the match is `aaa   aaaa a`, and the replacement is `bbbbbbbb`,
         the result will be `bbb   bbbb b` (with the `b`s colored).
@@ -221,7 +222,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         return ""
 
     def _format_action_invocation(self, action: Action) -> str:
-        """Called to format the invocation part of an argument, e.g. `-x, --x int`."""
+        """Format the invocation part of an argument, e.g. `-x, --x int`."""
         if action.option_strings:
             option_strings = action.option_strings
         else:
@@ -250,7 +251,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             return super()._format_action_invocation(action).rstrip()
 
     def _format_args(self, action: Action, default_metavar: Optional[str]) -> str:
-        """Called to format the metavars."""
+        """Format the metavars."""
         if action.nargs == PARSER:
             # No metavars for a sub-command.
             return ""
@@ -274,7 +275,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             return super()._format_args(action, "")
 
     def _format_action(self, action: Action) -> str:
-        """Called by `ArgumentParser` to format a single argument.
+        """Format a single argument.
 
         The superclass implementation produces an output like
         `  --arg ARG   arg help`.
@@ -516,6 +517,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         return super()._format_usage(usage, actions, groups, prefix)
 
     def __init__(self, prog: str) -> None:
+        # noqa: D107
         self._color_helper = _ColorHelper(self.use_colors)
         # Wrapping is managed by this class, so pass `sys.maxsize` to the superclass.
         super().__init__(
