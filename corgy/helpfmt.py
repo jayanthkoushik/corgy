@@ -208,7 +208,9 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         Other types use the name of type itself.
         """
         if action.type:
-            if custom_metavar := getattr(action.type, "__metavar__", None):
+            if (
+                custom_metavar := getattr(action.type, "__metavar__", None)
+            ) is not None:
                 return custom_metavar
 
             if (
@@ -431,19 +433,20 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             fmt = pattern.sub(f_sub, fmt)
 
         # Colorize the option strings.
-        option_strings = getattr(action, "_corgy_option_strings")
-        pattern = self._pattern_placeholder_text(_PLACEHOLDER_OPTION_STR)
-        for option_string in option_strings:
-            f_sub = partial(
-                self._sub_non_ws_with_colored_repl,
-                replacement=option_string,
-                color=self.color_options,
-            )
-            fmt = pattern.sub(f_sub, fmt, count=1)
+        if (
+            option_strings := getattr(action, "_corgy_option_strings", None)
+        ) is not None:
+            pattern = self._pattern_placeholder_text(_PLACEHOLDER_OPTION_STR)
+            for option_string in option_strings:
+                f_sub = partial(
+                    self._sub_non_ws_with_colored_repl,
+                    replacement=option_string,
+                    color=self.color_options,
+                )
+                fmt = pattern.sub(f_sub, fmt, count=1)
 
         # Colorize the metavars.
-        if action.nargs != PARSER:
-            metavars = getattr(action, "_corgy_metavar")
+        if (metavars := getattr(action, "_corgy_metavar", None)) is not None:
             if isinstance(metavars, str):
                 metavars = (metavars,)
             if isinstance(action.nargs, int) and action.nargs > 0:
