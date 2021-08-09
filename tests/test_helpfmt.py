@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 from corgy import CorgyHelpFormatter
 from corgy.helpfmt import _ColorHelper
 
-_COLOR_HELPER = _ColorHelper()
+_COLOR_HELPER = _ColorHelper(skip_tty_check=True)
 _CRAYONS = _COLOR_HELPER.crayons
 
 # Shortcuts for color functions to make ground truths in assert statements concise.
@@ -541,6 +541,7 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
         )
 
 
+@skipIf(_CRAYONS is None, "`crayons` package not found")
 class TestCorgyHelpFormatterMultiArgs(TestCase):
     """Tests to check formatting of multiple arguments together."""
 

@@ -35,12 +35,14 @@ class _ColorHelper:
 
     crayons: Optional[ModuleType]
 
-    def __init__(self, use_colors: Optional[bool] = None):
+    def __init__(self, use_colors: Optional[bool] = None, skip_tty_check: bool = False):
         """Initialize the color helper.
 
         Args:
             use_colors: Whether to enable colored output. If None, coloring is enabled
                 if the `crayons` library is available, and the output is a tty.
+            skip_tty_check: Whether to skip checking if the output is a tty. Only used
+                if `use_colors` is None.
         """
         if use_colors:
             try:
@@ -49,7 +51,7 @@ class _ColorHelper:
                 raise ImportError(
                     "`crayons` library is required to use colors"
                 ) from None
-        elif use_colors is None and sys.stdout.isatty():
+        elif use_colors is None and (skip_tty_check or sys.stdout.isatty()):
             try:
                 self.crayons = importlib.import_module("crayons")
             except ImportError:
