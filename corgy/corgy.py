@@ -17,11 +17,10 @@ from typing import (
 
 from .helpfmt import CorgyHelpFormatter
 
-# The main interface is the `Corgy` class.
-# `_CorgyMeta` modifies creation of `Corgy` (and its subclasses) by converting
-# annotations to properties, and setting up utilities for command line parsing.
-# `corgyparser` is a decorator that allows custom parsers to be defined
-# for `Corgy` variables.
+# The main interface is the `Corgy` class. `_CorgyMeta` modifies creation of `Corgy`
+# (and its subclasses) by converting annotations to properties, and setting up utilities
+# for command line parsing. `corgyparser` is a decorator that allows custom parsers to
+# be defined for `Corgy` variables.
 
 __all__ = ["Corgy", "corgyparser"]
 _T = TypeVar("_T", bound="Corgy")
@@ -30,9 +29,9 @@ _T = TypeVar("_T", bound="Corgy")
 class _CorgyMeta(type):
     """Metaclass for `Corgy`.
 
-    Modifies class creation by parsing type annotations, and creating
-    properties for each annotated variable. Default values and custom
-    parsers are stored in the `__defaults` and `__parsers` attributes.
+    Modifies class creation by parsing type annotations, and creating properties for
+    each annotated variable. Default values and custom parsers are stored in the
+    `__defaults` and `__parsers` attributes.
     """
 
     def __new__(cls, name, bases, namespace, **kwds):
@@ -50,8 +49,8 @@ class _CorgyMeta(type):
                     f"cannot use name `__{var_name}`: internal clash with `{var_name}`"
                 )
 
-            # Check if help string is present,
-            # i.e. `<var_name>: Annotated[<var_type>, (<var_help>,...)]`.
+            # Check if help string is present, i.e.,
+            # `<var_name>: Annotated[<var_type>, (<var_help>,...)]`.
             if hasattr(var_ano, "__origin__") and hasattr(var_ano, "__metadata__"):
                 var_type = var_ano.__origin__
                 var_help = var_ano.__metadata__[0]
@@ -91,8 +90,8 @@ class _CorgyMeta(type):
 
     @staticmethod
     def _create_var_property(cls_name, var_name, var_type, var_doc):
-        # Properties are stored in private instance variables prefixed with `__`,
-        # and must be accessed as `_<cls>__<var_name>`.
+        # Properties are stored in private instance variables prefixed with `__`, and
+        # must be accessed as `_<cls>__<var_name>`.
         def var_fget(self) -> var_type:
             with suppress(AttributeError):
                 return getattr(self, f"_{cls_name.lstrip('_')}__{var_name}")
@@ -109,16 +108,16 @@ class _CorgyMeta(type):
 class Corgy(metaclass=_CorgyMeta):
     """Base class for collections of variables.
 
-    User-defined classes inheriting from `Corgy` should declare their
-    variables as type annotations. For example:
+    User-defined classes inheriting from `Corgy` should declare their variables as type
+    annotations. For example:
 
         class A(Corgy):
             x: int
             y: str
             z: Annotated[str, "this is z"]
 
-    At runtime, class `A` will have `x`, `y`, and `z` as properties,
-    and will provide methods to parse them from command line arguments.
+    At runtime, class `A` will have `x`, `y`, and `z` as properties, and will provide
+    methods to parse them from command line arguments.
     """
 
     @classmethod
@@ -127,8 +126,8 @@ class Corgy(metaclass=_CorgyMeta):
 
         Arguments:
         - parser: `argparse.ArgumentParser` instance.
-        - name_prefix: Prefix for argument names (default: empty string).
-            Arguments will be named `--<name-prefix>:<var-name>`.
+        - name_prefix: Prefix for argument names (default: empty string). Arguments will
+            be named `--<name-prefix>:<var-name>`.
         """
         for (
             var_name,
@@ -146,9 +145,8 @@ class Corgy(metaclass=_CorgyMeta):
                 var_type.add_args_to_parser(grp_parser, var_dashed_name)
                 continue
 
-            # Check if the variable is optional.
-            # `<var_name>: Optional[<var_type>]` is equivalent to
-            # `<var_name>: Union[<var_type>, None]`.
+            # Check if the variable is optional. `<var_name>: Optional[<var_type>]` is
+            # equivalent to `<var_name>: Union[<var_type>, None]`.
             if (
                 hasattr(var_type, "__origin__")
                 and var_type.__origin__ is Union
@@ -186,8 +184,8 @@ class Corgy(metaclass=_CorgyMeta):
                     len(var_base_type.__args__) == 2
                     and var_base_type.__args__[1] is Ellipsis
                 ):
-                    # `...` is used to represent non-empty collections,
-                    # i.e. `Sequence[int, ...]`.
+                    # `...` is used to represent non-empty collections, i.e.,
+                    # `Sequence[int, ...]`.
                     var_nargs = "+"
                 else:
                     # Ensure single type.
@@ -298,10 +296,10 @@ class Corgy(metaclass=_CorgyMeta):
         """Parse an object of the class from command line arguments.
 
         Arguments:
-        - parser: An instance of `argparse.ArgumentParser` or `None`.
-            If `None`, a new instance is created.
-        - parser_args: Arguments to be passed to `argparse.ArgumentParser()`.
-            Ignored if `parser` is not None.
+        - parser: An instance of `argparse.ArgumentParser` or `None`. If `None`, a new
+            instance is created.
+        - parser_args: Arguments to be passed to `argparse.ArgumentParser()`. Ignored
+            if `parser` is not None.
         """
         if parser is None:
             if "formatter_class" not in parser_args:
@@ -315,8 +313,8 @@ class Corgy(metaclass=_CorgyMeta):
 class _CorgyParser(NamedTuple):
     """Class to represent custom parsers.
 
-    This class is returned by the `@corgyparser` decorator,
-    and is used by `Corgy` to keep track of parsers.
+    This class is returned by the `@corgyparser` decorator, and is used by `Corgy` to
+    keep track of parsers.
     """
 
     var_name: str
