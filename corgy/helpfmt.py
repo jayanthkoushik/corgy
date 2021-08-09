@@ -79,7 +79,10 @@ class _ColorHelper:
 
         if use_bold := color.isupper():
             color = color.lower()
-        f_color = getattr(self.crayons, color)
+        try:
+            f_color = getattr(self.crayons, color)
+        except AttributeError:
+            raise ValueError(f"invalid color: {color}") from None
         return str(f_color(text, bold=use_bold))
 
 

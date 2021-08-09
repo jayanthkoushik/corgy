@@ -178,6 +178,14 @@ class TestCorgyHelpFormatterAPI(TestCase):
         self.assertEqual(parser.format_usage(), "usage: custom usage\n")
         self.assertEqual(parser.format_help(), "")
 
+    @skipIf(_CRAYONS is None, "`crayons` package not found")
+    def test_corgy_help_formatter_raises_if_using_invalid_color(self):
+        with patch.object(CorgyHelpFormatter, "color_metavars", "ELUB"):
+            parser = ArgumentParser(formatter_class=CorgyHelpFormatter)
+            parser.add_argument("--x", type=str)
+            with self.assertRaises(ValueError):
+                parser.format_help()
+
 
 @skipIf(_CRAYONS is None, "`crayons` package not found")
 class TestCorgyHelpFormatterSingleArgs(TestCase):
