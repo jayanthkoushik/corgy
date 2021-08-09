@@ -35,7 +35,7 @@ python = "^3.9"
 
 [tool.poetry.dev-dependencies]
 black = { version = ">=19.3b0", allow-prereleases = true }
-pylint = "^2.3"
+pylint = "^2.9"
 pre-commit = "^2.0"
 isort = "^4.3"
 mypy = ">=0.8"
@@ -52,32 +52,35 @@ include_trailing_comma = true
 combine_as_imports = true
 force_alphabetical_sort_within_sections = true
 
-[tool.pylint.MASTER]
-extension-pkg-whitelist = "torch"
-
-[tool.pylint.TYPECHECK]
-generated-members = "torch.*"
-
 [tool.pylint.FORMAT]
 max-line-length = "88"
 
 [tool.pylint.'MESSAGES CONTROL']
 disable = """
+    fixme,
+    missing-docstring,
+    invalid-name,
+    ungrouped-imports,
+    wrong-import-order,
+    wrong-import-position,
+    import-outside-toplevel,
+    unused-argument,
+    no-self-use,
+    no-member,
+    protected-access,
+    attribute-defined-outside-init,
     too-few-public-methods,
+    too-many-public-methods,
+    too-many-ancestors,
     too-many-instance-attributes,
     too-many-arguments,
     too-many-locals,
     too-many-statements,
+    too-many-lines,
     too-many-branches,
-    bad-continuation,
-    missing-docstring,
-    invalid-name,
-    protected-access,
-    wrong-import-position,
-    logging-format-interpolation,
-    logging-fstring-interpolation,
-    arguments-differ,
-    abstract-method,
+    too-many-nested-blocks,
+    too-many-return-statements,
+    too-many-boolean-expressions,
 """
 
 [build-system]

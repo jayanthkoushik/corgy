@@ -12,6 +12,8 @@ class TestCorgyMeta(unittest.TestCase):
 
     """Tests to check validity of classes inheriting from Corgy."""
 
+    # pylint: disable=unused-variable, unused-private-member
+
     class _CorgyCls(Corgy):
         x1: Sequence[int]
         x2: Annotated[int, "x2 docstr"]
@@ -69,7 +71,6 @@ class TestCorgyMeta(unittest.TestCase):
     def test_corgy_cls_raises_if_help_annotation_not_str(self):
         with self.assertRaises(TypeError):
 
-            # pylint: disable=unused-variable
             class C1(Corgy):
                 x: Annotated[int, 1]
 
@@ -87,11 +88,10 @@ class TestCorgyMeta(unittest.TestCase):
         self.assertTrue(hasattr(C, "__defaults"))
         self.assertIsInstance(getattr(C, "__defaults"), dict)
         self.assertTrue(hasattr(C, "_C__defaults"))
-        self.assertIsInstance(C._C__defaults, property)  # pylint: disable=no-member
+        self.assertIsInstance(getattr(C, "_C__defaults"), property)
         self.assertEqual(C().x, 0)
 
     def test_corgy_cls_raises_if_var_name_is_dunder_another_var(self):
-        # pylint: disable=unused-variable
         with self.assertRaises(TypeError):
 
             class C1(Corgy):
@@ -118,7 +118,7 @@ class TestCorgyMeta(unittest.TestCase):
     def test_corgy_cls_raises_on_setting_undefined_attribute(self):
         c = self._CorgyCls()
         with self.assertRaises(AttributeError):
-            c.z = 0  # pylint: disable=attribute-defined-outside-init
+            c.z = 0
 
     def test_corgy_cls_has_correct_repr(self):
         c = self._CorgyCls()
@@ -133,8 +133,6 @@ class TestCorgyMeta(unittest.TestCase):
 
 
 class TestCorgyAddArgsToParser(unittest.TestCase):
-    # pylint: disable=too-many-public-methods
-
     """Tests to check that Corgy properly adds arguments to ArgumentParsers."""
 
     def setUp(self):
@@ -296,7 +294,7 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
 
     def test_add_args_sets_nargs_to_plus_for_non_empty_sequence_type(self):
         class C(Corgy):
-            x: Sequence[int, ...]
+            x: Sequence[int, ...]  # type: ignore
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
@@ -530,7 +528,6 @@ class TestCorgyCmdlineParsing(unittest.TestCase):
             C.parse_from_cmdline(
                 formatter_class=argparse.ArgumentDefaultsHelpFormatter, add_help=False
             )
-            # pylint: disable=no-member
             corgy.corgy.argparse.ArgumentParser.assert_called_once_with(
                 formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                 add_help=False,
@@ -547,7 +544,6 @@ class TestCorgyCmdlineParsing(unittest.TestCase):
             "corgy.corgy.argparse.ArgumentParser", MagicMock(return_value=self.parser)
         ):
             C.parse_from_cmdline(add_help=False)
-            # pylint: disable=no-member
             corgy.corgy.argparse.ArgumentParser.assert_called_once_with(
                 formatter_class=CorgyHelpFormatter, add_help=False
             )
@@ -556,7 +552,7 @@ class TestCorgyCmdlineParsing(unittest.TestCase):
 class TestCorgyCustomParsers(unittest.TestCase):
     """Tests to check usage of the @corgyparser decorator"""
 
-    # pylint: disable=no-self-argument,no-self-use
+    # pylint: disable=no-self-argument, unused-variable
 
     def test_corgyparser_raises_if_not_passed_name(self):
         with self.assertRaises(TypeError):
@@ -568,7 +564,6 @@ class TestCorgyCustomParsers(unittest.TestCase):
     def test_corgy_raises_if_corgyparser_target_invalid(self):
         with self.assertRaises(TypeError):
 
-            # pylint: disable=unused-variable
             class A(Corgy):
                 x: int
 

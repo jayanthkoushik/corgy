@@ -181,7 +181,6 @@ class TestCorgyHelpFormatterAPI(TestCase):
 
 @skipIf(_CRAYONS is None, "`crayons` package not found")
 class TestCorgyHelpFormatterSingleArgs(TestCase):
-    # pylint: disable=too-many-public-methods
     """Tests to check formatting of single arguments."""
 
     def setUp(self):
@@ -349,7 +348,6 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
 
     def test_corgy_help_formatter_handles_callable_type(self):
         def custom_type(s):
-            # pylint: disable=unused-argument
             return s
 
         self.assertEqual(
@@ -363,7 +361,6 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
             __metavar__ = "ACTUAL-METAVAR"
 
         def custom_type(s: str) -> CustomType:
-            # pylint: disable=unused-argument
             return CustomType()
 
         self.assertEqual(
