@@ -38,9 +38,9 @@ class _ColorHelper:
     def __init__(self, use_colors: Optional[bool] = None):
         """Initialize the color helper.
 
-        Arguments:
-        - use_colors: Whether to enable colored output. If None, coloring is enabled if
-            the `crayons` library is available, and the output is a tty.
+        Args:
+            use_colors: Whether to enable colored output. If None, coloring is enabled
+                if the `crayons` library is available, and the output is a tty.
         """
         if use_colors:
             try:
@@ -60,11 +60,11 @@ class _ColorHelper:
     def colorize(self, text: str, color: str) -> str:
         """Colorize given text.
 
-        Arguments:
-        - text: Text to colorize.
-        - color: Name of a valid `crayons` color. If the name is all caps, the text
-            will be made bold. Special string `BOLD` will only make the text bold,
-            without coloring.
+        Args:
+            text: Text to colorize.
+            color: Name of a valid `crayons` color. If the name is all caps, the text
+                will be made bold. Special string `BOLD` will only make the text bold,
+                without coloring.
         """
         if not self.crayons:
             return text
@@ -174,11 +174,11 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         For example, if the match is `aaa   aaaa a`, and the replacement is `bbbbbbbb`,
         the result will be `bbb   bbbb b` (with the `b`s colored).
 
-        Arguments:
-        - match: The match to substitute into.
-        - replacement: The replacement to use. If it is shorter than the non-whitespace
-            part of the match, it is repeated. If it is `None`, the match is replaced
-            with a colored version of iteself.
+        Args:
+            match: The match to substitute into.
+            replacement: The replacement to use. If it is shorter than the
+                non-whitespace part of the match, it is repeated. If it is `None`, the
+                match is replaced with a colored version of iteself.
         """
         text = match.group(0)
         text_pieces = re.split(r"(\S+)", text)

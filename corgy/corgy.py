@@ -124,10 +124,10 @@ class Corgy(metaclass=_CorgyMeta):
     def add_args_to_parser(cls, parser: argparse.ArgumentParser, name_prefix: str = ""):
         """Add arguments for this class to the given parser.
 
-        Arguments:
-        - parser: `argparse.ArgumentParser` instance.
-        - name_prefix: Prefix for argument names (default: empty string). Arguments will
-            be named `--<name-prefix>:<var-name>`.
+        Args:
+            parser: `argparse.ArgumentParser` instance.
+            name_prefix: Prefix for argument names (default: empty string). Arguments
+                will be named `--<name-prefix>:<var-name>`.
         """
         for (
             var_name,
@@ -295,11 +295,11 @@ class Corgy(metaclass=_CorgyMeta):
     ) -> _T:
         """Parse an object of the class from command line arguments.
 
-        Arguments:
-        - parser: An instance of `argparse.ArgumentParser` or `None`. If `None`, a new
-            instance is created.
-        - parser_args: Arguments to be passed to `argparse.ArgumentParser()`. Ignored
-            if `parser` is not None.
+        Args:
+            parser: An instance of `argparse.ArgumentParser` or `None`. If `None`, a new
+                instance is created.
+            parser_args: Arguments to be passed to `argparse.ArgumentParser()`. Ignored
+                if `parser` is not None.
         """
         if parser is None:
             if "formatter_class" not in parser_args:
@@ -326,8 +326,8 @@ def corgyparser(
 ) -> Callable[[Callable[[str], Any]], _CorgyParser]:
     """Decorate a function as a custom parser for a variable.
 
-    Arguments:
-    - var_name: The argument associated with the decorated parser.
+    Args:
+        var_name: The argument associated with the decorated parser.
 
     Usage:
         @corgyparser("foo")
