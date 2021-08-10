@@ -10,7 +10,7 @@ packages = [
     { include = "corgy" },
     { include = "tests", format = "sdist" }
 ]
-include = ["CHANGELOG.md"]
+include = ["CHANGELOG.md", "example.png"]
 
 keywords = [
     "argparse",
