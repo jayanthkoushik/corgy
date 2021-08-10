@@ -692,7 +692,6 @@ class _NoColorTestMeta(type):
     """Metaclass to create versions of test classes that don't use colors."""
 
     def __new__(cls, name, bases, namespace, **kwds):
-        assert len(bases) == 1 and issubclass(bases[0], TestCase)
         for _item in dir(bases[0]):
             if not _item.startswith("test_"):
                 continue
