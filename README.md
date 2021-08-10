@@ -5,7 +5,7 @@ Elegant command line parsing for Python.
 Corgy allows you to create a command line interface in Python, without worrying about boilerplate code. This results in cleaner, more modular code.
 
 ```python
-from corgy import Corgy, corgyparser
+from corgy import Corgy
 
 class ArgGroup(Corgy):
     arg1: Annotated[Optional[int], "optional number"]
@@ -29,8 +29,8 @@ parser.add_argument("--arg1", type=int, help="a number", default=1)
 parser.add_argument("--arg2", type=float, nargs="+", help="at least one float", required=True)
 
 grp_parser = parser.add_argument_group("group 1")
-grp_parser.add_argument("--arg3:arg1", type=int, help="optional number")
-grp_parser.add_argument("--arg3:arg2", help="a boolean", action=BooleanOptionalAction)
+grp_parser.add_argument("--grp1:arg1", type=int, help="optional number")
+grp_parser.add_argument("--grp1:arg2", help="a boolean", action=BooleanOptionalAction)
 
 args = parser.parse_args()
 ```
