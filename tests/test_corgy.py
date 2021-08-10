@@ -521,12 +521,12 @@ class TestCorgyCmdlineParsing(unittest.TestCase):
 
         self.parser.parse_args = lambda: self.orig_parse_args(self.parser, ["--x", "1"])
         with patch(
-            "corgy.corgy.argparse.ArgumentParser", MagicMock(return_value=self.parser)
+            "corgy._corgy.argparse.ArgumentParser", MagicMock(return_value=self.parser)
         ):
             C.parse_from_cmdline(
                 formatter_class=argparse.ArgumentDefaultsHelpFormatter, add_help=False
             )
-            corgy.corgy.argparse.ArgumentParser.assert_called_once_with(
+            corgy._corgy.argparse.ArgumentParser.assert_called_once_with(
                 formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                 add_help=False,
             )
@@ -539,10 +539,10 @@ class TestCorgyCmdlineParsing(unittest.TestCase):
 
         self.parser.parse_args = lambda: self.orig_parse_args(self.parser, ["--x", "1"])
         with patch(
-            "corgy.corgy.argparse.ArgumentParser", MagicMock(return_value=self.parser)
+            "corgy._corgy.argparse.ArgumentParser", MagicMock(return_value=self.parser)
         ):
             C.parse_from_cmdline(add_help=False)
-            corgy.corgy.argparse.ArgumentParser.assert_called_once_with(
+            corgy._corgy.argparse.ArgumentParser.assert_called_once_with(
                 formatter_class=CorgyHelpFormatter, add_help=False
             )
 

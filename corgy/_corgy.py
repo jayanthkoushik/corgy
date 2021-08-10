@@ -15,7 +15,7 @@ from typing import (
     Union,
 )
 
-from .helpfmt import CorgyHelpFormatter
+from ._helpfmt import CorgyHelpFormatter
 
 # The main interface is the `Corgy` class. `_CorgyMeta` modifies creation of `Corgy`
 # (and its subclasses) by converting annotations to properties, and setting up utilities

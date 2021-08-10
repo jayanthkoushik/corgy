@@ -3,7 +3,7 @@ from unittest import skipIf, TestCase
 from unittest.mock import Mock, patch
 
 from corgy import CorgyHelpFormatter
-from corgy.helpfmt import _ColorHelper
+from corgy._helpfmt import _ColorHelper
 
 _COLOR_HELPER = _ColorHelper(skip_tty_check=True)
 _CRAYONS = _COLOR_HELPER.crayons
@@ -34,7 +34,7 @@ class TestCorgyHelpFormatterAPI(TestCase):
     def test_corgy_help_formatter_raises_if_enabling_colors_without_crayons(self):
         CorgyHelpFormatter.use_colors = True
         with patch(
-            "corgy.helpfmt.importlib.import_module", Mock(side_effect=ImportError)
+            "corgy._helpfmt.importlib.import_module", Mock(side_effect=ImportError)
         ):
             with self.assertRaises(ImportError):
                 ArgumentParser(formatter_class=CorgyHelpFormatter)
@@ -42,7 +42,7 @@ class TestCorgyHelpFormatterAPI(TestCase):
     def test_corgy_help_formatter_doesnt_raise_if_use_colors_none_without_crayons(self):
         CorgyHelpFormatter.use_colors = None
         with patch(
-            "corgy.helpfmt.importlib.import_module", Mock(side_effect=ImportError)
+            "corgy._helpfmt.importlib.import_module", Mock(side_effect=ImportError)
         ):
             try:
                 ArgumentParser(formatter_class=CorgyHelpFormatter)
