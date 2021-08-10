@@ -35,11 +35,21 @@ grp_parser.add_argument("--arg3:arg2", help="a boolean", action=BooleanOptionalA
 args = parser.parse_args()
 ```
 
+Corgy also provides support for more informative help messages from `argparse`, and colorized output:
+
+![Sample output from Corgy](example.png)
+
 # Install
 **`corgy` requires Python 3.9+**. It is available on PyPI, and can be installed with pip:
 
 ```bash
 pip install corgy
+```
+
+Support for colorized output requires the `crayons` package, also available on PyPI. You can pull it as a dependency for `corgy` by installing with the `colors` extra:
+
+```bash
+pip install corgy[colors]
 ```
 
 # Usage
@@ -59,7 +69,7 @@ a.x = 1
 a.y = a.x + 1.1
 ```
 
-For command line parsing, `x` and `y` are added to an `ArgumentParser` object with the approriate arguments passed to `ArgumentParser.add_argument`.
+For command line parsing, `x` and `y` are added to an `ArgumentParser` object with the approriate arguments passed to `ArgumentParser.add_argument`. This is roughly equivalent to:
 
 ```python
 parser = ArgumentParser()
@@ -223,3 +233,39 @@ Parse an object of the class from command line arguments. Options:
 * `parser_args`: Arguments to be passed to `argparse.ArgumentParser()`. Ignored if `parser` is not `None`.
 
 This method will return an instance of the `Corgy` subclass, with properties set to their parsed values.
+
+## `CorgyHelpFormatter`
+`CorgyHelpFormatter` is a help formatter for `argparse`, with support for colorized output. `Corgy.parse_from_cmdline` uses this formatter by default, unless a different `formatter_class` argument is provided.
+
+`CorgyHelpFormatter` can also be used independently of `Corgy`. Simply pass it as the `formatter_class` argument to `argparse.ArgumentParser()`:
+
+```python
+from argparse import ArgumentParser
+from corgy import CorgyHelpFormatter
+
+parser = ArgumentParser(formatter_class=CorgyHelpFormatter)
+...
+```
+
+### Configuration
+To configure `CorgyHelpFormatter`, you can set a number of attributes on the class. Note that you do not need to create an instance of the class; that is done by the parser itself. The following public attributes are available:
+
+* `enable_colors`: If `None` (the default), colors are enabled if the `crayons` package is available, and the output is a tty. To explicitly enable or disable colors, set to `True` or `False`.
+
+* `color_<choices/keywords/metavars/defaults/options>`: These attributes control the colors used for various parts of the output (see below for reference). Available colors are `red`, `green`, `yellow`, `blue`, `black`, `magenta`, `cyan`, and `white`. Specifying the name in all caps will make the color bold. You can also use the special value `BOLD` to make the output bold without changing the color. The default value are `blue` for choices, `green` for keywords, `RED` for metavars, `YELLOW` for defaults, and `BOLD` for options.
+
+```text
+    -a/--arg str       help for arg ({'a'/'b'/'c'} default: 'a')
+       |      |                          |            |      |
+    options  metavars                 choices      keywords defaults
+```
+
+* `output_width`: The number of columns used for the output. If `None` (the default), the current terminal width is used.
+
+* `max_help_position`: How far to the right (from the start), the help string can start from. If `None`, there is no limit. The default is `40`.
+
+* `marker_extras_<begin/end>`: The strings used to enclose the extra help text (choices, default values etc.). The defaults are `(` and `)`.
+
+* `marker_choices_<begin/end>`: The strings used to enclose the list of choices for an argument. The defaults are `{` and `}`.
+
+* `marker_choices_sep`: The string used to separate individual choices in the choice list. The default is `/`.
