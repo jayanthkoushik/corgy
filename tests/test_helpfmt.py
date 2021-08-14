@@ -366,19 +366,6 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
             f"  {_O('--x')} {_M('custom_type')}  ({_K('optional')})",
         )
 
-    def test_corgy_help_formatter_uses_return_type_of_type_if_annotated(self):
-        class CustomType:
-            __metavar__ = "ACTUAL-METAVAR"
-
-        def custom_type(s: str) -> CustomType:
-            return CustomType()
-
-        self.assertEqual(
-            self._get_arg_help("--x", type=custom_type),
-            #   --x ACTUAL-METAVAR  (optional)
-            f"  {_O('--x')} {_M('ACTUAL-METAVAR')}  ({_K('optional')})",
-        )
-
     def test_corgy_help_formatter_handles_custom_metavar(self):
         class CustomType:
             __metavar__ = "CUSTOM"

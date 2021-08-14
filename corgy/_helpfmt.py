@@ -207,23 +207,13 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         """Metavar to use if none is explicityly provided.
 
         Special attribute `__metavar__` can be added to any type, to use a custom
-        metavar for that type. Callable types use the return type, if it is annotated.
-        Other types use the name of type itself.
+        metavar for that type. Other types use the name of type itself.
         """
         if action.type:
             if (
                 custom_metavar := getattr(action.type, "__metavar__", None)
             ) is not None:
                 return custom_metavar
-
-            if (
-                callable(action.type)
-                and (anno := getattr(action.type, "__annotations__", None))
-                and (return_type := anno.get("return", None))
-            ):
-                with patch.object(action, "type", return_type):
-                    return self._get_default_metavar_for_optional(action)
-
             return getattr(action.type, "__name__")
 
         return ""
