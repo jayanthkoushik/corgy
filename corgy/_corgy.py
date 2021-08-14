@@ -221,9 +221,6 @@ class Corgy(metaclass=_CorgyMeta):
             else:
                 var_choices = None
 
-            if type(var_base_type) is not type:  # pylint: disable=unidiomatic-typecheck
-                raise TypeError(f"{var_base_type} is not a valid type")
-
             # Check if the variable is boolean. Boolean variables are converted to
             # `--<var-name>`/`--no-<var-name>` arguments.
             var_action: Optional[Type[argparse.Action]]

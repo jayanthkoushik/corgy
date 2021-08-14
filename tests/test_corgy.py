@@ -395,26 +395,15 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
             "--x", type=str, help="x", nargs="*"
         )
 
-    def test_add_args_raises_if_base_type_is_optional(self):
+    def test_add_args_allows_function_base_type(self):
+        def f(x: str) -> int:
+            return int(x)
+
         class C(Corgy):
-            x: Sequence[Optional[int]]
+            x: f
 
-        with self.assertRaises(TypeError):
-            C.add_args_to_parser(self.parser)
-
-    def test_add_args_raises_if_base_type_not_valid(self):
-        class C(Corgy):
-            x: Sequence["int"]
-
-        with self.assertRaises(TypeError):
-            C.add_args_to_parser(self.parser)
-
-    def test_add_args_raises_if_base_type_generic(self):
-        class C(Corgy):
-            x: Annotated[list[str], "x"]
-
-        with self.assertRaises(TypeError):
-            C.add_args_to_parser(self.parser)
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with("--x", type=f, required=True)
 
     def test_add_args_allows_list_base_type(self):
         class C(Corgy):
