@@ -183,7 +183,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             match: The match to substitute into.
             replacement: The replacement to use. If it is shorter than the
                 non-whitespace part of the match, it is repeated. If it is `None`, the
-                match is replaced with a colored version of iteself.
+                match is replaced with a colored version of itself.
         """
         text = match.group(0)
         text_pieces = re.split(r"(\S+)", text)
@@ -204,7 +204,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         return "".join(text_pieces)
 
     def _get_default_metavar_for_optional(self, action: Action) -> str:
-        """Metavar to use if none is explicityly provided.
+        """Metavar to use if none is explicitly provided.
 
         Special attribute `__metavar__` can be added to any type, to use a custom
         metavar for that type. Other types use the name of type itself.
@@ -277,7 +277,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         The superclass implementation produces an output like
         `  --arg ARG   arg help`.
 
-        This implementaiton includes the default value, and choices (if present). Text
+        This implementation includes the default value, and choices (if present). Text
         is added to indicate if the argument is required, or optional. The argument type
         is used as the metavar, and colors are used for semantic highlighting.
         """

@@ -69,7 +69,7 @@ a.x = 1
 a.y = a.x + 1.1
 ```
 
-For command line parsing, `x` and `y` are added to an `ArgumentParser` object with the approriate arguments passed to `ArgumentParser.add_argument`. This is roughly equivalent to:
+For command line parsing, `x` and `y` are added to an `ArgumentParser` object with the appropriate arguments passed to `ArgumentParser.add_argument`. This is roughly equivalent to:
 
 ```python
 parser = ArgumentParser()
