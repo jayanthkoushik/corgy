@@ -17,16 +17,15 @@ class OutputFileType(FileType):
     """`argparse.FileType` subclass restricted to write mode.
 
     Non-existing files are created (including parent directories).
+
+    Args:
+        mode: `w` (default) or `wb`.
+        **kwargs: passed to `argparse.FileType`.
     """
 
     __metavar__ = "file"
 
     def __init__(self, mode: Literal["w", "wb"] = "w", **kwargs) -> None:
-        """Initialize the `OutputFileType` instance.
-
-        `mode` should be `w` (default) or `wb`. Other arguments are passed to the base
-        class (`argparse.FileType`).
-        """
         if mode not in ("w", "wb"):
             raise ValueError(f"invalid mode for `{type(self)}`: `{mode}`")
         super().__init__(mode, **kwargs)
@@ -46,16 +45,15 @@ class InputFileType(FileType):
     """`argparse.FileType` subclass restricted to read mode.
 
     This class exists primarily to provide a counterpart to `OutputFileType`.
+
+    Args:
+        mode: `r` (default) or `rb`.
+        **kwargs: passed to `argparse.FileType`.
     """
 
     __metavar__ = "file"
 
     def __init__(self, mode: Literal["r", "rb"] = "r", **kwargs) -> None:
-        """Initialize the `InputFileType` instance.
-
-        `mode` should be `r` (default) or `rb`. Other arguments are passed to the base
-        class (`argparse.FileType`).`
-        """
         if mode not in ("r", "rb"):
             raise ValueError(f"invalid mode for `{type(self)}`: `{mode}`")
         super().__init__(mode, **kwargs)
@@ -126,18 +124,17 @@ _T = TypeVar("_T")
 
 
 class SubClassType(Generic[_T]):
-    """Factory for creating a type representing a sub-class of a given class."""
+    """Factory for creating a type representing a sub-class of a given class.
+
+    Args:
+        cls: The base class for the type. When used as the `type` argument to an
+            `argparse.ArgumentParser.add_argument` call, only sub-classes of this
+            class are accepted as valid command-line arguments.
+        allow_base: Whether the base class itself is allowed as a valid value for
+            this type (default: `False`).
+    """
 
     def __init__(self, cls: Type[_T], allow_base: bool = False) -> None:
-        """Initialize a type for sub-classes of `cls`.
-
-        Args:
-            cls: The base class for the type. When used as the `type` argument to an
-                `argparse.ArgumentParser.add_argument` call, only sub-classes of this
-                class are accepted as valid command-line arguments.
-            allow_base: Whether the base class itself is allowed as a valid value for
-                this type (default: `False`).
-        """
         self.cls = cls
         self.allow_base = allow_base
 

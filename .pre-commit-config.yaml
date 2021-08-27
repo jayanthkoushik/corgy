@@ -39,3 +39,11 @@ repos:
     entry: poetry run python -m unittest
     always_run: true
     pass_filenames: false
+  - id: docs
+    name: build docs with sphinx
+    language: system
+    types: [python]
+    include: docs/make.sh
+    exclude: tests/*.py
+    entry: poetry run docs/make.sh
+    pass_filenames: false

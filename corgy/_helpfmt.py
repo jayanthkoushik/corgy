@@ -39,7 +39,7 @@ class _ColorHelper:
         """Initialize the color helper.
 
         Args:
-            use_colors: Whether to enable colored output. If None, coloring is enabled
+            use_colors: Whether to enable colored output. If `None`, coloring is enabled
                 if the `crayons` library is available, and the output is a tty.
             skip_tty_check: Whether to skip checking if the output is a tty. Only used
                 if `use_colors` is None.
@@ -109,28 +109,49 @@ class _CorgyHelpFormatterMeta(type):
 class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     """Formatter class for `argparse` with a cleaner layout, and support for colors.
 
-    To use, pass this class as the `formatter_class` argument to
-    `argparse.ArgumentParser`. To configure the behavior, first set attributes on the
-    class itself.
+    `Corgy.parse_from_cmdline` uses this formatter by default, unless a different
+    `formatter_class` argument is provided. `CorgyHelpFormatter` can also be used
+    independently of `Corgy`. Simply pass it as the `formatter_class` argument to
+    `argparse.ArgumentParser()`:
 
-    By default, colors are enabled if the `crayons` library is available, and the output
-    is a tty. To force colors off, set `use_colors` to `False`. To set the colors used
-    for choices, default values, keywords, metavars, and option strings, set
-    `color_<choices/defaults/keywords/metavars/options>` to a valid `crayons` color
-    name, or `BOLD`. If the color name is all caps, the text will be made bold. `BOLD`
-    will make the text bold without coloring. The defaults are `blue`, `YELLOW`,
-    `green`, `RED`, and `BOLD` respectively.
+    >>> from argparse import ArgumentParser
+    >>> from corgy import CorgyHelpFormatter
+    >>> parser = ArgumentParser(formatter_class=CorgyHelpFormatter)
 
-    To change the width to which the output is wrapped, set `output_width` to the
-    desired value. If `None` (the default), the width is set to the current terminal
-    width. `max_help_position` controls how far to the right the help text can start
-    from. The default value is 40. If `None`, there is no limit.
+    To configure `CorgyHelpFormatter`, you can set a number of attributes on the class.
+    Note that you do not need to create an instance of the class; that is done by the
+    parser itself. The following public attributes are available:
 
-    Extra help (e.g., choices, default values) is shown after the help text, enclosed
-    between `marker_extras_begin` and `marker_extras_end` (defaults `(` and `)`
-    respectively). Choices are enclosed between `marker_choices_begin` and
-    `marker_choices_end` (defaults `[` and `]` respectively), and are separated by
-    `marker_choices_sep` (default `/`).
+    * `enable_colors`: If `None` (the default), colors are enabled if the `crayons`
+      package is available, and the output is a tty. To explicitly enable or disable
+      colors, set to `True` or `False`.
+
+    * `color_<choices/keywords/metavars/defaults/options>`: These attributes control
+      the colors used for various parts of the output (see below for reference).
+      Available colors are `red`, `green`, `yellow`, `blue`, `black`, `magenta`, `cyan`,
+      and `white`. Specifying the name in all caps will make the color bold. You can
+      also use the special value `BOLD` to make the output bold without changing the
+      color. The default value are `blue` for choices, `green` for keywords, `RED` for
+      metavars, `YELLOW` for defaults, and `BOLD` for options. Format::
+
+        -a/--arg str       help for arg ({'a'/'b'/'c'} default: 'a')
+          |      |                          |            |      |
+        options  metavars                 choices      keywords defaults
+
+    * `output_width`: The number of columns used for the output. If `None` (the
+      default), the current terminal width is used.
+
+    * `max_help_position`: How far to the right (from the start), the help string can
+      start from. If `None`, there is no limit. The default is `40`.
+
+    * `marker_extras_<begin/end>`: The strings used to enclose the extra help text
+      (choices, default values etc.). The defaults are `(` and `)`.
+
+    * `marker_choices_<begin/end>`: The strings used to enclose the list of choices for
+      an argument. The defaults are `{` and `}`.
+
+    * `marker_choices_sep`: The string used to separate individual choices in the choice
+      list. The default is `/`.
     """
 
     use_colors: Optional[bool] = None
@@ -492,12 +513,15 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         return fmt
 
     def start_section(self, heading: Optional[str] = None) -> None:
+        #: :meta private:
         if heading == "optional arguments":
             # This was made the default in Python 3.10.
             heading = "options"
         super().start_section(heading)
 
     def add_usage(self, *args, **kwargs) -> None:
+        """Add the usage line to the help message."""
+        #: :meta private:
         # Only add usage if called directly from `ArgumentParser.format_usage`. This
         # prevents usage from being shown inside help output.
         current_frame = inspect.currentframe()
