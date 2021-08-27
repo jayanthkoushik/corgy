@@ -39,7 +39,7 @@ class _CorgyMeta(type):
         if "__annotations__" not in namespace:
             return super().__new__(cls, name, bases, namespace, **kwds)
 
-        namespace["__defaults"] = dict()
+        namespace["__defaults"] = {}
         for var_name, var_ano in namespace["__annotations__"].items():
             # Check for name conflicts.
             if f"_{name.lstrip('_')}__{var_name}" in (
@@ -76,7 +76,7 @@ class _CorgyMeta(type):
             namespace["__slots__"].append(f"__{var_name}")
 
         # Store custom parsers in a dict.
-        namespace["__parsers"] = dict()
+        namespace["__parsers"] = {}
         for _, v in namespace.items():
             if not isinstance(v, _CorgyParser):
                 continue
@@ -109,12 +109,13 @@ class Corgy(metaclass=_CorgyMeta):
     """Base class for collections of variables.
 
     User-defined classes inheriting from `Corgy` should declare their variables as type
-    annotations. For example:
+    annotations.
 
-        class A(Corgy):
-            x: int
-            y: str
-            z: Annotated[str, "this is z"]
+    Example:
+        >>> class A(Corgy):
+                x: int
+                y: str
+                z: Annotated[str, "this is z"]
 
     At runtime, class `A` will have `x`, `y`, and `z` as properties, and will provide
     methods to parse them from command line arguments.
@@ -326,10 +327,10 @@ def corgyparser(
     Args:
         var_name: The argument associated with the decorated parser.
 
-    Usage:
-        @corgyparser("foo")
-        def _foo_parser(arg: str) -> Any:
-            ...
+    Example:
+        >>> @corgyparser("foo")
+            def _foo_parser(arg: str) -> Any:
+                ...
     """
     if not isinstance(var_name, str):
         raise TypeError(
