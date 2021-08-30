@@ -42,8 +42,7 @@ repos:
   - id: docs
     name: build docs with sphinx
     language: system
-    types: [python]
-    include: docs/make.sh
-    exclude: tests/*.py
+    files: ".*\\.py|docs/make\\.sh"
+    exclude: "tests/.*\\.py"
     entry: poetry run docs/make.sh
     pass_filenames: false
