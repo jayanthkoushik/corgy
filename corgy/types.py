@@ -134,6 +134,8 @@ class SubClassType(Generic[_T]):
             this type (default: `False`).
     """
 
+    __metavar__ = "cls"
+
     def __init__(self, cls: Type[_T], allow_base: bool = False) -> None:
         self.cls = cls
         self.allow_base = allow_base
