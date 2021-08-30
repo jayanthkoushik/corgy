@@ -37,7 +37,7 @@ repos:
     name: run unittests
     language: system
     entry: poetry run python -m unittest
-    always_run: true
+    types: [python]
     pass_filenames: false
   - id: docs
     name: build docs with sphinx
