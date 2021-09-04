@@ -184,6 +184,9 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         re.DOTALL,
     )
 
+    # Regex to match the default value added to help by `BooleanOptionalAction`.
+    _pattern_bool_opt_default = re.compile(r" \(default: .*\)")
+
     @staticmethod
     @cache
     def _pattern_placeholder_text(placeholder) -> re.Pattern:
@@ -359,7 +362,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             if isinstance(action, BooleanOptionalAction) and action.help:
                 # BooleanOptionalAction adds the default value to the help text. Remove
                 # it, since we already have it.
-                action.help = action.help.removesuffix(f" (default: {action.default})")
+                action.help = self._pattern_bool_opt_default.sub("", action.help)
 
         # Add qualifier to choice list e.g. `({a/b/c} required)`.
         if choice_list_fmt or arg_qualifier:
