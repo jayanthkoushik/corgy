@@ -2,7 +2,7 @@ import os
 from argparse import ArgumentTypeError
 from io import IOBase
 from pathlib import Path
-from tempfile import NamedTemporaryFile, TemporaryDirectory, TemporaryFile
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
@@ -30,7 +30,7 @@ class TestOutputFileType(TestCase):
     def test_output_file_type_creates_dir_if_not_exists(self):
         with TemporaryDirectory() as tmp_dir:
             fname = os.path.join(tmp_dir, "foo", "bar", "baz.txt")
-            self.type(fname)
+            self.type(fname).close()
             self.assertTrue(os.path.exists(fname))
             self.assertTrue(os.access(fname, os.W_OK))
 
@@ -38,14 +38,14 @@ class TestOutputFileType(TestCase):
         with patch("corgy.types.os.makedirs", MagicMock(side_effect=OSError)):
             with TemporaryDirectory() as tmp_dir:
                 with self.assertRaises(ArgumentTypeError):
-                    self.type(os.path.join(tmp_dir, "foo", "bar", "baz.txt"))
+                    self.type(os.path.join(tmp_dir, "foo", "bar", "baz.txt")).close()
 
     def test_output_file_type_returns_file_object(self):
         with TemporaryDirectory() as tmp_dir:
             fname = os.path.join(tmp_dir, "foo.txt")
-            out_file = self.type(fname)
-            self.assertIsInstance(out_file, IOBase)
-            self.assertEqual(out_file.name, fname)
+            with self.type(fname) as out_file:
+                self.assertIsInstance(out_file, IOBase)
+                self.assertEqual(out_file.name, fname)
 
 
 class TestInputFileType(TestCase):
@@ -66,10 +66,12 @@ class TestInputFileType(TestCase):
                 self.type(os.path.join(tmp_dir, "foo.txt"))
 
     def test_input_file_type_returns_file_object(self):
-        with TemporaryFile() as tmp_file:
-            in_file = self.type(tmp_file.name)
-            self.assertIsInstance(in_file, IOBase)
-            self.assertEqual(in_file.name, tmp_file.name)
+        with TemporaryDirectory() as tmp_dir:
+            fname = os.path.join(tmp_dir, "foo.txt")
+            open(fname, "wb").close()  # pylint: disable=consider-using-with
+            with self.type(fname) as in_file:
+                self.assertIsInstance(in_file, IOBase)
+                self.assertEqual(in_file.name, fname)
 
 
 class TestOutputDirectoryType(TestCase):
