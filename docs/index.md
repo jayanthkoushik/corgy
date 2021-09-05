@@ -218,6 +218,28 @@ Parse an object of the class from command line arguments.
 
 
 
+### corgy.corgyparser(var_name: str)
+Decorate a function as a custom parser for a variable.
+
+To use a custom function for parsing an argument with `Corgy`, use this decorator.
+
+
+* **Parameters**
+
+    **var_name** – The argument associated with the decorated parser.
+
+
+### Example
+
+```python
+>>> class A(Corgy):
+        time: tuple[int, int, int]
+        @corgyparser("time")
+        def parse_time(s):
+            return tuple(map(int, s.split(":")))
+```
+
+
 ### class corgy.CorgyHelpFormatter(prog: str)
 Formatter class for `argparse` with a cleaner layout, and support for colors.
 
@@ -277,34 +299,12 @@ an argument. The defaults are `{` and `}`.
 list. The default is `/`.
 
 
-#### add_usage(\*args, \*\*kwargs)
-Add the usage line to the help message.
-
-
 #### property using_colors(: bool)
 Whether colors are enabled.
 
 
-### corgy.corgyparser(var_name: str)
-Decorate a function as a custom parser for a variable.
-
-To use a custom function for parsing an argument with `Corgy`, use this decorator.
-
-
-* **Parameters**
-
-    **var_name** – The argument associated with the decorated parser.
-
-
-### Example
-
-```python
->>> class A(Corgy):
-        time: tuple[int, int, int]
-        @corgyparser("time")
-        def parse_time(s):
-            return tuple(map(int, s.split(":")))
-```
+#### add_usage(\*args, \*\*kwargs)
+Add the usage line to the help message.
 
 ## Submodules
 
@@ -313,13 +313,20 @@ To use a custom function for parsing an argument with `Corgy`, use this decorato
 Type factories for use with `corgy` (or standalone with `argparse`).
 
 
-### class corgy.types.InputDirectoryType()
-Factory for creating a type representing a directory to be read from.
+### class corgy.types.OutputFileType(mode: str = 'w', \*\*kwargs)
+`argparse.FileType` subclass restricted to write mode.
 
-When an instance of this class is called with a string, the string is interpreted
-as a path to a directory. A check is performed to ensure that the directory exists,
-and that it is readable. If everything succeeds, a `Path` instance is returned,
-otherwise `argparse.ArgumentTypeError` is raised.
+Non-existing files are created (including parent directories).
+
+
+* **Parameters**
+
+    
+    * **mode** – any write mode, e.g., `w` (default), `wb`, `a`, `ab`, etc.
+
+
+    * **\*\*kwargs** – passed to `argparse.FileType`.
+
 
 
 ### class corgy.types.InputFileType(mode: Literal[r, rb] = 'r', \*\*kwargs)
@@ -347,20 +354,13 @@ directory is also checked for write permissions; a `Path` instance is returned i
 everything succeeds, and `argparse.ArgumentTypeError` is raised otherwise.
 
 
-### class corgy.types.OutputFileType(mode: str = 'w', \*\*kwargs)
-`argparse.FileType` subclass restricted to write mode.
+### class corgy.types.InputDirectoryType()
+Factory for creating a type representing a directory to be read from.
 
-Non-existing files are created (including parent directories).
-
-
-* **Parameters**
-
-    
-    * **mode** – any write mode, e.g., `w` (default), `wb`, `a`, `ab`, etc.
-
-
-    * **\*\*kwargs** – passed to `argparse.FileType`.
-
+When an instance of this class is called with a string, the string is interpreted
+as a path to a directory. A check is performed to ensure that the directory exists,
+and that it is readable. If everything succeeds, a `Path` instance is returned,
+otherwise `argparse.ArgumentTypeError` is raised.
 
 
 ### class corgy.types.SubClassType(cls: Type[corgy.types._T], allow_base: bool = False)
