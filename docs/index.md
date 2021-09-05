@@ -331,7 +331,7 @@ This class exists primarily to provide a counterpart to `OutputFileType`.
 * **Parameters**
 
     
-    * **mode** – `r` (default) or `rb`.
+    * **mode** – any read mode, e.g., `r` (default), `rb`, etc.
 
 
     * **\*\*kwargs** – passed to `argparse.FileType`.
@@ -347,7 +347,7 @@ directory is also checked for write permissions; a `Path` instance is returned i
 everything succeeds, and `argparse.ArgumentTypeError` is raised otherwise.
 
 
-### class corgy.types.OutputFileType(mode: Literal[w, wb] = 'w', \*\*kwargs)
+### class corgy.types.OutputFileType(mode: str = 'w', \*\*kwargs)
 `argparse.FileType` subclass restricted to write mode.
 
 Non-existing files are created (including parent directories).
@@ -356,7 +356,7 @@ Non-existing files are created (including parent directories).
 * **Parameters**
 
     
-    * **mode** – `w` (default) or `wb`.
+    * **mode** – any write mode, e.g., `w` (default), `wb`, `a`, `ab`, etc.
 
 
     * **\*\*kwargs** – passed to `argparse.FileType`.

@@ -19,14 +19,14 @@ class OutputFileType(FileType):
     Non-existing files are created (including parent directories).
 
     Args:
-        mode: `w` (default) or `wb`.
+        mode: any write mode, e.g., `w` (default), `wb`, `a`, `ab`, etc.
         **kwargs: passed to `argparse.FileType`.
     """
 
     __metavar__ = "file"
 
-    def __init__(self, mode: Literal["w", "wb"] = "w", **kwargs) -> None:
-        if mode not in ("w", "wb"):
+    def __init__(self, mode: str = "w", **kwargs) -> None:
+        if "x" in mode or ("r" in mode and "+" not in mode):
             raise ValueError(f"invalid mode for `{type(self)}`: `{mode}`")
         super().__init__(mode, **kwargs)
 
@@ -47,14 +47,14 @@ class InputFileType(FileType):
     This class exists primarily to provide a counterpart to `OutputFileType`.
 
     Args:
-        mode: `r` (default) or `rb`.
+        mode: any read mode, e.g., `r` (default), `rb`, etc.
         **kwargs: passed to `argparse.FileType`.
     """
 
     __metavar__ = "file"
 
     def __init__(self, mode: Literal["r", "rb"] = "r", **kwargs) -> None:
-        if mode not in ("r", "rb"):
+        if any(c in mode for c in "wxa+"):
             raise ValueError(f"invalid mode for `{type(self)}`: `{mode}`")
         super().__init__(mode, **kwargs)
 

@@ -19,13 +19,16 @@ class TestOutputFileType(TestCase):
     def setUp(self) -> None:
         self.type = OutputFileType()
 
-    def test_output_file_type_raises_if_mode_not_w(self):
-        OutputFileType("w")
-        OutputFileType("wb")
-        with self.assertRaises(ValueError):
-            OutputFileType("r")
-        with self.assertRaises(ValueError):
-            InputFileType("r+")
+    def test_output_file_type_accepts_write_modes(self):
+        for mode in ["w", "a", "r+", "w+", "wt", "ba", "b+r", "+tw"]:
+            with self.subTest(mode=mode):
+                OutputFileType(mode)
+
+    def test_output_file_type_raises_if_not_write_mode(self):
+        for mode in ["r", "x"]:
+            with self.subTest(mode=mode):
+                with self.assertRaises(ValueError):
+                    OutputFileType(mode)
 
     def test_output_file_type_creates_dir_if_not_exists(self):
         with TemporaryDirectory() as tmp_dir:
@@ -52,13 +55,16 @@ class TestInputFileType(TestCase):
     def setUp(self) -> None:
         self.type = InputFileType()
 
-    def test_input_file_type_raises_if_mode_not_r(self):
-        InputFileType("r")
-        InputFileType("rb")
-        with self.assertRaises(ValueError):
-            InputFileType("w")
-        with self.assertRaises(ValueError):
-            InputFileType("r+")
+    def test_input_file_type_accepts_read_modes(self):
+        for mode in ["r", "rb", "tr"]:
+            with self.subTest(mode=mode):
+                InputFileType(mode)
+
+    def test_input_file_type_raises_if_not_read_mode(self):
+        for mode in ["w", "x", "a", "r+"]:
+            with self.subTest(mode=mode):
+                with self.assertRaises(ValueError):
+                    InputFileType(mode)
 
     def test_input_file_type_raises_if_file_not_exists(self):
         with TemporaryDirectory() as tmp_dir:
