@@ -47,6 +47,7 @@ sphinx-markdown-builder = "^0.5.4"
 
 [tool.black]
 line-length = 88
+skip-magic-trailing-comma = true
 
 [tool.isort]
 line_length = 88

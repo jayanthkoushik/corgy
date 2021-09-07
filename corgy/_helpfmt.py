@@ -545,8 +545,4 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         # noqa: D107
         self._color_helper = _ColorHelper(self.use_colors)
         # Wrapping is managed by this class, so pass `sys.maxsize` to the superclass.
-        super().__init__(
-            prog,
-            max_help_position=sys.maxsize,
-            width=sys.maxsize,
-        )
+        super().__init__(prog, max_help_position=sys.maxsize, width=sys.maxsize)

@@ -96,8 +96,7 @@ class TestCorgyHelpFormatterAPI(TestCase):
             parser.add_argument("-x", "--x", type=int, choices=[1, 2])
 
             self.assertEqual(
-                parser.format_help(),
-                "options:\n  -x|--x int  % ( 1|2 )  optional%\n",
+                parser.format_help(), "options:\n  -x|--x int  % ( 1|2 )  optional%\n"
             )
 
     def test_corgy_help_formatter_handles_changing_output_width(self):
@@ -119,11 +118,7 @@ class TestCorgyHelpFormatterAPI(TestCase):
 
     def test_corgy_help_formatter_handles_changing_max_help_position(self):
         CorgyHelpFormatter.use_colors = False
-        with patch.multiple(
-            CorgyHelpFormatter,
-            output_width=100,
-            max_help_position=10,
-        ):
+        with patch.multiple(CorgyHelpFormatter, output_width=100, max_help_position=10):
             parser = ArgumentParser(formatter_class=CorgyHelpFormatter)
             parser.add_argument(
                 "--x", type=int, metavar="A LONG METAVAR", help="x help"
@@ -307,8 +302,7 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
 
     def test_corgy_help_formatter_handles_help_suppress(self):
         self.assertEqual(
-            self._get_arg_help("--x", type=str, help=SUPPRESS, default="def"),
-            "",
+            self._get_arg_help("--x", type=str, help=SUPPRESS, default="def"), ""
         )
 
     def test_corgy_help_formatter_handles_nargs_plus(self):

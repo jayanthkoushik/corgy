@@ -264,10 +264,7 @@ class Corgy(metaclass=_CorgyMeta):
             name_prefix: Prefix for argument names (default: empty string). Arguments
                 will be named `--<name-prefix>:<var-name>`.
         """
-        for (
-            var_name,
-            var_type,
-        ) in getattr(cls, "__annotations__").items():
+        for (var_name, var_type) in getattr(cls, "__annotations__").items():
             var_dashed_name = var_name.replace("_", "-")
             if name_prefix:
                 var_dashed_name = name_prefix.replace("_", "-") + ":" + var_dashed_name
@@ -378,11 +375,7 @@ class Corgy(metaclass=_CorgyMeta):
                 _kwargs["default"] = _defaults[var_name]
             if var_required:
                 _kwargs["required"] = True
-            parser.add_argument(
-                f"--{var_dashed_name}",
-                type=var_base_type,
-                **_kwargs,
-            )
+            parser.add_argument(f"--{var_dashed_name}", type=var_base_type, **_kwargs)
 
     @classmethod
     def _new_with_args(cls: type[_T], **args) -> _T:
@@ -453,9 +446,7 @@ class _CorgyParser(NamedTuple):
     fparse: Callable[[str], Any]
 
 
-def corgyparser(
-    var_name: str,
-) -> Callable[[Callable[[str], Any]], _CorgyParser]:
+def corgyparser(var_name: str) -> Callable[[Callable[[str], Any]], _CorgyParser]:
     """Decorate a function as a custom parser for a variable.
 
     To use a custom function for parsing an argument with `Corgy`, use this decorator.

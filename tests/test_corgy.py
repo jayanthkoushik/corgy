@@ -516,8 +516,7 @@ class TestCorgyCmdlineParsing(unittest.TestCase):
                 formatter_class=argparse.ArgumentDefaultsHelpFormatter, add_help=False
             )
             corgy._corgy.argparse.ArgumentParser.assert_called_once_with(
-                formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-                add_help=False,
+                formatter_class=argparse.ArgumentDefaultsHelpFormatter, add_help=False
             )
 
     def test_parse_from_cmdline_uses_corgy_help_formatter_if_no_formatter_specified(
