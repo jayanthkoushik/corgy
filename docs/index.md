@@ -15,8 +15,8 @@ using type annotations.
         y: float
 ```
 
-At runtime, class `A` will have `x`, and `y` as properties, so that the class can
-be used similar to Python dataclasses.
+At runtime, class `A` will have `x`, and `y` as properties, so that the class can be
+used similar to Python dataclasses.
 
 ```python
 >>> a = A()
@@ -81,9 +81,9 @@ be required.
 **NOTE**: Default values are not type checked, and can be arbitrary objects.
 
 **Sequence**
-`collections.abc.Sequence` can be used to specify that an argument accepts
-multiple space-separated values. `typing.Sequence` can also be used, but is not
-recommended as it is deprecated since Python 3.9.
+`collections.abc.Sequence` can be used to specify that an argument accepts multiple
+space-separated values. `typing.Sequence` can also be used, but is not recommended
+as it is deprecated since Python 3.9.
 
 There are a few different ways to use `Sequence`, each resulting in different
 conditions for the parser. The simplest case is a plain sequence.
@@ -124,8 +124,8 @@ This amounts to `nargs=3`. All types in the sequence must be the same. So,
 `Sequence[int, str, int]` will result in a `TypeError`.
 
 **Literal**
-`typing.Literal` can be used to specify that an argument takes one of a fixed set
-of values.
+`typing.Literal` can be used to specify that an argument takes one of a fixed set of
+values.
 
 ```python
 >>> x: Literal[0, 1, 2]
@@ -348,18 +348,18 @@ This class exists primarily to provide a counterpart to `OutputFileType`.
 ### class corgy.types.OutputDirectoryType()
 Factory for creating a type representing a directory to be written to.
 
-When an instance of this class is called with a string, the string is interpreted
-as a path to a directory. If the directory does not exist, it is created. The
-directory is also checked for write permissions; a `Path` instance is returned if
-everything succeeds, and `argparse.ArgumentTypeError` is raised otherwise.
+When an instance of this class is called with a string, the string is interpreted as
+a path to a directory. If the directory does not exist, it is created. The directory
+is also checked for write permissions; a `Path` instance is returned if everything
+succeeds, and `argparse.ArgumentTypeError` is raised otherwise.
 
 
 ### class corgy.types.InputDirectoryType()
 Factory for creating a type representing a directory to be read from.
 
-When an instance of this class is called with a string, the string is interpreted
-as a path to a directory. A check is performed to ensure that the directory exists,
-and that it is readable. If everything succeeds, a `Path` instance is returned,
+When an instance of this class is called with a string, the string is interpreted as
+a path to a directory. A check is performed to ensure that the directory exists, and
+that it is readable. If everything succeeds, a `Path` instance is returned,
 otherwise `argparse.ArgumentTypeError` is raised.
 
 
@@ -371,12 +371,12 @@ Factory for creating a type representing a sub-class of a given class.
 
     
     * **cls** – The base class for the type. When used as the `type` argument to an
-    `argparse.ArgumentParser.add_argument` call, only sub-classes of this
-    class are accepted as valid command-line arguments.
+    `argparse.ArgumentParser.add_argument` call, only sub-classes of this class
+    are accepted as valid command-line arguments.
 
 
-    * **allow_base** – Whether the base class itself is allowed as a valid value for
-    this type (default: `False`).
+    * **allow_base** – Whether the base class itself is allowed as a valid value for this
+    type (default: `False`).
 
 
 

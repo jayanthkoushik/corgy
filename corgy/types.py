@@ -62,10 +62,10 @@ class InputFileType(FileType):
 class OutputDirectoryType:
     """Factory for creating a type representing a directory to be written to.
 
-    When an instance of this class is called with a string, the string is interpreted
-    as a path to a directory. If the directory does not exist, it is created. The
-    directory is also checked for write permissions; a `Path` instance is returned if
-    everything succeeds, and `argparse.ArgumentTypeError` is raised otherwise.
+    When an instance of this class is called with a string, the string is interpreted as
+    a path to a directory. If the directory does not exist, it is created. The directory
+    is also checked for write permissions; a `Path` instance is returned if everything
+    succeeds, and `argparse.ArgumentTypeError` is raised otherwise.
     """
 
     __metavar__ = "dir"
@@ -96,9 +96,9 @@ class OutputDirectoryType:
 class InputDirectoryType:
     """Factory for creating a type representing a directory to be read from.
 
-    When an instance of this class is called with a string, the string is interpreted
-    as a path to a directory. A check is performed to ensure that the directory exists,
-    and that it is readable. If everything succeeds, a `Path` instance is returned,
+    When an instance of this class is called with a string, the string is interpreted as
+    a path to a directory. A check is performed to ensure that the directory exists, and
+    that it is readable. If everything succeeds, a `Path` instance is returned,
     otherwise `argparse.ArgumentTypeError` is raised.
     """
 
@@ -128,10 +128,10 @@ class SubClassType(Generic[_T]):
 
     Args:
         cls: The base class for the type. When used as the `type` argument to an
-            `argparse.ArgumentParser.add_argument` call, only sub-classes of this
-            class are accepted as valid command-line arguments.
-        allow_base: Whether the base class itself is allowed as a valid value for
-            this type (default: `False`).
+            `argparse.ArgumentParser.add_argument` call, only sub-classes of this class
+            are accepted as valid command-line arguments.
+        allow_base: Whether the base class itself is allowed as a valid value for this
+            type (default: `False`).
     """
 
     __metavar__ = "cls"

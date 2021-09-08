@@ -115,8 +115,8 @@ class Corgy(metaclass=_CorgyMeta):
             x: int
             y: float
 
-    At runtime, class `A` will have `x`, and `y` as properties, so that the class can
-    be used similar to Python dataclasses.
+    At runtime, class `A` will have `x`, and `y` as properties, so that the class can be
+    used similar to Python dataclasses.
 
     >>> a = A()
     >>> a.x = 1
@@ -170,9 +170,9 @@ class Corgy(metaclass=_CorgyMeta):
         Default values are not type checked, and can be arbitrary objects.
 
     **Sequence**
-    `collections.abc.Sequence` can be used to specify that an argument accepts
-    multiple space-separated values. `typing.Sequence` can also be used, but is not
-    recommended as it is deprecated since Python 3.9.
+    `collections.abc.Sequence` can be used to specify that an argument accepts multiple
+    space-separated values. `typing.Sequence` can also be used, but is not recommended
+    as it is deprecated since Python 3.9.
 
     There are a few different ways to use `Sequence`, each resulting in different
     conditions for the parser. The simplest case is a plain sequence.
@@ -205,8 +205,8 @@ class Corgy(metaclass=_CorgyMeta):
     `Sequence[int, str, int]` will result in a `TypeError`.
 
     **Literal**
-    `typing.Literal` can be used to specify that an argument takes one of a fixed set
-    of values.
+    `typing.Literal` can be used to specify that an argument takes one of a fixed set of
+    values.
 
     >>> x: Literal[0, 1, 2]
 
@@ -326,8 +326,8 @@ class Corgy(metaclass=_CorgyMeta):
                         for _a in var_base_type.__args__[1:]
                     ):
                         raise TypeError(
-                            f"`{var_name}` has unsupported type `{var_base_type}`: "
-                            f"only single-type sequences are supported"
+                            f"`{var_name}` has unsupported type `{var_base_type}`: only"
+                            f"single-type sequences are supported"
                         )
                     var_nargs = len(var_base_type.__args__)
                 var_base_type = var_base_type.__args__[0]
@@ -463,8 +463,8 @@ def corgyparser(var_name: str) -> Callable[[Callable[[str], Any]], _CorgyParser]
     """
     if not isinstance(var_name, str):
         raise TypeError(
-            "corgyparser should be passed the name of an argument: "
-            "decorate using @corgyparser(<argument>)"
+            "corgyparser should be passed the name of an argument: decorate using"
+            "@corgyparser(<argument>)"
         )
 
     def wrapper(var_name: str, fparse: Callable[[str], Any]):

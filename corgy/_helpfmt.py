@@ -99,9 +99,9 @@ class _CorgyHelpFormatterMeta(type):
         # class created using this metaclass.
         if name not in cls.__dict__:
             raise AttributeError(
-                f"cannot set attribute `{name}` on class `{cls.__name__}`: "
-                f"if you are trying to configure an existing attribute, "
-                f"are you sure you're using the correct name?"
+                f"cannot set attribute `{name}` on class `{cls.__name__}`: if you are"
+                f"trying to configure an existing attribute, are you sure you're using"
+                f"the correct name?"
             )
         super().__setattr__(name, value)
 
@@ -468,9 +468,9 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 metavars = (metavars,)
             if isinstance(action.nargs, int) and action.nargs > 0:
                 # When `nargs` is a number, the metavar part is formatted as a space
-                # separated sequence. So, all the metavars are captured together by
-                # the regex (which allows whitespace between placeholders). So, we
-                # combine the metavars into a single string, which will be passed to
+                # separated sequence. So, all the metavars are captured together by the
+                # regex (which allows whitespace between placeholders). So, we combine
+                # the metavars into a single string, which will be passed to
                 # `_sub_non_ws_with_colored_repl` to replace the entire metavar part.
                 metavars = ("".join(metavars),)
 
