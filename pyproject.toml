@@ -43,7 +43,7 @@ isort = "^4.3"
 mypy = ">=0.8"
 pydocstyle = "^6.1.1"
 Sphinx = "^4.1.2"
-sphinx-markdown-builder = "^0.5.4"
+sphinx-markdown-builder = { git = "https://github.com/clayrisser/sphinx-markdown-builder" }
 
 [tool.black]
 line-length = 88

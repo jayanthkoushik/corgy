@@ -109,26 +109,26 @@ class Corgy(metaclass=_CorgyMeta):
     """Base class for collections of variables.
 
     To create a command line interface, subclass `Corgy`, and declare your arguments
-    using type annotations.
+    using type annotations::
 
-    >>> class A(Corgy):
+        class A(Corgy):
             x: int
             y: float
 
     At runtime, class `A` will have `x`, and `y` as properties, so that the class can be
-    used similar to Python dataclasses.
+    used similar to Python dataclasses::
 
-    >>> a = A()
-    >>> a.x = 1
-    >>> a.y = a.x + 1.1
+        a = A()
+        a.x = 1
+        a.y = a.x + 1.1
 
     For command line parsing, `x` and `y` are added to an `ArgumentParser` object with
     the appropriate arguments passed to `ArgumentParser.add_argument`. This is roughly
-    equivalent to:
+    equivalent to::
 
-    >>> parser = ArgumentParser()
-    >>> parser.add_argument("--x", type=int, required=True)
-    >>> parser.add_argument("--y", type=float, required=True)
+        parser = ArgumentParser()
+        parser.add_argument("--x", type=int, required=True)
+        parser.add_argument("--y", type=float, required=True)
 
     `Corgy` does not support positional arguments. All arguments are converted to
     optional arguments, and prefixed with `--`.
@@ -137,9 +137,9 @@ class Corgy(metaclass=_CorgyMeta):
     the argument is parsed.
 
     **Annotated**:
-    `typing.Annotated` can be used to add a help message.
+    `typing.Annotated` can be used to add a help message::
 
-    >>> x: Annotated[int, "help for x"]
+        x: Annotated[int, "help for x"]
 
     `Annotated` can accept multiple arguments, but only the first two are used by
     `Corgy`. The first argument is the type, and the second is the help message.
@@ -147,17 +147,17 @@ class Corgy(metaclass=_CorgyMeta):
     should be part of the type.
 
     **Optional**:
-    `typing.Optional` can be used to mark an argument as optional.
+    `typing.Optional` can be used to mark an argument as optional::
 
-    >>> x: Optional[int]
+        x: Optional[int]
 
-    Another way to mark an argument as optional is to provide a default value.
+    Another way to mark an argument as optional is to provide a default value::
 
-    >>> x: int = 0
+        x: int = 0
 
-    Default values can be used in conjunction with `Optional`.
+    Default values can be used in conjunction with `Optional`::
 
-    >>> x: Optional[int] = 0
+        x: Optional[int] = 0
 
     Note that the last two examples are not equivalent, since the type of `x` is
     `Optional[int]` in the last example, so it is allowed to be `None`.
@@ -175,63 +175,66 @@ class Corgy(metaclass=_CorgyMeta):
     as it is deprecated since Python 3.9.
 
     There are a few different ways to use `Sequence`, each resulting in different
-    conditions for the parser. The simplest case is a plain sequence.
+    conditions for the parser. The simplest case is a plain sequence::
 
-    >>> x: Sequence[int]
+        x: Sequence[int]
 
     This represents a (possibly empty) sequence, and corresponds to the following call
-    to `ArgumentParser.add_argument`.
+    to `ArgumentParser.add_argument`::
 
-    >>> parser.add_argument("--x", type=int, nargs="*", required=True)
+        parser.add_argument("--x", type=int, nargs="*", required=True)
 
     Note that since the argument is required, parsing an empty list will still require
     `--x` in the command line. After parsing, `x` will be a `list`. To denote an
     optional sequence, use `Optional[Sequence[...]]`.
 
-    To specify that a sequence must be non-empty, use:
+    To specify that a sequence must be non-empty, use::
 
-    >>> x: Sequence[int, ...]
+        x: Sequence[int, ...]
 
     This will result in `nargs` being set to `+` in the call to
     `ArgumentParser.add_argument`. Using this syntax **requires**
     `collections.abc.Sequence`, since `typing.Sequence` does not accept `...` as an
     argument.
 
-    Finally, you can specify a fixed length sequence.
+    Finally, you can specify a fixed length sequence::
 
-    >>> x: Sequence[int, int, int]
+        x: Sequence[int, int, int]
 
     This amounts to `nargs=3`. All types in the sequence must be the same. So,
     `Sequence[int, str, int]` will result in a `TypeError`.
 
     **Literal**
     `typing.Literal` can be used to specify that an argument takes one of a fixed set of
-    values.
+    values::
 
-    >>> x: Literal[0, 1, 2]
+        x: Literal[0, 1, 2]
 
     The provided values are passed to the `choices` argument of
     `ArgumentParser.add_argument`. All values must be of the same type, which will be
     inferred from the type of the first value.
 
-    `Literal` itself can be used as a type, for instance inside a `Sequence`.
+    `Literal` itself can be used as a type, for instance inside a `Sequence`::
 
-    >>> x: Sequence[Literal[0, 1, 2], Literal[0, 1, 2]]
+        x: Sequence[Literal[0, 1, 2], Literal[0, 1, 2]]
 
     This is a sequence of length 2, where each element is either 0, 1, or 2.
 
     **Bool**
     `bool` types (when not in a sequence) are converted to
-    `argparse.BooleanOptionalAction`.
+    `argparse.BooleanOptionalAction`::
 
-    >>> class A(Corgy):
+        class A(Corgy):
             arg: bool
 
-    >>> parser = ArgumentParser()
-    >>> A.add_to_parser(parser)
-    >>> parser.print_help()
+        parser = ArgumentParser()
+        A.add_to_parser(parser)
+        parser.print_help()
 
     Output:
+
+    .. code-block:: text
+
         usage: -c [-h] --arg | --no-arg
 
         optional arguments:
@@ -239,13 +242,13 @@ class Corgy(metaclass=_CorgyMeta):
         --arg, --no-arg
 
     Finally, `Corgy` classes can themselves be used as a type, to represent a group of
-    arguments.
+    arguments::
 
-    >>> class A(Corgy):
+        class A(Corgy):
             x: int
             y: float
 
-    >>> class B(Corgy):
+        class B(Corgy):
             x: int
             grp: Annotated[A, "a group"]
 
@@ -454,12 +457,13 @@ def corgyparser(var_name: str) -> Callable[[Callable[[str], Any]], _CorgyParser]
     Args:
         var_name: The argument associated with the decorated parser.
 
-    Example:
-        >>> class A(Corgy):
-                time: tuple[int, int, int]
-                @corgyparser("time")
-                def parse_time(s):
-                    return tuple(map(int, s.split(":")))
+    Example::
+
+        class A(Corgy):
+            time: tuple[int, int, int]
+            @corgyparser("time")
+            def parse_time(s):
+                return tuple(map(int, s.split(":")))
     """
     if not isinstance(var_name, str):
         raise TypeError(

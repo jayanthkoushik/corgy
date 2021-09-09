@@ -112,11 +112,11 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     `Corgy.parse_from_cmdline` uses this formatter by default, unless a different
     `formatter_class` argument is provided. `CorgyHelpFormatter` can also be used
     independently of `Corgy`. Simply pass it as the `formatter_class` argument to
-    `argparse.ArgumentParser()`:
+    `argparse.ArgumentParser()`::
 
-    >>> from argparse import ArgumentParser
-    >>> from corgy import CorgyHelpFormatter
-    >>> parser = ArgumentParser(formatter_class=CorgyHelpFormatter)
+        from argparse import ArgumentParser
+        from corgy import CorgyHelpFormatter
+        parser = ArgumentParser(formatter_class=CorgyHelpFormatter)
 
     To configure `CorgyHelpFormatter`, you can set a number of attributes on the class.
     Note that you do not need to create an instance of the class; that is done by the
@@ -132,11 +132,14 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
       and `white`. Specifying the name in all caps will make the color bold. You can
       also use the special value `BOLD` to make the output bold without changing the
       color. The default value are `blue` for choices, `green` for keywords, `RED` for
-      metavars, `YELLOW` for defaults, and `BOLD` for options. Format::
+      metavars, `YELLOW` for defaults, and `BOLD` for options. Format:
 
-        -a/--arg str       help for arg ({'a'/'b'/'c'} default: 'a')
-          |      |                          |            |      |
-        options  metavars                 choices      keywords defaults
+      .. code-block:: text
+         :dedent: 1
+
+              -a/--arg str       help for arg ({'a'/'b'/'c'} default: 'a')
+                |      |                          |            |      |
+              options  metavars                 choices      keywords defaults
 
     * `output_width`: The number of columns used for the output. If `None` (the
       default), the current terminal width is used.

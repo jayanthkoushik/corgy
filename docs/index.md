@@ -3,25 +3,25 @@
 Corgy package for elegant command line parsing.
 
 
-### class corgy.Corgy()
+### _class_ corgy.Corgy()
 Base class for collections of variables.
 
 To create a command line interface, subclass `Corgy`, and declare your arguments
-using type annotations.
+using type annotations:
 
 ```python
->>> class A(Corgy):
-        x: int
-        y: float
+class A(Corgy):
+    x: int
+    y: float
 ```
 
 At runtime, class `A` will have `x`, and `y` as properties, so that the class can be
-used similar to Python dataclasses.
+used similar to Python dataclasses:
 
 ```python
->>> a = A()
->>> a.x = 1
->>> a.y = a.x + 1.1
+a = A()
+a.x = 1
+a.y = a.x + 1.1
 ```
 
 For command line parsing, `x` and `y` are added to an `ArgumentParser` object with
@@ -29,9 +29,9 @@ the appropriate arguments passed to `ArgumentParser.add_argument`. This is rough
 equivalent to:
 
 ```python
->>> parser = ArgumentParser()
->>> parser.add_argument("--x", type=int, required=True)
->>> parser.add_argument("--y", type=float, required=True)
+parser = ArgumentParser()
+parser.add_argument("--x", type=int, required=True)
+parser.add_argument("--y", type=float, required=True)
 ```
 
 `Corgy` does not support positional arguments. All arguments are converted to
@@ -41,10 +41,10 @@ optional arguments, and prefixed with `--`.
 the argument is parsed.
 
 **Annotated**:
-`typing.Annotated` can be used to add a help message.
+`typing.Annotated` can be used to add a help message:
 
 ```python
->>> x: Annotated[int, "help for x"]
+x: Annotated[int, "help for x"]
 ```
 
 `Annotated` can accept multiple arguments, but only the first two are used by
@@ -53,22 +53,22 @@ the argument is parsed.
 should be part of the type.
 
 **Optional**:
-`typing.Optional` can be used to mark an argument as optional.
+`typing.Optional` can be used to mark an argument as optional:
 
 ```python
->>> x: Optional[int]
+x: Optional[int]
 ```
 
-Another way to mark an argument as optional is to provide a default value.
+Another way to mark an argument as optional is to provide a default value:
 
 ```python
->>> x: int = 0
+x: int = 0
 ```
 
-Default values can be used in conjunction with `Optional`.
+Default values can be used in conjunction with `Optional`:
 
 ```python
->>> x: Optional[int] = 0
+x: Optional[int] = 0
 ```
 
 Note that the last two examples are not equivalent, since the type of `x` is
@@ -86,17 +86,17 @@ space-separated values. `typing.Sequence` can also be used, but is not recommend
 as it is deprecated since Python 3.9.
 
 There are a few different ways to use `Sequence`, each resulting in different
-conditions for the parser. The simplest case is a plain sequence.
+conditions for the parser. The simplest case is a plain sequence:
 
 ```python
->>> x: Sequence[int]
+x: Sequence[int]
 ```
 
 This represents a (possibly empty) sequence, and corresponds to the following call
-to `ArgumentParser.add_argument`.
+to `ArgumentParser.add_argument`:
 
 ```python
->>> parser.add_argument("--x", type=int, nargs="*", required=True)
+parser.add_argument("--x", type=int, nargs="*", required=True)
 ```
 
 Note that since the argument is required, parsing an empty list will still require
@@ -106,7 +106,7 @@ optional sequence, use `Optional[Sequence[...]]`.
 To specify that a sequence must be non-empty, use:
 
 ```python
->>> x: Sequence[int, ...]
+x: Sequence[int, ...]
 ```
 
 This will result in `nargs` being set to `+` in the call to
@@ -114,10 +114,10 @@ This will result in `nargs` being set to `+` in the call to
 `collections.abc.Sequence`, since `typing.Sequence` does not accept `...` as an
 argument.
 
-Finally, you can specify a fixed length sequence.
+Finally, you can specify a fixed length sequence:
 
 ```python
->>> x: Sequence[int, int, int]
+x: Sequence[int, int, int]
 ```
 
 This amounts to `nargs=3`. All types in the sequence must be the same. So,
@@ -125,60 +125,58 @@ This amounts to `nargs=3`. All types in the sequence must be the same. So,
 
 **Literal**
 `typing.Literal` can be used to specify that an argument takes one of a fixed set of
-values.
+values:
 
 ```python
->>> x: Literal[0, 1, 2]
+x: Literal[0, 1, 2]
 ```
 
 The provided values are passed to the `choices` argument of
 `ArgumentParser.add_argument`. All values must be of the same type, which will be
 inferred from the type of the first value.
 
-`Literal` itself can be used as a type, for instance inside a `Sequence`.
+`Literal` itself can be used as a type, for instance inside a `Sequence`:
 
 ```python
->>> x: Sequence[Literal[0, 1, 2], Literal[0, 1, 2]]
+x: Sequence[Literal[0, 1, 2], Literal[0, 1, 2]]
 ```
 
 This is a sequence of length 2, where each element is either 0, 1, or 2.
 
 **Bool**
 `bool` types (when not in a sequence) are converted to
-`argparse.BooleanOptionalAction`.
+`argparse.BooleanOptionalAction`:
 
 ```python
->>> class A(Corgy):
-        arg: bool
-```
+class A(Corgy):
+    arg: bool
 
-```python
->>> parser = ArgumentParser()
->>> A.add_to_parser(parser)
->>> parser.print_help()
+parser = ArgumentParser()
+A.add_to_parser(parser)
+parser.print_help()
 ```
 
 Output:
 
-    usage: -c [-h] –arg | –no-arg
+```text
+usage: -c [-h] --arg | --no-arg
 
-    optional arguments:
-    -h, –help       show this help message and exit
-    –arg, –no-arg
-
-Finally, `Corgy` classes can themselves be used as a type, to represent a group of
-arguments.
-
-```python
->>> class A(Corgy):
-        x: int
-        y: float
+optional arguments:
+-h, --help       show this help message and exit
+--arg, --no-arg
 ```
 
+Finally, `Corgy` classes can themselves be used as a type, to represent a group of
+arguments:
+
 ```python
->>> class B(Corgy):
-        x: int
-        grp: Annotated[A, "a group"]
+class A(Corgy):
+    x: int
+    y: float
+
+class B(Corgy):
+    x: int
+    grp: Annotated[A, "a group"]
 ```
 
 Group arguments are added to the command line parser with the group argument name
@@ -187,7 +185,7 @@ prefixed. In the above example, parsing using `B` would result in the arguments
 instance of `A`, and set as the `grp` property of `B`.
 
 
-#### classmethod add_args_to_parser(parser: argparse.ArgumentParser, name_prefix: str = '')
+#### _classmethod_ add_args_to_parser(parser: argparse.ArgumentParser, name_prefix: str = '')
 Add arguments for this class to the given parser.
 
 
@@ -202,7 +200,7 @@ Add arguments for this class to the given parser.
 
 
 
-#### classmethod parse_from_cmdline(parser: Optional[argparse.ArgumentParser] = None, \*\*parser_args)
+#### _classmethod_ parse_from_cmdline(parser: Optional[argparse.ArgumentParser] = None, \*\*parser_args)
 Parse an object of the class from command line arguments.
 
 
@@ -229,18 +227,18 @@ To use a custom function for parsing an argument with `Corgy`, use this decorato
     **var_name** – The argument associated with the decorated parser.
 
 
-### Example
+Example:
 
 ```python
->>> class A(Corgy):
-        time: tuple[int, int, int]
-        @corgyparser("time")
-        def parse_time(s):
-            return tuple(map(int, s.split(":")))
+class A(Corgy):
+    time: tuple[int, int, int]
+    @corgyparser("time")
+    def parse_time(s):
+        return tuple(map(int, s.split(":")))
 ```
 
 
-### class corgy.CorgyHelpFormatter(prog: str)
+### _class_ corgy.CorgyHelpFormatter(prog: str)
 Formatter class for `argparse` with a cleaner layout, and support for colors.
 
 `Corgy.parse_from_cmdline` uses this formatter by default, unless a different
@@ -249,9 +247,9 @@ independently of `Corgy`. Simply pass it as the `formatter_class` argument to
 `argparse.ArgumentParser()`:
 
 ```python
->>> from argparse import ArgumentParser
->>> from corgy import CorgyHelpFormatter
->>> parser = ArgumentParser(formatter_class=CorgyHelpFormatter)
+from argparse import ArgumentParser
+from corgy import CorgyHelpFormatter
+parser = ArgumentParser(formatter_class=CorgyHelpFormatter)
 ```
 
 To configure `CorgyHelpFormatter`, you can set a number of attributes on the class.
@@ -272,10 +270,10 @@ also use the special value `BOLD` to make the output bold without changing the
 color. The default value are `blue` for choices, `green` for keywords, `RED` for
 metavars, `YELLOW` for defaults, and `BOLD` for options. Format:
 
-```
--a/--arg str       help for arg ({'a'/'b'/'c'} default: 'a')
-  |      |                          |            |      |
-options  metavars                 choices      keywords defaults
+```text
+    -a/--arg str       help for arg ({'a'/'b'/'c'} default: 'a')
+      |      |                          |            |      |
+    options  metavars                 choices      keywords defaults
 ```
 
 
@@ -299,7 +297,7 @@ an argument. The defaults are `{` and `}`.
 list. The default is `/`.
 
 
-#### property using_colors(: bool)
+#### _property_ using_colors(_: boo_ )
 Whether colors are enabled.
 
 
@@ -313,7 +311,7 @@ Add the usage line to the help message.
 Type factories for use with `corgy` (or standalone with `argparse`).
 
 
-### class corgy.types.OutputFileType(mode: str = 'w', \*\*kwargs)
+### _class_ corgy.types.OutputFileType(mode: str = 'w', \*\*kwargs)
 `argparse.FileType` subclass restricted to write mode.
 
 Non-existing files are created (including parent directories).
@@ -329,7 +327,7 @@ Non-existing files are created (including parent directories).
 
 
 
-### class corgy.types.InputFileType(mode: Literal[r, rb] = 'r', \*\*kwargs)
+### _class_ corgy.types.InputFileType(mode: Literal[r, rb] = 'r', \*\*kwargs)
 `argparse.FileType` subclass restricted to read mode.
 
 This class exists primarily to provide a counterpart to `OutputFileType`.
@@ -345,7 +343,7 @@ This class exists primarily to provide a counterpart to `OutputFileType`.
 
 
 
-### class corgy.types.OutputDirectoryType()
+### _class_ corgy.types.OutputDirectoryType()
 Factory for creating a type representing a directory to be written to.
 
 When an instance of this class is called with a string, the string is interpreted as
@@ -354,7 +352,7 @@ is also checked for write permissions; a `Path` instance is returned if everythi
 succeeds, and `argparse.ArgumentTypeError` is raised otherwise.
 
 
-### class corgy.types.InputDirectoryType()
+### _class_ corgy.types.InputDirectoryType()
 Factory for creating a type representing a directory to be read from.
 
 When an instance of this class is called with a string, the string is interpreted as
@@ -363,7 +361,7 @@ that it is readable. If everything succeeds, a `Path` instance is returned,
 otherwise `argparse.ArgumentTypeError` is raised.
 
 
-### class corgy.types.SubClassType(cls: Type[corgy.types._T], allow_base: bool = False)
+### _class_ corgy.types.SubClassType(cls: Type[corgy.types._T], allow_base: bool = False)
 Factory for creating a type representing a sub-class of a given class.
 
 
