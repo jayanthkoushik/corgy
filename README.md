@@ -53,4 +53,4 @@ pip install corgy[colors]
 ```
 
 # Usage
-For documentation on usage, refer to [docs/index.md](docs/index.md).
+For documentation on usage, refer to docs/index.md.
