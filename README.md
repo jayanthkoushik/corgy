@@ -37,7 +37,7 @@ args = parser.parse_args()
 
 Corgy also provides support for more informative help messages from `argparse`, and colorized output:
 
-![Sample output from Corgy](example.svg)
+![Sample output from Corgy](https://raw.githubusercontent.com/jayanthkoushik/corgy/7c0b4c0ad48fb8c1838e3d31a96fdd094fd01ac6/example.svg)
 
 # Install
 **`corgy` requires Python 3.9+**. It is available on PyPI, and can be installed with pip:
