@@ -9,5 +9,6 @@
     "postbump": "poetry version $(< .version); echo __version__ = \\\"$(< .version)\\\" > corgy/_version.py",
     "precommit": "git add pyproject.toml corgy/_version.py"
   },
-  "commit-all": true
+  "commit-all": true,
+  "header": "# Changelog\n"
 }
