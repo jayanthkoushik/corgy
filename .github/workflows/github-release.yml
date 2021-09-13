@@ -1,4 +1,4 @@
-name: Add wheel to GitHub release
+name: Create GitHub release with changelog and wheel
 
 on:
   push:
@@ -13,6 +13,11 @@ jobs:
     - uses: actions/setup-python@master
       with:
         python-version: 3.9
+    - uses: actions/setup-node@master
+    - name: Run conventional-github-releaser
+      run: npx conventional-github-releaser -p angular
+      env:
+        CONVENTIONAL_GITHUB_RELEASER_TOKEN: ${{ secrets.CONVENTIONAL_GITHUB_RELEASER_TOKEN }}
     - name: Install poetry
       run: curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
     - name: Build dist
