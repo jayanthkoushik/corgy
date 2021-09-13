@@ -1,4 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env sh
+# Usage: ./release.sh <standard-version args>
+# This script is used to publish a new version of the project.
+# 'standard-version' or 'npx' must be installed.
 
 set -e
 
@@ -11,7 +14,15 @@ else
   exit 1
 fi
 
+echo "DRY RUN"
+echo "======="
+echo ""
+
 eval ${cmd} --dry-run ${@:1}
+
+echo ""
+echo "======="
+echo ""
 
 while true; do
 	read -p "Publish this release? " yn
