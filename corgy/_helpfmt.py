@@ -241,8 +241,10 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 custom_metavar := getattr(action.type, "__metavar__", None)
             ) is not None:
                 return custom_metavar
-            return getattr(action.type, "__name__")
-
+            try:
+                return getattr(action.type, "__name__")
+            except AttributeError:
+                return str(action.type)
         return ""
 
     def _format_action_invocation(self, action: Action) -> str:
