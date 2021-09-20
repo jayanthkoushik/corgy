@@ -303,12 +303,14 @@ class Corgy(metaclass=_CorgyMeta):
                 var_required = var_name not in getattr(cls, "__defaults")
 
             # Check if the variable has a custom parser.
-            if var_name in (_parsers := getattr(cls, "__parsers")):
+            _parsers = getattr(cls, "__parsers")
+            if var_name in _parsers:
                 var_fparse = _parsers[var_name]
                 _kwargs: dict[str, Any] = {}
                 if var_help is not None:
                     _kwargs["help"] = var_help
-                if var_name in (_defaults := getattr(cls, "__defaults")):
+                _defaults = getattr(cls, "__defaults")
+                if var_name in _defaults:
                     _kwargs["default"] = _defaults[var_name]
                 if var_required:
                     _kwargs["required"] = True
@@ -382,7 +384,8 @@ class Corgy(metaclass=_CorgyMeta):
                 _kwargs["action"] = var_action
             if var_choices is not None:
                 _kwargs["choices"] = var_choices
-            if var_name in (_defaults := getattr(cls, "__defaults")):
+            _defaults = getattr(cls, "__defaults")
+            if var_name in _defaults:
                 _kwargs["default"] = _defaults[var_name]
             if var_required:
                 _kwargs["required"] = True

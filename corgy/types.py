@@ -31,7 +31,8 @@ class OutputFileType(FileType):
         super().__init__(mode, **kwargs)
 
     def __call__(self, string: str) -> IO:
-        if not os.path.exists(filedir := os.path.dirname(string)):
+        filedir = os.path.dirname(string)
+        if not os.path.exists(filedir):
             try:
                 os.makedirs(filedir)
             except OSError as e:

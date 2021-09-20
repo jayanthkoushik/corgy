@@ -81,7 +81,8 @@ class _ColorHelper:
             colorama = getattr(self.crayons, "colorama")
             return colorama.Style.BRIGHT + text + colorama.Style.NORMAL
 
-        if use_bold := color.isupper():
+        use_bold = color.isupper()
+        if use_bold:
             color = color.lower()
         try:
             f_color = getattr(self.crayons, color)
@@ -227,7 +228,10 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                     repl_piece = text_piece
                 else:
                     repl_piece = ""
-                    while (rem_len := len(text_piece) - len(repl_piece)) > 0:
+                    while True:
+                        rem_len = len(text_piece) - len(repl_piece)
+                        if rem_len <= 0:
+                            break
                         repl_piece += replacement[repl_idx : repl_idx + rem_len]
                         repl_idx += rem_len
                         if repl_idx >= len(replacement):
@@ -242,9 +246,8 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         metavar for that type. Other types use the name of type itself.
         """
         if action.type:
-            if (
-                custom_metavar := getattr(action.type, "__metavar__", None)
-            ) is not None:
+            custom_metavar = getattr(action.type, "__metavar__", None)
+            if custom_metavar is not None:
                 return custom_metavar
             try:
                 return getattr(action.type, "__name__")
@@ -462,9 +465,8 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             fmt = pattern.sub(f_sub, fmt)
 
         # Colorize the option strings.
-        if (
-            option_strings := getattr(action, "_corgy_option_strings", None)
-        ) is not None:
+        option_strings = getattr(action, "_corgy_option_strings", None)
+        if option_strings is not None:
             pattern = self._pattern_placeholder_text(_PLACEHOLDER_OPTION_STR)
             for option_string in option_strings:
                 f_sub = partial(
@@ -475,7 +477,8 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 fmt = pattern.sub(f_sub, fmt, count=1)
 
         # Colorize the metavars.
-        if (metavars := getattr(action, "_corgy_metavar", None)) is not None:
+        metavars = getattr(action, "_corgy_metavar", None)
+        if metavars is not None:
             if isinstance(metavars, str):
                 metavars = (metavars,)
             if isinstance(action.nargs, int) and action.nargs > 0:
@@ -489,7 +492,10 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             pattern = self._pattern_placeholder_text(_PLACEHOLDER_METAVAR)
 
             metavar_iter = iter(cycle(metavars))
-            while match := pattern.search(fmt):
+            while True:
+                match = pattern.search(fmt)
+                if not match:
+                    break
                 metavar = next(metavar_iter)
                 match_sub = self._sub_non_ws_with_colored_repl(
                     match, metavar, self.color_metavars
