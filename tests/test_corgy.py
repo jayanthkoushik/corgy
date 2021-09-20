@@ -1,23 +1,35 @@
 import argparse
+import sys
 import unittest
 from collections.abc import Sequence
-from typing import Annotated, Literal, Optional, Sequence as SequenceType
+from contextlib import suppress
+from typing import Literal, Optional, Sequence as SequenceType
+from unittest import skipIf
 from unittest.mock import MagicMock, patch
 
 import corgy
-from corgy import Corgy, CorgyHelpFormatter, corgyparser
+
+with suppress(ImportError):
+    from typing import Annotated
+
+    from corgy import Corgy, CorgyHelpFormatter, corgyparser
 
 
+@skipIf(sys.version_info < (3, 9), "Python 3.9 or higher needed")
 class TestCorgyMeta(unittest.TestCase):
     """Tests to check validity of classes inheriting from Corgy."""
 
     # pylint: disable=unused-variable, unused-private-member
 
-    class _CorgyCls(Corgy):
-        x1: Sequence[int]
-        x2: Annotated[int, "x2 docstr"]
-        x3: int = 3
-        x4: Annotated[str, "x4 docstr"] = "4"
+    @classmethod
+    def setUpClass(cls):
+        class _CorgyCls(Corgy):
+            x1: Sequence[int]
+            x2: Annotated[int, "x2 docstr"]
+            x3: int = 3
+            x4: Annotated[str, "x4 docstr"] = "4"
+
+        cls._CorgyCls = _CorgyCls
 
     def test_corgy_cls_has_properties_from_type_hints(self):
         for _x in ["x1", "x2", "x3", "x4"]:
@@ -131,6 +143,7 @@ class TestCorgyMeta(unittest.TestCase):
         self.assertEqual(str(c), "_CorgyCls(x1=<unset>, x2=<unset>, x3=3, x4='4')")
 
 
+@skipIf(sys.version_info < (3, 9), "Python 3.9 or higher needed")
 class TestCorgyAddArgsToParser(unittest.TestCase):
     """Tests to check that Corgy properly adds arguments to ArgumentParsers."""
 
@@ -415,6 +428,7 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
         )
 
 
+@skipIf(sys.version_info < (3, 9), "Python 3.9 or higher needed")
 class TestCorgyCmdlineParsing(unittest.TestCase):
     """Test cases to check parsing of command line arguments by Corgy."""
 
@@ -535,6 +549,7 @@ class TestCorgyCmdlineParsing(unittest.TestCase):
             )
 
 
+@skipIf(sys.version_info < (3, 9), "Python 3.9 or higher needed")
 class TestCorgyCustomParsers(unittest.TestCase):
     """Tests to check usage of the @corgyparser decorator."""
 

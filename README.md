@@ -40,11 +40,13 @@ Corgy also provides support for more informative help messages from `argparse`, 
 ![Sample output from Corgy](https://raw.githubusercontent.com/jayanthkoushik/corgy/7c0b4c0ad48fb8c1838e3d31a96fdd094fd01ac6/example.svg)
 
 # Install
-**`corgy` requires Python 3.9+**. It is available on PyPI, and can be installed with pip:
+`corgy` is available on PyPI, and can be installed with pip:
 
 ```bash
 pip install corgy
 ```
+
+**The full `corgy` package requires Python 3.9 or higher**. Python 3.7 and 3.8 are also supported, but only have access to `CorgyHelpFormatter`, and `corgy.types`.
 
 Support for colorized output requires the `crayons` package, also available on PyPI. You can pull it as a dependency for `corgy` by installing with the `colors` extra:
 

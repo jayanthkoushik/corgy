@@ -1,9 +1,14 @@
-from argparse import ArgumentParser, BooleanOptionalAction, SUPPRESS
+import sys
+from argparse import ArgumentParser, SUPPRESS
+from contextlib import suppress
 from unittest import skipIf, TestCase
 from unittest.mock import Mock, patch
 
 from corgy import CorgyHelpFormatter
 from corgy._helpfmt import _ColorHelper
+
+with suppress(ImportError):
+    from argparse import BooleanOptionalAction
 
 _COLOR_HELPER = _ColorHelper(skip_tty_check=True)
 _CRAYONS = _COLOR_HELPER.crayons
@@ -291,6 +296,7 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
                 f"  {_O('+++x')} {_M('str')}  x help ({_K('optional')})",
             )
 
+    @skipIf(sys.version_info < (3, 9), "`BooleanOptionalAction` not available")
     def test_corgy_help_formatter_handles_boolean_optional_action(self):
         self.assertEqual(
             self._get_arg_help(

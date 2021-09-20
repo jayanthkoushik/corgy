@@ -6,6 +6,8 @@ Corgy package for elegant command line parsing.
 ### _class_ corgy.Corgy()
 Base class for collections of variables.
 
+**NOTE**: This class is only available on Python 3.9 or higher.
+
 To create a command line interface, subclass `Corgy`, and declare your arguments
 using type annotations:
 
@@ -219,6 +221,8 @@ Parse an object of the class from command line arguments.
 ### corgy.corgyparser(var_name: str)
 Decorate a function as a custom parser for a variable.
 
+**NOTE**: This decorator is only available on Python 3.9 or higher.
+
 To use a custom function for parsing an argument with `Corgy`, use this decorator.
 
 
@@ -327,7 +331,7 @@ Non-existing files are created (including parent directories).
 
 
 
-### _class_ corgy.types.InputFileType(mode: Literal[r, rb] = 'r', \*\*kwargs)
+### _class_ corgy.types.InputFileType(mode: Literal['r', 'rb'] = 'r', \*\*kwargs)
 `argparse.FileType` subclass restricted to read mode.
 
 This class exists primarily to provide a counterpart to `OutputFileType`.

@@ -1,3 +1,8 @@
+import sys
+
+if sys.version_info < (3, 9):
+    raise ImportError("`corgy._corgy` requires Python 3.9 or higher.")
+
 import argparse
 from collections import defaultdict
 from collections.abc import Sequence as AbstractSequence
@@ -107,6 +112,9 @@ class _CorgyMeta(type):
 
 class Corgy(metaclass=_CorgyMeta):
     """Base class for collections of variables.
+
+    Note:
+        This class is only available on Python 3.9 or higher.
 
     To create a command line interface, subclass `Corgy`, and declare your arguments
     using type annotations::
@@ -451,6 +459,9 @@ class _CorgyParser(NamedTuple):
 
 def corgyparser(var_name: str) -> Callable[[Callable[[str], Any]], _CorgyParser]:
     """Decorate a function as a custom parser for a variable.
+
+    Note:
+        This decorator is only available on Python 3.9 or higher.
 
     To use a custom function for parsing an argument with `Corgy`, use this decorator.
 

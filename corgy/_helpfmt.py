@@ -4,12 +4,16 @@ import re
 import shutil
 import sys
 import textwrap
-from argparse import Action, BooleanOptionalAction, HelpFormatter, PARSER, SUPPRESS
-from functools import cache, partial
+from argparse import Action, HelpFormatter, PARSER, SUPPRESS
+from contextlib import suppress
+from functools import lru_cache, partial
 from itertools import cycle
 from types import ModuleType
 from typing import Any, Optional, Sequence, Union
 from unittest.mock import patch
+
+with suppress(ImportError):
+    from argparse import BooleanOptionalAction
 
 __all__ = ["CorgyHelpFormatter"]
 
@@ -188,10 +192,11 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     )
 
     # Regex to match the default value added to help by `BooleanOptionalAction`.
-    _pattern_bool_opt_default = re.compile(r" \(default: .*\)")
+    if sys.version_info >= (3, 9):
+        _pattern_bool_opt_default = re.compile(r" \(default: .*\)")
 
     @staticmethod
-    @cache
+    @lru_cache(maxsize=None)
     def _pattern_placeholder_text(placeholder) -> re.Pattern:
         """Regex to match text which has been replaced by the given placeholder."""
         # Due to wrapping, the placeholder text may be split across multiple lines. So,
@@ -364,10 +369,12 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 )
             else:
                 arg_qualifier = f"default: {action.default!r}"
-            if isinstance(action, BooleanOptionalAction) and action.help:
-                # BooleanOptionalAction adds the default value to the help text. Remove
-                # it, since we already have it.
-                action.help = self._pattern_bool_opt_default.sub("", action.help)
+
+            if sys.version_info >= (3, 9):
+                if isinstance(action, BooleanOptionalAction) and action.help:
+                    # BooleanOptionalAction adds the default value to the help text.
+                    # Remove it, since we already have it.
+                    action.help = self._pattern_bool_opt_default.sub("", action.help)
 
         # Add qualifier to choice list e.g. `({a/b/c} required)`.
         if choice_list_fmt or arg_qualifier:
