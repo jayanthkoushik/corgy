@@ -2,7 +2,7 @@
 import os
 from argparse import ArgumentTypeError, FileType
 from pathlib import Path
-from typing import Generic, IO, Iterator, Literal, Type, TypeVar
+from typing import Generic, IO, Iterator, Type, TypeVar
 
 __all__ = [
     "OutputFileType",
@@ -54,7 +54,7 @@ class InputFileType(FileType):
 
     __metavar__ = "file"
 
-    def __init__(self, mode: Literal["r", "rb"] = "r", **kwargs) -> None:
+    def __init__(self, mode: str = "r", **kwargs) -> None:
         if any(c in mode for c in "wxa+"):
             raise ValueError(f"invalid mode for `{type(self)}`: `{mode}`")
         super().__init__(mode, **kwargs)

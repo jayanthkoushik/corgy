@@ -331,7 +331,7 @@ Non-existing files are created (including parent directories).
 
 
 
-### _class_ corgy.types.InputFileType(mode: Literal['r', 'rb'] = 'r', \*\*kwargs)
+### _class_ corgy.types.InputFileType(mode: str = 'r', \*\*kwargs)
 `argparse.FileType` subclass restricted to read mode.
 
 This class exists primarily to provide a counterpart to `OutputFileType`.
