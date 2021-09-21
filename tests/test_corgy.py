@@ -1,17 +1,14 @@
-import argparse
 import sys
 import unittest
-from collections.abc import Sequence
-from contextlib import suppress
-from typing import Literal, Optional, Sequence as SequenceType
 from unittest import skipIf
-from unittest.mock import MagicMock, patch
 
-import corgy
+if sys.version_info >= (3, 9):
+    import argparse
+    from collections.abc import Sequence
+    from typing import Annotated, Literal, Optional, Sequence as SequenceType
+    from unittest.mock import MagicMock, patch
 
-with suppress(ImportError):
-    from typing import Annotated
-
+    import corgy
     from corgy import Corgy, CorgyHelpFormatter, corgyparser
 
 

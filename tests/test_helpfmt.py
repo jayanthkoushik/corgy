@@ -1,13 +1,12 @@
 import sys
 from argparse import ArgumentParser, SUPPRESS
-from contextlib import suppress
 from unittest import skipIf, TestCase
 from unittest.mock import Mock, patch
 
 from corgy import CorgyHelpFormatter
 from corgy._helpfmt import _ColorHelper
 
-with suppress(ImportError):
+if sys.version_info >= (3, 9):
     from argparse import BooleanOptionalAction
 
 _COLOR_HELPER = _ColorHelper(skip_tty_check=True)

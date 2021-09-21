@@ -5,14 +5,13 @@ import shutil
 import sys
 import textwrap
 from argparse import Action, HelpFormatter, PARSER, SUPPRESS
-from contextlib import suppress
 from functools import lru_cache, partial
 from itertools import cycle
 from types import ModuleType
 from typing import Any, Optional, Sequence, Union
 from unittest.mock import patch
 
-with suppress(ImportError):
+if sys.version_info >= (3, 9):
     from argparse import BooleanOptionalAction
 
 __all__ = ["CorgyHelpFormatter"]
