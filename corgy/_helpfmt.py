@@ -8,7 +8,7 @@ from argparse import Action, HelpFormatter, PARSER, SUPPRESS
 from functools import lru_cache, partial
 from itertools import cycle
 from types import ModuleType
-from typing import Any, Optional, Sequence, Union
+from typing import Any, Optional, Sequence, Tuple, Union
 from unittest.mock import patch
 
 if sys.version_info >= (3, 9):
@@ -293,7 +293,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
 
         if self.using_colors:
             # Create a placeholder for the metavar, and store it in the action.
-            placeholder_metavar: Union[str, tuple[str, ...]]
+            placeholder_metavar: Union[str, Tuple[str, ...]]
             if isinstance(metavar, tuple):
                 placeholder_metavar = tuple(
                     _PLACEHOLDER_METAVAR * len(metavar_i) for metavar_i in metavar
