@@ -304,10 +304,6 @@ list. The default is `/`.
 #### _property_ using_colors(_: boo_ )
 Whether colors are enabled.
 
-
-#### add_usage(\*args, \*\*kwargs)
-Add the usage line to the help message.
-
 ## Submodules
 
 ## corgy.types module

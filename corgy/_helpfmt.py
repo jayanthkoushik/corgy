@@ -8,7 +8,7 @@ from argparse import Action, HelpFormatter, PARSER, SUPPRESS
 from functools import lru_cache, partial
 from itertools import cycle
 from types import ModuleType
-from typing import Any, Optional, Sequence, Tuple, Union
+from typing import Optional, Sequence, Tuple, Union
 from unittest.mock import patch
 
 if sys.version_info >= (3, 9):
@@ -34,19 +34,18 @@ _PLACEHOLDER_KWD_REQUIRED = "\ufdda"
 
 
 class _ColorHelper:
-    """Wrapper around `crayons` library to colorize text."""
+    """Wrapper around `crayons` library to colorize text.
+
+    Args:
+        use_colors: Whether to enable colored output. If `None`, coloring is enabled
+            if the `crayons` library is available, and the output is a tty.
+        skip_tty_check: Whether to skip checking if the output is a tty. Only used if
+            `use_colors` is None.
+    """
 
     crayons: Optional[ModuleType]
 
     def __init__(self, use_colors: Optional[bool] = None, skip_tty_check: bool = False):
-        """Initialize the color helper.
-
-        Args:
-            use_colors: Whether to enable colored output. If `None`, coloring is enabled
-                if the `crayons` library is available, and the output is a tty.
-            skip_tty_check: Whether to skip checking if the output is a tty. Only used
-                if `use_colors` is None.
-        """
         if use_colors:
             try:
                 self.crayons = importlib.import_module("crayons")
@@ -97,8 +96,7 @@ class _CorgyHelpFormatterMeta(type):
     user errors caused by using an incorrect name to configure the class.
     """
 
-    def __setattr__(cls, name: str, value: Any):
-        """Prevent new attributes from being set."""
+    def __setattr__(cls, name, value):
         # Note: `__setattr__` applies to instances of the class, so `cls` here is a
         # class created using this metaclass.
         if name not in cls.__dict__:
@@ -197,7 +195,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
 
     @staticmethod
     @lru_cache(maxsize=None)
-    def _pattern_placeholder_text(placeholder) -> re.Pattern:
+    def _pattern_placeholder_text(placeholder: str) -> re.Pattern:
         """Regex to match text which has been replaced by the given placeholder."""
         # Due to wrapping, the placeholder text may be split across multiple lines. So,
         # the regex looks for a continuous string of `placeholder` or whitespace.
@@ -532,15 +530,14 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
 
         return fmt
 
-    def start_section(self, heading: Optional[str] = None) -> None:
+    def start_section(self, heading: Optional[str] = None):
         #: :meta private:
         if heading == "optional arguments":
             # This was made the default in Python 3.10.
             heading = "options"
         super().start_section(heading)
 
-    def add_usage(self, *args, **kwargs) -> None:
-        """Add the usage line to the help message."""
+    def add_usage(self, *args, **kwargs):
         #: :meta private:
         # Only add usage if called directly from `ArgumentParser.format_usage`. This
         # prevents usage from being shown inside help output.
@@ -552,13 +549,13 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             return
         super().add_usage(*args, **kwargs)
 
-    def _format_usage(self, usage, actions, groups, prefix) -> str:
+    def _format_usage(self, usage: str, *args, **kwargs) -> str:
         if usage is None:
             # Don't build usage from options, if it is not specified.
             return ""
-        return super()._format_usage(usage, actions, groups, prefix)
+        return super()._format_usage(usage, *args, **kwargs)
 
-    def __init__(self, prog: str) -> None:
+    def __init__(self, prog: str):
         # noqa: D107
         self._color_helper = _ColorHelper(self.use_colors)
         # Wrapping is managed by this class, so pass `sys.maxsize` to the superclass.

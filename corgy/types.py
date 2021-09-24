@@ -26,7 +26,7 @@ class OutputFileType(FileType):
 
     __metavar__ = "file"
 
-    def __init__(self, mode: str = "w", **kwargs) -> None:
+    def __init__(self, mode: str = "w", **kwargs):
         if "x" in mode or ("r" in mode and "+" not in mode):
             raise ValueError(f"invalid mode for `{type(self)}`: `{mode}`")
         super().__init__(mode, **kwargs)
@@ -55,7 +55,7 @@ class InputFileType(FileType):
 
     __metavar__ = "file"
 
-    def __init__(self, mode: str = "r", **kwargs) -> None:
+    def __init__(self, mode: str = "r", **kwargs):
         if any(c in mode for c in "wxa+"):
             raise ValueError(f"invalid mode for `{type(self)}`: `{mode}`")
         super().__init__(mode, **kwargs)
@@ -138,7 +138,7 @@ class SubClassType(Generic[_T]):
 
     __metavar__ = "cls"
 
-    def __init__(self, cls: Type[_T], allow_base: bool = False) -> None:
+    def __init__(self, cls: Type[_T], allow_base: bool = False):
         self.cls = cls
         self.allow_base = allow_base
 
@@ -190,7 +190,7 @@ class KeyValueType(Generic[_KT, _VT]):
     class _MetavarDescriptor:
         """Descriptor to allow `__metavar__` to use the proper separator."""
 
-        def __get__(self, instance, _):
+        def __get__(self, instance: "KeyValueType", _) -> str:
             if instance is None:
                 return "KEY=VAL"
             return f"KEY{instance.separator}VAL"

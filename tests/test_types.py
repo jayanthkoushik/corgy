@@ -17,7 +17,7 @@ from corgy.types import (
 
 
 class TestOutputFileType(TestCase):
-    def setUp(self) -> None:
+    def setUp(self):
         self.type = OutputFileType()
 
     def test_output_file_type_accepts_write_modes(self):
@@ -53,7 +53,7 @@ class TestOutputFileType(TestCase):
 
 
 class TestInputFileType(TestCase):
-    def setUp(self) -> None:
+    def setUp(self):
         self.type = InputFileType()
 
     def test_input_file_type_accepts_read_modes(self):
@@ -82,7 +82,7 @@ class TestInputFileType(TestCase):
 
 
 class TestOutputDirectoryType(TestCase):
-    def setUp(self) -> None:
+    def setUp(self):
         self.type = OutputDirectoryType()
 
     def test_output_directory_type_creates_dir_if_not_exists(self):
@@ -123,7 +123,7 @@ class TestOutputDirectoryType(TestCase):
 
 
 class TestInputDirectoryType(TestCase):
-    def setUp(self) -> None:
+    def setUp(self):
         self.type = InputDirectoryType()
 
     def test_input_directory_type_raises_if_dir_not_exists(self):

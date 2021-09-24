@@ -414,7 +414,7 @@ class Corgy(metaclass=_CorgyMeta):
 
         return obj
 
-    def __str__(self) -> str:
+    def __str__(self):
         s = f"{self.__class__.__name__}("
         for i, arg_name in enumerate(getattr(self.__class__, "__annotations__")):
             if i != 0:
@@ -485,7 +485,7 @@ def corgyparser(var_name: str) -> Callable[[Callable[[str], Any]], _CorgyParser]
             "@corgyparser(<argument>)"
         )
 
-    def wrapper(var_name: str, fparse: Callable[[str], Any]):
+    def wrapper(var_name, fparse):
         return _CorgyParser(var_name, fparse)
 
     return partial(wrapper, var_name)
