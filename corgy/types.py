@@ -179,10 +179,8 @@ class KeyValueType(Generic[_KT, _VT]):
     after being cast to provided types.
 
     Args:
-        key_type (positional only): Callable that convert a string to the key type
-            (default: `str`).
-        val_type (positional only): Callable that convert a string to the value type
-            (default: `str`).
+        key_type: Callable that convert a string to the key type (default: `str`).
+        val_type: Callable that convert a string to the value type (default: `str`)
         separator (keyword only): The separator to use when splitting the input string
             (default: `=`).
     """
@@ -209,13 +207,12 @@ class KeyValueType(Generic[_KT, _VT]):
         cls,
         key_type: Callable[[str], _KT],
         val_type: Callable[[str], _VT],
-        /,
         *,
         separator: str = "=",
     ) -> "KeyValueType[_KT, _VT]":
         ...
 
-    def __new__(cls, key_type=str, val_type=str, /, *, separator="="):
+    def __new__(cls, key_type=str, val_type=str, *, separator="="):
         obj = super().__new__(cls)
         obj.key_type = key_type
         obj.val_type = val_type
