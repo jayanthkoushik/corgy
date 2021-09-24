@@ -190,8 +190,8 @@ class KeyValueType(Generic[_KT, _VT]):
 
         def __get__(self, instance: "KeyValueType", _) -> str:
             if instance is None:
-                return "KEY=VAL"
-            return f"KEY{instance.separator}VAL"
+                return "key=val"
+            return f"key{instance.separator}val"
 
     __metavar__ = _MetavarDescriptor()
     key_type: Callable[[str], _KT]

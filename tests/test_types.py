@@ -233,12 +233,12 @@ class TestKeyValuePairType(TestCase):
 
     def test_key_value_type_default_metavar(self):
         type_ = KeyValueType()
-        self.assertEqual(type_.__metavar__, "KEY=VAL")
+        self.assertEqual(type_.__metavar__, "key=val")
 
     def test_key_value_type_handles_custom_separator(self):
         type_ = KeyValueType(separator=";")
         self.assertTupleEqual(type_("foo;bar"), ("foo", "bar"))
-        self.assertEqual(type_.__metavar__, "KEY;VAL")
+        self.assertEqual(type_.__metavar__, "key;val")
 
     def test_key_value_type_handles_multiple_separators(self):
         type_ = KeyValueType()
