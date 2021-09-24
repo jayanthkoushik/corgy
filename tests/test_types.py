@@ -9,6 +9,7 @@ from unittest.mock import MagicMock, patch
 from corgy.types import (
     InputDirectoryType,
     InputFileType,
+    KeyValueType,
     OutputDirectoryType,
     OutputFileType,
     SubClassType,
@@ -219,3 +220,42 @@ class TestSubClassType(TestCase):
 
         type_ = SubClassType(A)
         self.assertSetEqual(set(type_.choices()), {"B", "C", "D", "F"})
+
+
+class TestKeyValuePairType(TestCase):
+    def test_key_value_type_splits_input_string(self):
+        type_ = KeyValueType()
+        self.assertTupleEqual(type_("foo=bar"), ("foo", "bar"))
+
+    def test_key_value_type_handles_type_casting(self):
+        type_ = KeyValueType(int, float)
+        self.assertTupleEqual(type_("1=2.0"), (1, 2.0))
+
+    def test_key_value_type_default_metavar(self):
+        type_ = KeyValueType()
+        self.assertEqual(type_.__metavar__, "KEY=VAL")
+
+    def test_key_value_type_handles_custom_separator(self):
+        type_ = KeyValueType(separator=";")
+        self.assertTupleEqual(type_("foo;bar"), ("foo", "bar"))
+        self.assertEqual(type_.__metavar__, "KEY;VAL")
+
+    def test_key_value_type_handles_multiple_separators(self):
+        type_ = KeyValueType()
+        self.assertTupleEqual(type_("foo=bar=baz"), ("foo", "bar=baz"))
+
+    def test_key_value_type_raises_if_no_separator(self):
+        type_ = KeyValueType()
+        with self.assertRaises(ArgumentTypeError):
+            type_("foo")
+
+    def test_key_value_type_raises_if_bad_type(self):
+        type_ = KeyValueType(int, int)
+        with self.assertRaises(ArgumentTypeError):
+            type_("foo=1")
+        with self.assertRaises(ArgumentTypeError):
+            type_("1=foo")
+
+    def test_key_value_type_handles_function_as_type(self):
+        type_ = KeyValueType(str, lambda x: x.upper())
+        self.assertTupleEqual(type_("foo=bar"), ("foo", "BAR"))

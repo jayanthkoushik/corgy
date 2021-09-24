@@ -2,7 +2,7 @@
 import os
 from argparse import ArgumentTypeError, FileType
 from pathlib import Path
-from typing import Generic, IO, Iterator, Type, TypeVar
+from typing import Callable, Generic, IO, Iterator, overload, Tuple, Type, TypeVar
 
 __all__ = [
     "OutputFileType",
@@ -10,6 +10,7 @@ __all__ = [
     "OutputDirectoryType",
     "InputDirectoryType",
     "SubClassType",
+    "KeyValueType",
 ]
 
 
@@ -164,3 +165,76 @@ class SubClassType(Generic[_T]):
             yield self.cls.__name__
         for subclass in self._generate_subclasses(self.cls):
             yield subclass.__name__
+
+
+_KT = TypeVar("_KT")
+_VT = TypeVar("_VT")
+
+
+class KeyValueType(Generic[_KT, _VT]):
+    """Factory for creating a (key, value) pair type.
+
+    When an instance of this class is called with a string of the form `key=value`,
+    the string is split on the first `=` character, and the resulting pair is returned,
+    after being cast to provided types.
+
+    Args:
+        key_type (positional only): Callable that convert a string to the key type
+            (default: `str`).
+        val_type (positional only): Callable that convert a string to the value type
+            (default: `str`).
+        separator (keyword only): The separator to use when splitting the input string
+            (default: `=`).
+    """
+
+    class _MetavarDescriptor:
+        """Descriptor to allow `__metavar__` to use the proper separator."""
+
+        def __get__(self, instance, _):
+            if instance is None:
+                return "KEY=VAL"
+            return f"KEY{instance.separator}VAL"
+
+    __metavar__ = _MetavarDescriptor()
+    key_type: Callable[[str], _KT]
+    val_type: Callable[[str], _VT]
+    separator: str
+
+    @overload
+    def __new__(cls, *, separator: str = "=") -> "KeyValueType[str, str]":
+        ...
+
+    @overload
+    def __new__(
+        cls,
+        key_type: Callable[[str], _KT],
+        val_type: Callable[[str], _VT],
+        /,
+        *,
+        separator: str = "=",
+    ) -> "KeyValueType[_KT, _VT]":
+        ...
+
+    def __new__(cls, key_type=str, val_type=str, /, *, separator="="):
+        obj = super().__new__(cls)
+        obj.key_type = key_type
+        obj.val_type = val_type
+        obj.separator = separator
+        return obj
+
+    def __call__(self, string: str) -> Tuple[_KT, _VT]:
+        try:
+            key_s, val_s = string.split(self.separator, 1)
+        except ValueError:
+            raise ArgumentTypeError(
+                f"expected value of form `{self.__metavar__}`: {string}"
+            ) from None
+        try:
+            key = getattr(self, "key_type")(key_s)
+        except Exception as e:
+            raise ArgumentTypeError(f"could not convert key: {e}") from None
+        try:
+            val = getattr(self, "val_type")(val_s)
+        except Exception as e:
+            raise ArgumentTypeError(f"could not convert value: {e}") from None
+        return key, val

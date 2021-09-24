@@ -384,3 +384,28 @@ Factory for creating a type representing a sub-class of a given class.
 
 #### choices()
 Return an iterator over names of valid choices for this type.
+
+
+### _class_ corgy.types.KeyValueType(\*, separator: str = "'='")
+
+### _class_ corgy.types.KeyValueType(key_type: Callable[[str], corgy.types._KT], val_type: Callable[[str], corgy.types._VT], /, \*, separator: str = "'='")
+Factory for creating a (key, value) pair type.
+
+When an instance of this class is called with a string of the form `key=value`,
+the string is split on the first `=` character, and the resulting pair is returned,
+after being cast to provided types.
+
+
+* **Parameters**
+
+    
+    * **key_type** (*positional only*) – Callable that convert a string to the key type
+    (default: `str`).
+
+
+    * **val_type** (*positional only*) – Callable that convert a string to the value type
+    (default: `str`).
+
+
+    * **separator** (*keyword only*) – The separator to use when splitting the input string
+    (default: `=`).
