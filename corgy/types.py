@@ -1,6 +1,7 @@
 """Type factories for use with `corgy` (or standalone with `argparse`)."""
 import os
 from argparse import ArgumentTypeError, FileType
+from operator import attrgetter
 from pathlib import Path
 from typing import Callable, Generic, IO, Iterator, overload, Tuple, Type, TypeVar
 
@@ -148,8 +149,7 @@ class SubClassType(Generic[_T]):
             if subclass is base_cls:
                 continue
             yield subclass
-            for subsubclass in SubClassType._generate_subclasses(subclass):
-                yield subsubclass
+            yield from SubClassType._generate_subclasses(subclass)
 
     def __call__(self, string: str) -> Type[_T]:
         if self.cls.__name__ == string and self.allow_base:
@@ -163,8 +163,7 @@ class SubClassType(Generic[_T]):
         """Return an iterator over names of valid choices for this type."""
         if self.allow_base:
             yield self.cls.__name__
-        for subclass in self._generate_subclasses(self.cls):
-            yield subclass.__name__
+        yield from map(attrgetter("__name__"), self._generate_subclasses(self.cls))
 
 
 _KT = TypeVar("_KT")
