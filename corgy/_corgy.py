@@ -36,7 +36,8 @@ class _CorgyMeta(type):
 
     Modifies class creation by parsing type annotations, and creating properties for
     each annotated variable. Default values and custom parsers are stored in the
-    `__defaults` and `__parsers` attributes.
+    `__defaults` and `__parsers` attributes. Custom flags, if present, are stored in
+    the `__flags` attribute.
     """
 
     def __new__(cls, name, bases, namespace, **kwds):
@@ -45,6 +46,7 @@ class _CorgyMeta(type):
             return super().__new__(cls, name, bases, namespace, **kwds)
 
         namespace["__defaults"] = {}
+        namespace["__flags"] = {}
         for var_name, var_ano in namespace["__annotations__"].items():
             # Check for name conflicts.
             if f"_{name.lstrip('_')}__{var_name}" in (
@@ -54,9 +56,8 @@ class _CorgyMeta(type):
                     f"cannot use name `__{var_name}`: internal clash with `{var_name}`"
                 )
 
-            # Check if help string is present, i.e.,
-            # `<var_name>: Annotated[<var_type>, (<var_help>,...)]`.
             if hasattr(var_ano, "__origin__") and hasattr(var_ano, "__metadata__"):
+                # `<var_name>: Annotated[<var_type>, <var_help>, [<var_flags>]]`.
                 var_type = var_ano.__origin__
                 var_help = var_ano.__metadata__[0]
                 if not isinstance(var_help, str):
@@ -64,11 +65,32 @@ class _CorgyMeta(type):
                         f"incorrect help string annotation for variable `{var_name}`: "
                         f"expected str"
                     )
+
+                if len(var_ano.__metadata__) > 1:
+                    if isinstance(var_type, cls):
+                        # Custom flags are not allowed for groups.
+                        raise TypeError(
+                            f"invalid annotation for group `{var_name}`: "
+                            f"custom flags not allowed for groups"
+                        )
+
+                    var_flags = var_ano.__metadata__[1]
+                    if not isinstance(var_flags, list) or not var_flags:
+                        raise TypeError(
+                            f"incorrect custom flags for variable `{var_name}`: "
+                            f"expected non-empty list"
+                        )
+                else:
+                    var_flags = None
             else:
                 # `<var_name>: <var_type>`.
                 var_type = var_ano
                 var_help = None
+                var_flags = None
             namespace["__annotations__"][var_name] = var_type
+
+            if var_flags is not None:
+                namespace["__flags"][var_name] = var_flags
 
             # Add default value to dedicated dict.
             with suppress(KeyError):
@@ -138,9 +160,6 @@ class Corgy(metaclass=_CorgyMeta):
         parser.add_argument("--x", type=int, required=True)
         parser.add_argument("--y", type=float, required=True)
 
-    `Corgy` does not support positional arguments. All arguments are converted to
-    optional arguments, and prefixed with `--`.
-
     `Corgy` recognizes a number of special annotations, which are used to control how
     the argument is parsed.
 
@@ -149,10 +168,19 @@ class Corgy(metaclass=_CorgyMeta):
 
         x: Annotated[int, "help for x"]
 
-    `Annotated` can accept multiple arguments, but only the first two are used by
-    `Corgy`. The first argument is the type, and the second is the help message.
-    `Annotated` should always be the outermost annotation; other special annotations
-    should be part of the type.
+    Annotations can also be used to modify the flags used to parse the argument. By
+    default, the argument name is used, prefixed with `--`, and `_` replaced by `-`.
+    This syntax can also be used to create a positional argument, by specifying a flag
+    without any leading `-`::
+
+        x: Annotated[int, "help for x"]  # flag is `--x`
+        x: Annotated[int, "help for x", ["-x", "--ex"]]  # flags are `-x/--ex`
+        x: Annotated[int, "help for x", ["x"]]  # positional argument
+
+    `Annotated` can accept multiple arguments, but only the first three are used by
+    `Corgy`. The first argument is the type, the second is the help message, and the
+    third is a list of flags. `Annotated` should always be the outermost annotation;
+    other special annotations should be part of the type.
 
     **Optional**:
     `typing.Optional` can be used to mark an argument as optional::
@@ -263,7 +291,9 @@ class Corgy(metaclass=_CorgyMeta):
     Group arguments are added to the command line parser with the group argument name
     prefixed. In the above example, parsing using `B` would result in the arguments
     `--x`, `--grp:x`, and `--grp:y`. `grp:x` and `grp:y` will be converted to an
-    instance of `A`, and set as the `grp` property of `B`.
+    instance of `A`, and set as the `grp` property of `B`. Note that groups will ignore
+    any custom flags when computing the prefix; elements within the group will use
+    custom flags, but because they are prefixed with `--`, they will not be positional.
     """
 
     @classmethod
@@ -273,19 +303,29 @@ class Corgy(metaclass=_CorgyMeta):
         Args:
             parser: `argparse.ArgumentParser` instance.
             name_prefix: Prefix for argument names (default: empty string). Arguments
-                will be named `--<name-prefix>:<var-name>`.
+                will be named `--<name-prefix>:<var-name>`. If custom flags are present,
+                `--<name-prefix>:<flag>` will be used instead (one for each flag).
         """
         for (var_name, var_type) in getattr(cls, "__annotations__").items():
-            var_dashed_name = var_name.replace("_", "-")
+            var_flags = getattr(cls, "__flags").get(
+                var_name, [f"--{var_name.replace('_', '-')}"]
+            )
             if name_prefix:
-                var_dashed_name = name_prefix.replace("_", "-") + ":" + var_dashed_name
+                var_flags = [
+                    f"--{name_prefix.replace('_', '-')}:{flag.lstrip('-')}"
+                    for flag in var_flags
+                ]
+                var_dest = f"{name_prefix}:{var_name}"
+            else:
+                var_dest = var_name
+
             var_help = getattr(cls, var_name).__doc__  # doc is stored in the property
 
             # Check if the variable is also `Corgy` type.
             if type(var_type) is type(cls):
                 # Create an argument group using `<var_type>`.
-                grp_parser = parser.add_argument_group(var_dashed_name, var_help)
-                var_type.add_args_to_parser(grp_parser, var_dashed_name)
+                grp_parser = parser.add_argument_group(var_dest, var_help)
+                var_type.add_args_to_parser(grp_parser, var_dest)
                 continue
 
             # Check if the variable is optional. `<var_name>: Optional[<var_type>]` is
@@ -307,6 +347,9 @@ class Corgy(metaclass=_CorgyMeta):
             if var_name in _parsers:
                 var_fparse = _parsers[var_name]
                 _kwargs: dict[str, Any] = {}
+                if var_name in getattr(cls, "__flags"):
+                    # Explicitly pass `dest` if custom flags are present.
+                    _kwargs["dest"] = var_dest
                 if var_help is not None:
                     _kwargs["help"] = var_help
                 _defaults = getattr(cls, "__defaults")
@@ -314,7 +357,7 @@ class Corgy(metaclass=_CorgyMeta):
                     _kwargs["default"] = _defaults[var_name]
                 if var_required:
                     _kwargs["required"] = True
-                parser.add_argument(f"--{var_dashed_name}", type=var_fparse, **_kwargs)
+                parser.add_argument(*var_flags, type=var_fparse, **_kwargs)
                 continue
 
             # Check if the variable is a sequence.
@@ -376,6 +419,8 @@ class Corgy(metaclass=_CorgyMeta):
 
             # Add the variable to the parser.
             _kwargs = {}
+            if var_name in getattr(cls, "__flags"):
+                _kwargs["dest"] = var_dest
             if var_help is not None:
                 _kwargs["help"] = var_help
             if var_nargs is not None:
@@ -389,7 +434,7 @@ class Corgy(metaclass=_CorgyMeta):
                 _kwargs["default"] = _defaults[var_name]
             if var_required:
                 _kwargs["required"] = True
-            parser.add_argument(f"--{var_dashed_name}", type=var_base_type, **_kwargs)
+            parser.add_argument(*var_flags, type=var_base_type, **_kwargs)
 
     @classmethod
     def _new_with_args(cls: type[_T], **args) -> _T:

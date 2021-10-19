@@ -36,9 +36,6 @@ parser.add_argument("--x", type=int, required=True)
 parser.add_argument("--y", type=float, required=True)
 ```
 
-`Corgy` does not support positional arguments. All arguments are converted to
-optional arguments, and prefixed with `--`.
-
 `Corgy` recognizes a number of special annotations, which are used to control how
 the argument is parsed.
 
@@ -49,10 +46,21 @@ the argument is parsed.
 x: Annotated[int, "help for x"]
 ```
 
-`Annotated` can accept multiple arguments, but only the first two are used by
-`Corgy`. The first argument is the type, and the second is the help message.
-`Annotated` should always be the outermost annotation; other special annotations
-should be part of the type.
+Annotations can also be used to modify the flags used to parse the argument. By
+default, the argument name is used, prefixed with `--`, and `_` replaced by `-`.
+This syntax can also be used to create a positional argument, by specifying a flag
+without any leading `-`:
+
+```python
+x: Annotated[int, "help for x"]  # flag is `--x`
+x: Annotated[int, "help for x", ["-x", "--ex"]]  # flags are `-x/--ex`
+x: Annotated[int, "help for x", ["x"]]  # positional argument
+```
+
+`Annotated` can accept multiple arguments, but only the first three are used by
+`Corgy`. The first argument is the type, the second is the help message, and the
+third is a list of flags. `Annotated` should always be the outermost annotation;
+other special annotations should be part of the type.
 
 **Optional**:
 `typing.Optional` can be used to mark an argument as optional:
@@ -184,7 +192,9 @@ class B(Corgy):
 Group arguments are added to the command line parser with the group argument name
 prefixed. In the above example, parsing using `B` would result in the arguments
 `--x`, `--grp:x`, and `--grp:y`. `grp:x` and `grp:y` will be converted to an
-instance of `A`, and set as the `grp` property of `B`.
+instance of `A`, and set as the `grp` property of `B`. Note that groups will ignore
+any custom flags when computing the prefix; elements within the group will use
+custom flags, but because they are prefixed with `--`, they will not be positional.
 
 
 #### _classmethod_ add_args_to_parser(parser: argparse.ArgumentParser, name_prefix: str = '')
@@ -198,7 +208,8 @@ Add arguments for this class to the given parser.
 
 
     * **name_prefix** – Prefix for argument names (default: empty string). Arguments
-    will be named `--<name-prefix>:<var-name>`.
+    will be named `--<name-prefix>:<var-name>`. If custom flags are present,
+    `--<name-prefix>:<flag>` will be used instead (one for each flag).
 
 
 

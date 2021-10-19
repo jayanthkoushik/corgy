@@ -82,11 +82,26 @@ class TestCorgyMeta(unittest.TestCase):
             class C1(Corgy):
                 x: Annotated[int, 1]
 
-    def test_corgy_cls_uses_only_first_element_of_variadic_annotation(self):
-        class C2(Corgy):
-            x: Annotated[int, "x help", "blah", 3]
+    def test_corgy_cls_raises_if_flags_not_list(self):
+        with self.assertRaises(TypeError):
 
-        self.assertEqual(C2.x.__doc__, "x help")
+            class C1(Corgy):
+                x: Annotated[int, "x help", "x"]
+
+    def test_corgy_cls_raises_if_flag_list_empty(self):
+        with self.assertRaises(TypeError):
+
+            class C1(Corgy):
+                x: Annotated[int, "x help", []]
+
+    def test_add_args_raises_if_custom_flags_on_group(self):
+        with self.assertRaises(TypeError):
+
+            class G(Corgy):
+                x: int
+
+            class C(Corgy):
+                g: Annotated[G, "group G", ["-g", "--grp"]]
 
     def test_corgy_cls_allows_dunder_defaults_as_var_name(self):
         class C(Corgy):
@@ -209,6 +224,30 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
             "--x", type=int, required=True, help="x docstring"
+        )
+
+    def test_add_args_handles_custom_flag(self):
+        class C(Corgy):
+            the_x_arg: Annotated[int, "x help", ["-x", "--the-x", "--the-x-arg"]]
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with(
+            "-x",
+            "--the-x",
+            "--the-x-arg",
+            type=int,
+            required=True,
+            help="x help",
+            dest="the_x_arg",
+        )
+
+    def test_add_args_uses_positional_flag(self):
+        class C(Corgy):
+            the_x_arg: Annotated[int, "x help", ["x"]]
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with(
+            "x", type=int, required=True, help="x help", dest="the_x_arg"
         )
 
     def test_add_args_converts_literal_to_choices(self):
@@ -396,6 +435,29 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
         self.parser.add_argument.assert_called_once_with("--x", type=int, required=True)
         self.parser.add_argument_group.assert_called_once_with("g", None)
 
+    def test_add_args_handles_custom_flags_inside_group(self):
+        class G(Corgy):
+            the_x_arg: Annotated[int, "x help", ["-x", "--the-x", "--the-x-arg"]]
+
+        class C(Corgy):
+            the_grp: G
+
+        grp_parser = MagicMock()
+        self.parser.add_argument_group.return_value = grp_parser
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_not_called()
+        self.parser.add_argument_group.assert_called_once_with("the_grp", None)
+        grp_parser.add_argument.assert_called_once_with(
+            "--the-grp:x",
+            "--the-grp:the-x",
+            "--the-grp:the-x-arg",
+            type=int,
+            help="x help",
+            required=True,
+            dest="the_grp:the_x_arg",
+        )
+
     def test_add_args_infers_correct_base_type_from_complex_type_hint(self):
         class C(Corgy):
             x: Annotated[Optional[Sequence[str]], "x"]
@@ -447,6 +509,19 @@ class TestCorgyCmdlineParsing(unittest.TestCase):
         self.assertEqual(c.y, "2")
         self.assertListEqual(c.z, [3, 4])
 
+    def test_cmdline_args_are_parsed_with_custom_flags(self):
+        class C(Corgy):
+            var: Annotated[int, "x help", ["-x", "--the-x", "--the-x-arg"]]
+
+        for flag in ["-x", "--the-x", "--the-x-arg"]:
+            with self.subTest(flag=flag):
+                self.parser = argparse.ArgumentParser()
+                self.parser.parse_args = lambda: self.orig_parse_args(
+                    self.parser, ["-x", "1"]
+                )
+                c = C.parse_from_cmdline(self.parser)
+                self.assertEqual(c.var, 1)
+
     def test_cmdline_parsing_handles_group_arguments(self):
         class G(Corgy):
             x: int
@@ -487,6 +562,28 @@ class TestCorgyCmdlineParsing(unittest.TestCase):
         self.assertEqual(c.g1.x, 2)
         self.assertEqual(c.g2.x, 3)
         self.assertEqual(c.g2.g.x, 4)
+
+    def test_cmdline_parsing_handles_nested_groups_with_custom_flags(self):
+        class G1(Corgy):
+            var: Annotated[int, "var help", ["-v", "--var"]]
+
+        class G2(Corgy):
+            var: Annotated[int, "var help", ["-v", "--var"]]
+            g: G1
+
+        class C(Corgy):
+            var: Annotated[int, "var help", ["-v", "--var"]]
+            g1: G1
+            g2: G2
+
+        self.parser.parse_args = lambda: self.orig_parse_args(
+            self.parser, ["-v", "1", "--g1:v", "2", "--g2:var", "3", "--g2:g:v", "4"]
+        )
+        c = C.parse_from_cmdline(self.parser)
+        self.assertEqual(c.var, 1)
+        self.assertEqual(c.g1.var, 2)
+        self.assertEqual(c.g2.var, 3)
+        self.assertEqual(c.g2.g.var, 4)
 
     def test_cmdline_parsing_handles_list_base_type(self):
         class C(Corgy):
