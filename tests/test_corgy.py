@@ -82,7 +82,7 @@ class TestCorgyMeta(unittest.TestCase):
             class C1(Corgy):
                 x: Annotated[int, 1]
 
-    def test_corgy_cls_uses_only_frist_element_of_variadic_annotation(self):
+    def test_corgy_cls_uses_only_first_element_of_variadic_annotation(self):
         class C2(Corgy):
             x: Annotated[int, "x help", "blah", 3]
 
