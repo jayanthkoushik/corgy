@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/jayanthkoushik/corgy/compare/v1.4.0...v1.5.0) (2021-10-19)
+
+
+### Features
+
+* allow specifying custom flags in Corgy classes ([6111bca](https://github.com/jayanthkoushik/corgy/commit/6111bca5538e9f2a1175a7897804316a3968988e))
+
 ## [1.4.0](https://github.com/jayanthkoushik/corgy/compare/v1.3.0...v1.4.0) (2021-09-28)
 
 
