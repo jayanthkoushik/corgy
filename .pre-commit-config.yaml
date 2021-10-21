@@ -12,28 +12,28 @@ repos:
 - repo: local
   hooks:
   - id: black
-    name: black
+    name: blacken code
     entry: poetry run black
     language: system
     types: [python]
   - id: isort
-    name: isort
+    name: sort python imports
     entry: poetry run isort
     language: system
     types: [python]
   - id: pylint
-    name: pylint
+    name: lint python files
     entry: poetry run pylint
     language: system
     types: [python]
   - id: mypy
-    name: mypy
+    name: type check python files
     entry: poetry run mypy --ignore-missing-imports .
     language: system
     types: [python]
     pass_filenames: false
   - id: pydocstyle
-    name: pydocstyle
+    name: lint python docstrings
     entry: poetry run pydocstyle
     language: system
     types: [python]
