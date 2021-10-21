@@ -203,7 +203,7 @@ Add arguments for this class to the given parser.
 
 * **Parameters**
 
-    
+
     * **parser** – `argparse.ArgumentParser` instance.
 
 
@@ -219,7 +219,7 @@ Parse an object of the class from command line arguments.
 
 * **Parameters**
 
-    
+
     * **parser** – An instance of `argparse.ArgumentParser` or `None`. If `None`, a new
     instance is created.
 
@@ -330,7 +330,7 @@ Non-existing files are created (including parent directories).
 
 * **Parameters**
 
-    
+
     * **mode** – any write mode, e.g., `w` (default), `wb`, `a`, `ab`, etc.
 
 
@@ -346,7 +346,7 @@ This class exists primarily to provide a counterpart to `OutputFileType`.
 
 * **Parameters**
 
-    
+
     * **mode** – any read mode, e.g., `r` (default), `rb`, etc.
 
 
@@ -378,7 +378,7 @@ Factory for creating a type representing a sub-class of a given class.
 
 * **Parameters**
 
-    
+
     * **cls** – The base class for the type. When used as the `type` argument to an
     `argparse.ArgumentParser.add_argument` call, only sub-classes of this class
     are accepted as valid command-line arguments.
@@ -405,7 +405,7 @@ after being cast to provided types.
 
 * **Parameters**
 
-    
+
     * **key_type** – Callable that convert a string to the key type (default: `str`).
 
 
