@@ -28,7 +28,7 @@ repos:
     types: [python]
   - id: mypy
     name: type check python files
-    entry: poetry run mypy --ignore-missing-imports .
+    entry: poetry run mypy .
     language: system
     types: [python]
     pass_filenames: false
