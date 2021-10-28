@@ -39,9 +39,9 @@ black = { version = ">=20.8b0", allow-prereleases = true }
 pylint = "^2.9"
 pre-commit = "^2.0"
 isort = "^5.1"
-mypy = ">=0.8"
-pydocstyle = "^6.0"
-Sphinx = "^4.0"
+mypy = ">=0.9"
+pydocstyle = "^6.1"
+sphinx = "^4.2"
 sphinx-markdown-builder = { git = "https://github.com/clayrisser/sphinx-markdown-builder" }
 
 [tool.black]
