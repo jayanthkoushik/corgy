@@ -9,13 +9,13 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v2
       with:
         fetch-depth: 0
-    - uses: actions/setup-python@master
+    - uses: actions/setup-python@v2
       with:
         python-version: 3.9
-    - uses: actions/setup-node@master
+    - uses: actions/setup-node@v2
     - name: Run conventional-github-releaser
       run: npx conventional-github-releaser -p angular
       env:
@@ -25,7 +25,7 @@ jobs:
     - name: Build dist
       run: $HOME/.poetry/bin/poetry build
     - name: Add wheel to release
-      uses: svenstaro/upload-release-action@master
+      uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: dist/*.whl
