@@ -437,11 +437,25 @@ class Corgy(metaclass=_CorgyMeta):
             parser.add_argument(*var_flags, type=var_base_type, **_kwargs)
 
     @classmethod
-    def _new_with_args(cls: type[_T], **args) -> _T:
+    def new_with_args(cls: type[_T], **args) -> _T:
         """Create a new instance of the class using the given arguments.
 
         Arguments with `:` in their name are passed to group class constructors.
-        Unknown arguments are ignored.
+        Unknown arguments are ignored. This method is useful when using a custom
+        parser (possibly with additional non-corgy arguments).
+
+        Example::
+
+            class C(Corgy):
+                x: int
+
+            parser = argparse.ArgumentParser()
+            C.add_args_to_parser(parser)
+            parser.add_argument("--y", type=int)
+
+            args = parser.parse_args(["--x", "1", "--y", "2"])
+            c = C.new_with_args(**vars(args))
+            y = args.y
         """
         obj = object.__new__(cls)
         grp_args_map: dict[str, Any] = defaultdict(dict)
@@ -459,7 +473,7 @@ class Corgy(metaclass=_CorgyMeta):
 
         for grp_name, grp_args in grp_args_map.items():
             grp_type = getattr(cls, grp_name).fget.__annotations__["return"]
-            grp_obj = grp_type._new_with_args(**grp_args)
+            grp_obj = grp_type.new_with_args(**grp_args)
             setattr(obj, grp_name, grp_obj)
 
         return obj
@@ -496,7 +510,7 @@ class Corgy(metaclass=_CorgyMeta):
             parser = argparse.ArgumentParser(**parser_args)
         cls.add_args_to_parser(parser)
         args = vars(parser.parse_args())
-        return cls._new_with_args(**args)
+        return cls.new_with_args(**args)
 
 
 class _CorgyParser(NamedTuple):

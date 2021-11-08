@@ -213,6 +213,29 @@ Add arguments for this class to the given parser.
 
 
 
+#### _classmethod_ new_with_args(\*\*args)
+Create a new instance of the class using the given arguments.
+
+Arguments with `:` in their name are passed to group class constructors.
+Unknown arguments are ignored. This method is useful when using a custom
+parser (possibly with additional non-corgy arguments).
+
+Example:
+
+```python
+class C(Corgy):
+    x: int
+
+parser = argparse.ArgumentParser()
+C.add_args_to_parser(parser)
+parser.add_argument("--y", type=int)
+
+args = parser.parse_args(["--x", "1", "--y", "2"])
+c = C.new_with_args(**vars(args))
+y = args.y
+```
+
+
 #### _classmethod_ parse_from_cmdline(parser: Optional[argparse.ArgumentParser] = None, \*\*parser_args)
 Parse an object of the class from command line arguments.
 
