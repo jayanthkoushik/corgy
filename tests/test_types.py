@@ -126,6 +126,11 @@ class TestInputDirectoryType(TestCase):
     def setUp(self):
         self.type = InputDirectoryType()
 
+    def test_input_directory_type_raises_if_input_not_dir(self):
+        with NamedTemporaryFile() as tmp_file:
+            with self.assertRaises(ArgumentTypeError):
+                self.type(tmp_file.name)
+
     def test_input_directory_type_raises_if_dir_not_exists(self):
         with TemporaryDirectory() as tmp_dir:
             with self.assertRaises(ArgumentTypeError):
@@ -220,6 +225,9 @@ class TestSubClassType(TestCase):
 
         type_ = SubClassType(A)
         self.assertSetEqual(set(type_.choices()), {"B", "C", "D", "F"})
+
+        type_ = SubClassType(A, allow_base=True)
+        self.assertSetEqual(set(type_.choices()), {"A", "B", "C", "D", "F"})
 
 
 class TestKeyValuePairType(TestCase):
