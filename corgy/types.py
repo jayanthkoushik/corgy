@@ -146,8 +146,6 @@ class SubClassType(Generic[_T]):
     @staticmethod
     def _generate_subclasses(base_cls: Type[_T]) -> Iterator[Type[_T]]:
         for subclass in base_cls.__subclasses__():
-            if subclass is base_cls:
-                continue
             yield subclass
             yield from SubClassType._generate_subclasses(subclass)
 
@@ -188,8 +186,6 @@ class KeyValueType(Generic[_KT, _VT]):
         """Descriptor to allow `__metavar__` to use the proper separator."""
 
         def __get__(self, instance: "KeyValueType", _) -> str:
-            if instance is None:
-                return "key=val"
             return f"key{instance.separator}val"
 
     __metavar__ = _MetavarDescriptor()
