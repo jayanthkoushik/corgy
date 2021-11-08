@@ -441,6 +441,7 @@ class Corgy(metaclass=_CorgyMeta):
         """Create a new instance of the class using the given arguments.
 
         Arguments with `:` in their name are passed to group class constructors.
+        Unknown arguments are ignored.
         """
         obj = object.__new__(cls)
         grp_args_map: dict[str, Any] = defaultdict(dict)
@@ -450,7 +451,11 @@ class Corgy(metaclass=_CorgyMeta):
                 grp_name, arg_name = arg_name.split(":", maxsplit=1)
                 grp_args_map[grp_name][arg_name] = arg_val
             else:
-                setattr(obj, arg_name, arg_val)
+                try:
+                    setattr(obj, arg_name, arg_val)
+                except AttributeError:
+                    # Ignore unknown arguments.
+                    pass
 
         for grp_name, grp_args in grp_args_map.items():
             grp_type = getattr(cls, grp_name).fget.__annotations__["return"]

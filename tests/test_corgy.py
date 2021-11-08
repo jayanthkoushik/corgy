@@ -642,6 +642,19 @@ class TestCorgyCmdlineParsing(unittest.TestCase):
                 formatter_class=CorgyHelpFormatter, add_help=False
             )
 
+    def test_parse_from_cmdline_ignores_extra_arguments(self):
+        class C(Corgy):
+            x: int
+
+        self.parser.add_argument("--y", type=str)
+        self.parser.parse_args = lambda: self.orig_parse_args(
+            self.parser, ["--x", "1", "--y", "2"]
+        )
+        c = C.parse_from_cmdline(self.parser, add_help=False)
+        self.assertEqual(c.x, 1)
+        with self.assertRaises(AttributeError):
+            _ = c.y
+
 
 @skipIf(sys.version_info < (3, 9), "Python 3.9 or higher needed")
 class TestCorgyCustomParsers(unittest.TestCase):
