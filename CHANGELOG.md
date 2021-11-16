@@ -1,5 +1,12 @@
 # Changelog
 
+### [2.0.1](https://github.com/jayanthkoushik/corgy/compare/v2.0.0...v2.0.1) (2021-11-16)
+
+
+### Bug Fixes
+
+* disable lru cache for stringify helper function ([589b6c4](https://github.com/jayanthkoushik/corgy/commit/589b6c45fa44f2bd2efc65b0dc2fdd9e2a287fd7))
+
 ## [2.0.0](https://github.com/jayanthkoushik/corgy/compare/v1.5.0...v2.0.0) (2021-11-16)
 
 
