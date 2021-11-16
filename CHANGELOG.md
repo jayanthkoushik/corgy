@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.0.0](https://github.com/jayanthkoushik/corgy/compare/v1.5.0...v2.0.0) (2021-11-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* return the actual types from SubClassType.choices for compatibility with argparse
+
+### Features
+
+* make Corgy.new_with_args public ([b025614](https://github.com/jayanthkoushik/corgy/commit/b0256141b9f46db0b657e00a825433946a81e2f5))
+* use __name__ for displaying choices/defaults if available ([4603c29](https://github.com/jayanthkoushik/corgy/commit/4603c295f5c3a9abe1e9f467c040655d29b731b8))
+
+
+### Bug Fixes
+
+* allow parsing with extra args in Corgy.parse_from_cmdline ([f565a84](https://github.com/jayanthkoushik/corgy/commit/f565a84df86b87b062c668d15b69bdc1eea9d12a))
+* return the actual types from SubClassType.choices for compatibility with argparse ([17a693e](https://github.com/jayanthkoushik/corgy/commit/17a693e39c4d5208a44027d23830a49f2749c82c))
+
 ## [1.5.0](https://github.com/jayanthkoushik/corgy/compare/v1.4.0...v1.5.0) (2021-10-19)
 
 
