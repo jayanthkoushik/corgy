@@ -201,6 +201,14 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         # the regex looks for a continuous string of `placeholder` or whitespace.
         return re.compile(rf"({placeholder}[{placeholder}\s]*)", re.DOTALL)
 
+    @staticmethod
+    @lru_cache(maxsize=None)
+    def _stringify(obj) -> str:
+        try:
+            return obj.__name__
+        except AttributeError:
+            return repr(obj)
+
     def _sub_non_ws_with_colored_repl(
         self, match: re.Match, replacement: Optional[str], color: str
     ) -> str:
@@ -333,7 +341,9 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 marker_choices_begin = self.marker_choices_begin
                 marker_choices_end = self.marker_choices_end
                 marker_choices_sep = self.marker_choices_sep
-            choices_str = marker_choices_sep.join(list(map(repr, action.choices)))
+            choices_str = marker_choices_sep.join(
+                list(map(self._stringify, action.choices))
+            )
             choice_list_fmt = (
                 marker_choices_begin + choices_str + marker_choices_end + " "
             )
@@ -365,10 +375,10 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 arg_qualifier = (
                     (_PLACEHOLDER_KWD_DEFAULT * len("default"))
                     + ": "
-                    + (_PLACEHOLDER_DEFAULT_VAL * len(repr(action.default)))
+                    + (_PLACEHOLDER_DEFAULT_VAL * len(self._stringify(action.default)))
                 )
             else:
-                arg_qualifier = f"default: {action.default!r}"
+                arg_qualifier = f"default: {self._stringify(action.default)}"
 
             if sys.version_info >= (3, 9):
                 if isinstance(action, BooleanOptionalAction) and action.help:
@@ -504,7 +514,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             pattern = self._pattern_placeholder_text(_PLACEHOLDER_DEFAULT_VAL)
             f_sub = partial(
                 self._sub_non_ws_with_colored_repl,
-                replacement=repr(action.default),
+                replacement=self._stringify(action.default),
                 color=self.color_defaults,
             )
             fmt = pattern.sub(f_sub, fmt)

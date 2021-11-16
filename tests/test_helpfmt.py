@@ -19,8 +19,9 @@ _C = lambda s: _COLOR_HELPER.colorize(repr(s), CorgyHelpFormatter.color_choices)
 _D = lambda s: _COLOR_HELPER.colorize(repr(s), CorgyHelpFormatter.color_defaults)
 _O = lambda s: _COLOR_HELPER.colorize(s, CorgyHelpFormatter.color_options)
 
-# Version of `_C` which does not call `repr` on the object.
+# Versions of `_C`/`_D` which do not call `repr` on the object.
 _Cs = lambda s: _COLOR_HELPER.colorize(s, CorgyHelpFormatter.color_choices)
+_Ds = lambda s: _COLOR_HELPER.colorize(s, CorgyHelpFormatter.color_defaults)
 
 # Make outputs independent of terminal width.
 CorgyHelpFormatter.output_width = 80
@@ -532,6 +533,24 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
         self.assertEqual(
             self._get_arg_help("--arg", type=str, default=SUPPRESS),
             f"  {_O('--arg')} {_M('str')}  ({_K('optional')})",
+        )
+
+    def test_corgy_help_formatter_uses_name_for_choices(self):
+        class A:
+            pass
+
+        self.assertEqual(
+            self._get_arg_help("--arg", choices=[A]),
+            f"  {_O('--arg')}  ([{_Cs('A')}] {_K('optional')})",
+        )
+
+    def test_corgy_help_formatter_uses_name_for_default(self):
+        class A:
+            pass
+
+        self.assertEqual(
+            self._get_arg_help("--arg", default=A),
+            f"  {_O('--arg')}  ({_K('default')}: {_Ds('A')})",
         )
 
 
