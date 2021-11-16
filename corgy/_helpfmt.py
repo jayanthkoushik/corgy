@@ -202,7 +202,6 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         return re.compile(rf"({placeholder}[{placeholder}\s]*)", re.DOTALL)
 
     @staticmethod
-    @lru_cache(maxsize=None)
     def _stringify(obj) -> str:
         try:
             return obj.__name__
