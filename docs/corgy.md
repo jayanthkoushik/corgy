@@ -413,7 +413,7 @@ Factory for creating a type representing a sub-class of a given class.
 
 
 #### choices()
-Return an iterator over names of valid choices for this type.
+Return an iterator over valid choices for this type.
 
 
 ### _class_ corgy.types.KeyValueType(\*, separator: str = "'='")

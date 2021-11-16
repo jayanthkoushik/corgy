@@ -1,7 +1,6 @@
 """Type factories for use with `corgy` (or standalone with `argparse`)."""
 import os
 from argparse import ArgumentTypeError, FileType
-from operator import attrgetter
 from pathlib import Path
 from typing import Callable, Generic, IO, Iterator, overload, Tuple, Type, TypeVar
 
@@ -157,11 +156,11 @@ class SubClassType(Generic[_T]):
                 return subclass
         raise ArgumentTypeError(f"`{string}` is not a valid sub-class of `{self.cls}`")
 
-    def choices(self) -> Iterator[str]:
-        """Return an iterator over names of valid choices for this type."""
+    def choices(self) -> Iterator[Type[_T]]:
+        """Return an iterator over valid choices for this type."""
         if self.allow_base:
-            yield self.cls.__name__
-        yield from map(attrgetter("__name__"), self._generate_subclasses(self.cls))
+            yield self.cls
+        yield from self._generate_subclasses(self.cls)
 
 
 _KT = TypeVar("_KT")

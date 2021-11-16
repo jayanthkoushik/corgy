@@ -1,5 +1,5 @@
 import os
-from argparse import ArgumentTypeError
+from argparse import ArgumentParser, ArgumentTypeError
 from io import IOBase
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
@@ -224,10 +224,26 @@ class TestSubClassType(TestCase):
             ...
 
         type_ = SubClassType(A)
-        self.assertSetEqual(set(type_.choices()), {"B", "C", "D", "F"})
+        self.assertSetEqual(set(type_.choices()), {B, C, D, F})
 
         type_ = SubClassType(A, allow_base=True)
-        self.assertSetEqual(set(type_.choices()), {"A", "B", "C", "D", "F"})
+        self.assertSetEqual(set(type_.choices()), {A, B, C, D, F})
+
+    def test_subclass_type_with_argparse(self):
+        class A:
+            ...
+
+        class B(A):
+            ...
+
+        class C(A):  # pylint: disable=unused-variable
+            ...
+
+        type_ = SubClassType(A)
+        parser = ArgumentParser()
+        parser.add_argument("--a", type=type_, choices=list(type_.choices()))
+        args = parser.parse_args(["--a", "B"])
+        self.assertIs(args.a, B)
 
 
 class TestKeyValuePairType(TestCase):
