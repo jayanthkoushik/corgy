@@ -134,13 +134,20 @@ class SubClassType(Generic[_T]):
             are accepted as valid command-line arguments.
         allow_base: Whether the base class itself is allowed as a valid value for this
             type (default: `False`).
+        use_full_names: Whether to use the full name of the classes
+            (`__module__ + "." + class.__qualname__`) or just `class.__name__`
+            (default: `False`). This is useful when the name itself is not enough to
+            uniquely identify a sub-class.
     """
 
     __metavar__ = "cls"
 
-    def __init__(self, cls: Type[_T], allow_base: bool = False):
+    def __init__(
+        self, cls: Type[_T], allow_base: bool = False, use_full_names: bool = False
+    ):
         self.cls = cls
         self.allow_base = allow_base
+        self.use_full_names = use_full_names
 
     @staticmethod
     def _generate_subclasses(base_cls: Type[_T]) -> Iterator[Type[_T]]:
@@ -148,11 +155,16 @@ class SubClassType(Generic[_T]):
             yield subclass
             yield from SubClassType._generate_subclasses(subclass)
 
+    def __corgy_fmt_choice__(self, value: Type[_T]) -> str:
+        if self.use_full_names:
+            return value.__module__ + "." + value.__qualname__
+        return value.__name__
+
     def __call__(self, string: str) -> Type[_T]:
-        if self.cls.__name__ == string and self.allow_base:
+        if self.__corgy_fmt_choice__(self.cls) == string and self.allow_base:
             return self.cls
         for subclass in self._generate_subclasses(self.cls):
-            if subclass.__name__ == string:
+            if self.__corgy_fmt_choice__(subclass) == string:
                 return subclass
         raise ArgumentTypeError(f"`{string}` is not a valid sub-class of `{self.cls}`")
 

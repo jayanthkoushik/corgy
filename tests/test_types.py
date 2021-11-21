@@ -245,6 +245,20 @@ class TestSubClassType(TestCase):
         args = parser.parse_args(["--a", "B"])
         self.assertIs(args.a, B)
 
+    def test_subclass_type_with_full_names(self):
+        class A:
+            ...
+
+        class B(A):
+            ...
+
+        class C(A):
+            ...
+
+        type_ = SubClassType(A, use_full_names=True)
+        self.assertIs(type_(B.__module__ + "." + B.__qualname__), B)
+        self.assertIs(type_(C.__module__ + "." + C.__qualname__), C)
+
 
 class TestKeyValuePairType(TestCase):
     def test_key_value_type_splits_input_string(self):

@@ -431,7 +431,7 @@ that it is readable. If everything succeeds, a `Path` instance is returned,
 otherwise `argparse.ArgumentTypeError` is raised.
 
 
-### _class_ corgy.types.SubClassType(cls: Type[corgy.types._T], allow_base: bool = False)
+### _class_ corgy.types.SubClassType(cls: Type[corgy.types._T], allow_base: bool = False, use_full_names: bool = False)
 Factory for creating a type representing a sub-class of a given class.
 
 
@@ -445,6 +445,12 @@ Factory for creating a type representing a sub-class of a given class.
 
     * **allow_base** – Whether the base class itself is allowed as a valid value for this
     type (default: `False`).
+
+
+    * **use_full_names** – Whether to use the full name of the classes
+    (`__module__ + "." + class.__qualname__`) or just `class.__name__`
+    (default: `False`). This is useful when the name itself is not enough to
+    uniquely identify a sub-class.
 
 
 

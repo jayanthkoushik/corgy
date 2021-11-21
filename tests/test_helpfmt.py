@@ -556,7 +556,7 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
     def test_corgy_help_formatter_uses_custom_choice_strs(self):
         class A:
             @staticmethod
-            def __corgy_choice_str__(obj):
+            def __corgy_fmt_choice__(obj):
                 return f"A:{obj}"
 
         self.assertEqual(
@@ -572,7 +572,7 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
             def __init__(self, x):
                 self.x = x
 
-            def __corgy_choice_str__(self, obj):
+            def __corgy_fmt_choice__(self, obj):
                 return f"{self}:{obj}"
 
             def __str__(self):
