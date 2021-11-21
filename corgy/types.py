@@ -4,14 +4,14 @@ from argparse import ArgumentTypeError, FileType
 from pathlib import Path
 from typing import Callable, Generic, IO, Iterator, overload, Tuple, Type, TypeVar
 
-__all__ = [
+__all__ = (
     "OutputFileType",
     "InputFileType",
     "OutputDirectoryType",
     "InputDirectoryType",
     "SubClassType",
     "KeyValueType",
-]
+)
 
 
 class OutputFileType(FileType):

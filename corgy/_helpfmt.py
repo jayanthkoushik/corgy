@@ -14,7 +14,7 @@ from unittest.mock import patch
 if sys.version_info >= (3, 9):
     from argparse import BooleanOptionalAction
 
-__all__ = ["CorgyHelpFormatter"]
+__all__ = ("CorgyHelpFormatter",)
 
 # These placeholders are used to replace special characters and words, so they can be
 # identified later for colorizing, without clashes with the help text. The code-points

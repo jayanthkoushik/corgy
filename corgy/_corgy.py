@@ -27,7 +27,7 @@ from ._helpfmt import CorgyHelpFormatter
 # for command line parsing. `corgyparser` is a decorator that allows custom parsers to
 # be defined for `Corgy` variables.
 
-__all__ = ["Corgy", "corgyparser"]
+__all__ = ("Corgy", "corgyparser")
 _T = TypeVar("_T", bound="Corgy")
 
 
