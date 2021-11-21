@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.1.0](https://github.com/jayanthkoushik/corgy/compare/v2.0.1...v2.1.0) (2021-11-21)
+
+
+### Features
+
+* add option to use full option names in `SubClassType` ([c4b68d7](https://github.com/jayanthkoushik/corgy/commit/c4b68d7cb9e4ea143c65260f1f534d4eed699a16))
+* allow customizing choice formatting with `__corgy_choice_str__` ([97b925d](https://github.com/jayanthkoushik/corgy/commit/97b925d15ef79cc03ee130a9fc9be0e28890d2ce))
+
 ### [2.0.1](https://github.com/jayanthkoushik/corgy/compare/v2.0.0...v2.0.1) (2021-11-16)
 
 
