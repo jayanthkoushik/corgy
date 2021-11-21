@@ -172,6 +172,20 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             options:
               --arg METAVAR  (optional)
 
+    * `__corgy_fmt_choice__`: Formatting of argument choices/defaults can be customized
+        by defining a function of this name on the argument type. The function should
+        take a single argument, the choice, and return a string. Usage::
+
+            >>> class T:
+                @staticmethod
+                def __corgy_fmt_choice__(choice):
+                    return f"CHOICE-{choice}"
+            >>> p = ArgumentParser(formatter_class=CorgyHelpFormatter, add_help=False)
+            >>> p.add_argument("--arg", type=T, choices=["a", "b", "c"], default="a")
+            >>> p.print_help()
+            options:
+              --arg T  ({CHOICE-a/CHOICE-b/CHOICE-c} default: CHOICE-a)
+
     """
 
     use_colors: Optional[bool] = None
@@ -217,7 +231,9 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         return re.compile(rf"({placeholder}[{placeholder}\s]*)", re.DOTALL)
 
     @staticmethod
-    def _stringify(obj) -> str:
+    def _stringify(obj, type_) -> str:
+        if hasattr(type_, "__corgy_fmt_choice__"):
+            return type_.__corgy_fmt_choice__(obj)
         try:
             return obj.__name__
         except AttributeError:
@@ -356,7 +372,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 marker_choices_end = self.marker_choices_end
                 marker_choices_sep = self.marker_choices_sep
             choices_str = marker_choices_sep.join(
-                list(map(self._stringify, action.choices))
+                [self._stringify(choice, action.type) for choice in action.choices]
             )
             choice_list_fmt = (
                 marker_choices_begin + choices_str + marker_choices_end + " "
@@ -389,10 +405,15 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 arg_qualifier = (
                     (_PLACEHOLDER_KWD_DEFAULT * len("default"))
                     + ": "
-                    + (_PLACEHOLDER_DEFAULT_VAL * len(self._stringify(action.default)))
+                    + (
+                        _PLACEHOLDER_DEFAULT_VAL
+                        * len(self._stringify(action.default, action.type))
+                    )
                 )
             else:
-                arg_qualifier = f"default: {self._stringify(action.default)}"
+                arg_qualifier = (
+                    f"default: {self._stringify(action.default, action.type)}"
+                )
 
             if sys.version_info >= (3, 9):
                 if isinstance(action, BooleanOptionalAction) and action.help:
@@ -528,7 +549,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             pattern = self._pattern_placeholder_text(_PLACEHOLDER_DEFAULT_VAL)
             f_sub = partial(
                 self._sub_non_ws_with_colored_repl,
-                replacement=self._stringify(action.default),
+                replacement=self._stringify(action.default, action.type),
                 color=self.color_defaults,
             )
             fmt = pattern.sub(f_sub, fmt)

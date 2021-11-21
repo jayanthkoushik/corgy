@@ -353,6 +353,24 @@ on the argument type. The following attributes are recognized:
     ```
 
 
+* `__corgy_fmt_choice__`: Formatting of argument choices/defaults can be customized
+
+    by defining a function of this name on the argument type. The function should
+    take a single argument, the choice, and return a string. Usage:
+
+    ```python
+    >>> class T:
+        @staticmethod
+        def __corgy_fmt_choice__(choice):
+            return f"CHOICE-{choice}"
+    >>> p = ArgumentParser(formatter_class=CorgyHelpFormatter, add_help=False)
+    >>> p.add_argument("--arg", type=T, choices=["a", "b", "c"], default="a")
+    >>> p.print_help()
+    options:
+      --arg T  ({CHOICE-a/CHOICE-b/CHOICE-c} default: CHOICE-a)
+    ```
+
+
 #### _property_ using_colors(_: boo_ )
 Whether colors are enabled.
 

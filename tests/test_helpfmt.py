@@ -553,6 +553,40 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
             f"  {_O('--arg')}  ({_K('default')}: {_Ds('A')})",
         )
 
+    def test_corgy_help_formatter_uses_custom_choice_strs(self):
+        class A:
+            @staticmethod
+            def __corgy_choice_str__(obj):
+                return f"A:{obj}"
+
+        self.assertEqual(
+            self._get_arg_help("--arg", type=A, choices=[1, "a"]),
+            f"  {_O('--arg')} {_M('A')}  ([{_Cs('A:1')}/{_Cs('A:a')}] "
+            f"{_K('optional')})",
+        )
+
+    def test_corgy_help_formatter_uses_custom_choice_strs_from_type_factory(self):
+        class AF:
+            __metavar__ = "AF"
+
+            def __init__(self, x):
+                self.x = x
+
+            def __corgy_choice_str__(self, obj):
+                return f"{self}:{obj}"
+
+            def __str__(self):
+                return str(self.x)
+
+            def __call__(self, string):
+                return string
+
+        self.assertEqual(
+            self._get_arg_help("--arg", type=AF("A"), choices=[1, "a"]),
+            f"  {_O('--arg')} {_M('AF')}  ([{_Cs('A:1')}/{_Cs('A:a')}] "
+            f"{_K('optional')})",
+        )
+
 
 @skipIf(_CRAYONS is None, "`crayons` package not found")
 class TestCorgyHelpFormatterMultiArgs(TestCase):
