@@ -334,6 +334,24 @@ an argument. The defaults are `{` and `}`.
 * `marker_choices_sep`: The string used to separate individual choices in the choice
 list. The default is `/`.
 
+Formatting of individual arguments can be customized with magic attributes defined
+on the argument type. The following attributes are recognized:
+
+
+* `__metavar__`: This can be set to a string on the argument type to override the
+
+    default metavar. Usage:
+
+    ```python
+    >>> class T:
+            __metavar__ = "METAVAR"
+    >>> p = ArgumentParser(formatter_class=CorgyHelpFormatter, add_help=False)
+    >>> p.add_argument("--arg", type=T)
+    >>> p.print_help()
+    options:
+      --arg METAVAR  (optional)
+    ```
+
 
 #### _property_ using_colors(_: boo_ )
 Whether colors are enabled.
