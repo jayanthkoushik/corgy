@@ -248,7 +248,15 @@ class Corgy(metaclass=_CorgyMeta):
 
     The provided values are passed to the `choices` argument of
     `ArgumentParser.add_argument`. All values must be of the same type, which will be
-    inferred from the type of the first value.
+    inferred from the type of the first value. If the first value has a `__bases__`
+    attribute, the type will be inferred as the first base type, and all other choices
+    must be subclasses of that type::
+
+        class A: ...
+        class A1(A): ...
+        class A2(A): ...
+
+        x: Literal[A1, A2]  # inferred type is A
 
     `Literal` itself can be used as a type, for instance inside a `Sequence`::
 
@@ -395,17 +403,26 @@ class Corgy(metaclass=_CorgyMeta):
                 hasattr(var_base_type, "__origin__")
                 and var_base_type.__origin__ is Literal
             ):
+                # Determine if the first choice has `__bases__`, in which case
+                # the first base class is the type for the argument.
+                try:
+                    c0_type = var_base_type.__args__[0].__bases__[0]
+                except AttributeError:
+                    c0_type = type(var_base_type.__args__[0])
+                    f_check_type: Callable[[Any, Any], bool] = isinstance
+                else:
+                    f_check_type = issubclass
+
                 # All choices must be of the same type.
                 if any(
-                    type(_a) is not type(var_base_type.__args__[0])
-                    for _a in var_base_type.__args__[1:]
+                    not f_check_type(_a, c0_type) for _a in var_base_type.__args__[1:]
                 ):
                     raise TypeError(
-                        f"choices for `{var_name}` not same type: "
+                        f"choices for `{var_name}` not all of type `{c0_type}`: "
                         f"`{var_base_type.__args__}`"
                     )
                 var_choices = var_base_type.__args__
-                var_base_type = type(var_base_type.__args__[0])
+                var_base_type = c0_type
             else:
                 var_choices = None
 

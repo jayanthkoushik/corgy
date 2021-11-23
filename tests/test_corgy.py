@@ -266,6 +266,40 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
         with self.assertRaises(TypeError):
             C.add_args_to_parser(self.parser)
 
+    def test_add_args_uses_base_class_for_choice_type(self):
+        class A:
+            pass
+
+        class A1(A):
+            pass
+
+        class A2(A):
+            pass
+
+        class B:
+            pass
+
+        class B1(B):
+            pass
+
+        class BA1(B, A2):
+            pass
+
+        class C(Corgy):
+            x: Literal[A1, A2, BA1]  # type: ignore
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with(
+            "--x", type=A, required=True, choices=(A1, A2, BA1)
+        )
+
+        with self.assertRaises(TypeError):
+
+            class D(Corgy):
+                x: Literal[A1, A2, B1]  # type: ignore
+
+            D.add_args_to_parser(self.parser)
+
     def test_add_args_handles_user_defined_class_as_type(self):
         class T:
             pass

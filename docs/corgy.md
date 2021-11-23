@@ -143,7 +143,17 @@ x: Literal[0, 1, 2]
 
 The provided values are passed to the `choices` argument of
 `ArgumentParser.add_argument`. All values must be of the same type, which will be
-inferred from the type of the first value.
+inferred from the type of the first value. If the first value has a `__bases__`
+attribute, the type will be inferred as the first base type, and all other choices
+must be subclasses of that type:
+
+```python
+class A: ...
+class A1(A): ...
+class A2(A): ...
+
+x: Literal[A1, A2]  # inferred type is A
+```
 
 `Literal` itself can be used as a type, for instance inside a `Sequence`:
 
