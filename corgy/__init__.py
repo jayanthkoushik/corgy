@@ -1,6 +1,6 @@
 """Corgy package for elegant command line parsing."""
 
-__all__: tuple = tuple()
+__all__ = ()
 
 try:
     from ._corgy import *
