@@ -105,6 +105,8 @@ class _CorgyMeta(type):
             )
             namespace["__slots__"].append(f"__{var_name}")
 
+        namespace["__slots__"] = tuple(namespace["__slots__"])
+
         # Store custom parsers in a dict.
         namespace["__parsers"] = {}
         for _, v in namespace.items():
