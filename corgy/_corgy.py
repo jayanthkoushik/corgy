@@ -522,7 +522,7 @@ class Corgy(metaclass=_CorgyMeta):
         )
         return cls(**args)
 
-    def __str__(self):
+    def __repr__(self):
         s = f"{self.__class__.__name__}("
         for i, arg_name in enumerate(getattr(self.__class__, "__annotations__")):
             if i != 0:
