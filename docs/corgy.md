@@ -26,6 +26,9 @@ a.x = 1
 a.y = a.x + 1.1
 ```
 
+Note that the class’s `__init__` method only accepts keyword arguments. Refer to
+the documentation of `Corgy.__init__` for more information.
+
 For command line parsing, `x` and `y` are added to an `ArgumentParser` object with
 the appropriate arguments passed to `ArgumentParser.add_argument`. This is roughly
 equivalent to:

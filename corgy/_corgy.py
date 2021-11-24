@@ -153,6 +153,9 @@ class Corgy(metaclass=_CorgyMeta):
         a.x = 1
         a.y = a.x + 1.1
 
+    Note that the class's `__init__` method only accepts keyword arguments. Refer to
+    the documentation of `Corgy.__init__` for more information.
+
     For command line parsing, `x` and `y` are added to an `ArgumentParser` object with
     the appropriate arguments passed to `ArgumentParser.add_argument`. This is roughly
     equivalent to::
@@ -469,21 +472,27 @@ class Corgy(metaclass=_CorgyMeta):
         """Initialize an instance of the class using the given arguments.
 
         Arguments with `:` in their name are passed to group class constructors.
-        Unknown arguments are ignored. This method is useful when using a custom
-        parser (possibly with additional non-corgy arguments).
+        Unknown arguments are ignored. This is useful when using a custom parser with
+        non-Corgy arguments.
 
         Example::
 
             class C(Corgy):
                 x: int
 
+            class D(Corgy):
+                x: int
+                c: C
+
             parser = argparse.ArgumentParser()
-            C.add_args_to_parser(parser)
+            D.add_args_to_parser(parser)
             parser.add_argument("--y", type=int)
 
-            args = parser.parse_args(["--x", "1", "--y", "2"])
-            c = C(**vars(args))
-            y = args.y
+            args = parser.parse_args(["--x", "1", "--c:x", "11", "--y", "2"])
+            d = D(**vars(args))
+            d.x  # 1
+            d.c  # C(x=11)
+            args.y  # 2
         """
         grp_args_map: dict[str, Any] = defaultdict(dict)
 
