@@ -1,12 +1,12 @@
 import os
+import sys
 from argparse import ArgumentParser, ArgumentTypeError
 from io import IOBase
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
-from unittest import TestCase
+from unittest import skipIf, TestCase
 from unittest.mock import MagicMock, patch
 
-from corgy import Corgy
 from corgy.types import (
     InputDirectoryType,
     InputFileType,
@@ -260,6 +260,7 @@ class TestSubClassType(TestCase):
         self.assertIs(type_(B.__module__ + "." + B.__qualname__), B)
         self.assertIs(type_(C.__module__ + "." + C.__qualname__), C)
 
+    @skipIf(sys.version_info < (3, 9), "Python 3.9 or higher needed")
     def test_subclass_type_choices_with_corgy(self):
         class A:
             ...
@@ -271,6 +272,8 @@ class TestSubClassType(TestCase):
             ...
 
         ASubClasses = SubClassType(A)
+
+        from corgy import Corgy
 
         class D(Corgy):
             x: ASubClasses
