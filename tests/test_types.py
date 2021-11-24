@@ -6,6 +6,7 @@ from tempfile import NamedTemporaryFile, TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
+from corgy import Corgy
 from corgy.types import (
     InputDirectoryType,
     InputFileType,
@@ -258,6 +259,28 @@ class TestSubClassType(TestCase):
         type_ = SubClassType(A, use_full_names=True)
         self.assertIs(type_(B.__module__ + "." + B.__qualname__), B)
         self.assertIs(type_(C.__module__ + "." + C.__qualname__), C)
+
+    def test_subclass_type_choices_with_corgy(self):
+        class A:
+            ...
+
+        class B(A):
+            ...
+
+        class C(A):
+            ...
+
+        ASubClasses = SubClassType(A)
+
+        class D(Corgy):
+            x: ASubClasses
+
+        parser = ArgumentParser()
+        parser.add_argument = MagicMock()
+        D.add_args_to_parser(parser)
+        parser.add_argument.assert_called_with(
+            "--x", type=ASubClasses, choices=(B, C), required=True
+        )
 
 
 class TestKeyValuePairType(TestCase):

@@ -138,9 +138,13 @@ class SubClassType(Generic[_T]):
             (`__module__ + "." + class.__qualname__`) or just `class.__name__`
             (default: `False`). This is useful when the name itself is not enough to
             uniquely identify a sub-class.
+
+    Types returned by this class can be used with `corgy`, and will have the
+    sub-classes added as valid choices.
     """
 
     __metavar__ = "cls"
+    __choices__: Tuple[Type[_T], ...]
 
     def __init__(
         self, cls: Type[_T], allow_base: bool = False, use_full_names: bool = False
@@ -148,6 +152,7 @@ class SubClassType(Generic[_T]):
         self.cls = cls
         self.allow_base = allow_base
         self.use_full_names = use_full_names
+        self.__choices__ = tuple(self.choices())
 
     @staticmethod
     def _generate_subclasses(base_cls: Type[_T]) -> Iterator[Type[_T]]:

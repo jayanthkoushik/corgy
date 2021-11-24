@@ -474,6 +474,9 @@ Factory for creating a type representing a sub-class of a given class.
     uniquely identify a sub-class.
 
 
+Types returned by this class can be used with `corgy`, and will have the
+sub-classes added as valid choices.
+
 
 #### choices()
 Return an iterator over valid choices for this type.
