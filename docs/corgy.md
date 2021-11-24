@@ -163,6 +163,17 @@ x: Sequence[Literal[0, 1, 2], Literal[0, 1, 2]]
 
 This is a sequence of length 2, where each element is either 0, 1, or 2.
 
+Choices can also be specified by adding a `__choices__` attribute to the argument
+type, containing a sequence of choices for the type Note that this will not be type
+checked:
+
+```python
+class A:
+    __choices__ = ("a1", "a2")
+
+x: A
+```
+
 **Bool**
 `bool` types (when not in a sequence) are converted to
 `argparse.BooleanOptionalAction`:

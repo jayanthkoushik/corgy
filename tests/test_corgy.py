@@ -300,6 +300,18 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
 
             D.add_args_to_parser(self.parser)
 
+    def test_add_args_uses_custom_choices(self):
+        class A:
+            __choices__ = (1, 2, 3)
+
+        class C(Corgy):
+            x: A
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with(
+            "--x", type=A, required=True, choices=(1, 2, 3)
+        )
+
     def test_add_args_handles_user_defined_class_as_type(self):
         class T:
             pass
