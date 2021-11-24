@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.2.0](https://github.com/jayanthkoushik/corgy/compare/v2.1.0...v2.2.0) (2021-11-24)
+
+
+### Features
+
+* add `__choices__` to `types.SubClassType` ([b817e17](https://github.com/jayanthkoushik/corgy/commit/b817e1736e5c34349182e20b4f0b8e5aece4392e))
+* allow `Literal` types to be classes themselves ([b772e6e](https://github.com/jayanthkoushik/corgy/commit/b772e6eb57db310f17716c147df0e9765876a2b1))
+* allow custom choices with `__choices__` ([3140aaa](https://github.com/jayanthkoushik/corgy/commit/3140aaa96bb18e2a82a54b31296f9066bf7731a6))
+
 ## [2.1.0](https://github.com/jayanthkoushik/corgy/compare/v2.0.1...v2.1.0) (2021-11-21)
 
 
