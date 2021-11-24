@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.3.0](https://github.com/jayanthkoushik/corgy/compare/v2.2.0...v2.3.0) (2021-11-24)
+
+
+### Features
+
+* implement `Corgy.__init__` and deprecate `new_with_args` ([2413eef](https://github.com/jayanthkoushik/corgy/commit/2413eefb281705c0dae7a28dc90364c28aef9b1e))
+* make `Corgy.__repr__` equal to `__str__` ([a72527d](https://github.com/jayanthkoushik/corgy/commit/a72527dddad39cf467007a921f6a8dd480a9d521))
+* show informative message if trying to import `Corgy` with Python < 3.9 ([9ec99ce](https://github.com/jayanthkoushik/corgy/commit/9ec99ce25794c62471af09876c2a6fabf6db9a2f))
+
 ## [2.2.0](https://github.com/jayanthkoushik/corgy/compare/v2.1.0...v2.2.0) (2021-11-24)
 
 
