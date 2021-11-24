@@ -43,6 +43,7 @@ class _ColorHelper:
             `use_colors` is None.
     """
 
+    __slots__ = ("crayons",)
     crayons: Optional[ModuleType]
 
     def __init__(self, use_colors: Optional[bool] = None, skip_tty_check: bool = False):
@@ -95,6 +96,8 @@ class _CorgyHelpFormatterMeta(type):
     The method prevents new attributes from being set, primarily to prevent potential
     user errors caused by using an incorrect name to configure the class.
     """
+
+    __slots__ = ()
 
     def __setattr__(cls, name, value):
         # Note: `__setattr__` applies to instances of the class, so `cls` here is a
@@ -204,6 +207,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     marker_choices_end = "}"
     marker_choices_sep = "/"
 
+    __slots__ = ("_color_helper",)
     _color_helper: _ColorHelper
 
     @property

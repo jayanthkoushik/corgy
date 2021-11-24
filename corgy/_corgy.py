@@ -41,6 +41,8 @@ class _CorgyMeta(type):
     the `__flags` attribute.
     """
 
+    __slots__ = ()
+
     def __new__(cls, name, bases, namespace, **kwds):
         namespace["__slots__"] = []
         if "__annotations__" not in namespace:

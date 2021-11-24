@@ -71,6 +71,7 @@ class OutputDirectoryType:
     """
 
     __metavar__ = "dir"
+    __slots__ = ()
 
     # The type has no state, so it is implemented as a singleton.
     _instance = None
@@ -106,6 +107,7 @@ class InputDirectoryType:
 
     __metavar__ = "dir"
     _instance = None
+    __slots__ = ()
 
     def __new__(cls):
         if cls._instance is None:
@@ -144,6 +146,8 @@ class SubClassType(Generic[_T]):
     """
 
     __metavar__ = "cls"
+
+    __slots__ = ("cls", "allow_base", "use_full_names", "__choices__")
     __choices__: Tuple[Type[_T], ...]
 
     def __init__(
@@ -205,6 +209,8 @@ class KeyValueType(Generic[_KT, _VT]):
             return f"key{instance.separator}val"
 
     __metavar__ = _MetavarDescriptor()
+
+    __slots__ = ("key_type", "val_type", "separator")
     key_type: Callable[[str], _KT]
     val_type: Callable[[str], _VT]
     separator: str
