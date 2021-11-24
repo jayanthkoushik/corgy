@@ -154,6 +154,14 @@ class TestCorgyMeta(unittest.TestCase):
         c = self._CorgyCls()
         self.assertEqual(repr(c), "_CorgyCls(x1=<unset>, x2=<unset>, x3=3, x4='4')")
 
+    def test_corgy_cls_repr_handles_groups(self):
+        class D(Corgy):
+            x: int
+            c: self._CorgyCls
+
+        d = D(x=1, c=self._CorgyCls(x1=[0, 1], x2=2, x4="8"))
+        self.assertEqual(repr(d), "D(x=1, c=_CorgyCls(x1=[0, 1], x2=2, x3=3, x4='8'))")
+
 
 @skipIf(sys.version_info < (3, 9), "Python 3.9 or higher needed")
 class TestCorgyAddArgsToParser(unittest.TestCase):
