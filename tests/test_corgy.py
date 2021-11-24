@@ -143,6 +143,15 @@ class TestCorgyMeta(unittest.TestCase):
         with self.assertRaises(AttributeError):
             c.z = 0
 
+    def test_corgy_cls_allows_custom_slots(self):
+        class C(Corgy):
+            __slots__ = ("y",)
+            x: int
+
+        c = C()
+        c.y = 1
+        self.assertEqual(c.y, 1)
+
     def test_corgy_cls_has_correct_repr(self):
         c = self._CorgyCls()
         c.x1 = [0, 1]

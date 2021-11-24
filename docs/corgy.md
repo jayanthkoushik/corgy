@@ -29,6 +29,24 @@ a.y = a.x + 1.1
 Note that the class’s `__init__` method only accepts keyword arguments. Refer to
 the documentation of `Corgy.__init__` for more information.
 
+`Corgy` classes have their `__slots__` attribute set to the annotated arguments.
+So, if you want to use additional instance variables not tracked by `Corgy`, define
+them (and only them) in the `__slots__` attribute:
+
+```python
+class A(Corgy):
+    __slots__ = ("x",)
+    y: float
+
+a = A()
+a.y = 1  # `Corgy` variable
+a.x = 2  # custom variable
+```
+
+To allow arbitrary instance variables, add `__dict__` to `__slots__`. Names added
+through custom `__slots__` are not processed by `Corgy`, and will not be added to
+`ArgumentParser` objects by the class methods.
+
 For command line parsing, `x` and `y` are added to an `ArgumentParser` object with
 the appropriate arguments passed to `ArgumentParser.add_argument`. This is roughly
 equivalent to:
