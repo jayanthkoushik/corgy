@@ -348,7 +348,7 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
 
     def test_corgy_help_formatter_handles_custom_type(self):
         class CustomType:
-            pass
+            ...
 
         self.assertEqual(
             self._get_arg_help("--x", type=CustomType),
@@ -537,7 +537,7 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
 
     def test_corgy_help_formatter_uses_name_for_choices(self):
         class A:
-            pass
+            ...
 
         self.assertEqual(
             self._get_arg_help("--arg", choices=[A]),
@@ -546,7 +546,7 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
 
     def test_corgy_help_formatter_uses_name_for_default(self):
         class A:
-            pass
+            ...
 
         self.assertEqual(
             self._get_arg_help("--arg", default=A),

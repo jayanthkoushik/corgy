@@ -268,22 +268,22 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
 
     def test_add_args_uses_base_class_for_choice_type(self):
         class A:
-            pass
+            ...
 
         class A1(A):
-            pass
+            ...
 
         class A2(A):
-            pass
+            ...
 
         class B:
-            pass
+            ...
 
         class B1(B):
-            pass
+            ...
 
         class BA1(B, A2):
-            pass
+            ...
 
         class C(Corgy):
             x: Literal[A1, A2, BA1]  # type: ignore
@@ -314,7 +314,7 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
 
     def test_add_args_handles_user_defined_class_as_type(self):
         class T:
-            pass
+            ...
 
         class C(Corgy):
             x: T
@@ -324,7 +324,7 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
 
     def test_add_args_handles_user_defined_object_as_default(self):
         class T:
-            pass
+            ...
 
         t = T()
 
@@ -713,7 +713,7 @@ class TestCorgyCustomParsers(unittest.TestCase):
 
             @corgyparser
             def spam():
-                pass
+                ...
 
     def test_corgy_raises_if_corgyparser_target_invalid(self):
         with self.assertRaises(TypeError):
