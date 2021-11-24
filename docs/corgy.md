@@ -3,7 +3,7 @@
 Corgy package for elegant command line parsing.
 
 
-### _class_ corgy.Corgy()
+### _class_ corgy.Corgy(\*\*args)
 Base class for collections of variables.
 
 **NOTE**: This class is only available on Python 3.9 or higher.
@@ -232,29 +232,6 @@ Add arguments for this class to the given parser.
     will be named `--<name-prefix>:<var-name>`. If custom flags are present,
     `--<name-prefix>:<flag>` will be used instead (one for each flag).
 
-
-
-#### _classmethod_ new_with_args(\*\*args)
-Create a new instance of the class using the given arguments.
-
-Arguments with `:` in their name are passed to group class constructors.
-Unknown arguments are ignored. This method is useful when using a custom
-parser (possibly with additional non-corgy arguments).
-
-Example:
-
-```python
-class C(Corgy):
-    x: int
-
-parser = argparse.ArgumentParser()
-C.add_args_to_parser(parser)
-parser.add_argument("--y", type=int)
-
-args = parser.parse_args(["--x", "1", "--y", "2"])
-c = C.new_with_args(**vars(args))
-y = args.y
-```
 
 
 #### _classmethod_ parse_from_cmdline(parser: Optional[argparse.ArgumentParser] = None, \*\*parser_args)

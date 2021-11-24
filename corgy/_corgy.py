@@ -19,6 +19,7 @@ from typing import (
     TypeVar,
     Union,
 )
+from warnings import warn
 
 from ._helpfmt import CorgyHelpFormatter
 
@@ -464,9 +465,8 @@ class Corgy(metaclass=_CorgyMeta):
                 _kwargs["required"] = True
             parser.add_argument(*var_flags, type=var_base_type, **_kwargs)
 
-    @classmethod
-    def new_with_args(cls: type[_T], **args) -> _T:
-        """Create a new instance of the class using the given arguments.
+    def __init__(self, **args):
+        """Initialize an instance of the class using the given arguments.
 
         Arguments with `:` in their name are passed to group class constructors.
         Unknown arguments are ignored. This method is useful when using a custom
@@ -482,10 +482,9 @@ class Corgy(metaclass=_CorgyMeta):
             parser.add_argument("--y", type=int)
 
             args = parser.parse_args(["--x", "1", "--y", "2"])
-            c = C.new_with_args(**vars(args))
+            c = C(**vars(args))
             y = args.y
         """
-        obj = object.__new__(cls)
         grp_args_map: dict[str, Any] = defaultdict(dict)
 
         for arg_name, arg_val in args.items():
@@ -494,17 +493,25 @@ class Corgy(metaclass=_CorgyMeta):
                 grp_args_map[grp_name][arg_name] = arg_val
             else:
                 try:
-                    setattr(obj, arg_name, arg_val)
+                    setattr(self, arg_name, arg_val)
                 except AttributeError:
                     # Ignore unknown arguments.
                     pass
 
         for grp_name, grp_args in grp_args_map.items():
-            grp_type = getattr(cls, grp_name).fget.__annotations__["return"]
-            grp_obj = grp_type.new_with_args(**grp_args)
-            setattr(obj, grp_name, grp_obj)
+            grp_type = getattr(self.__class__, grp_name).fget.__annotations__["return"]
+            grp_obj = grp_type(**grp_args)
+            setattr(self, grp_name, grp_obj)
 
-        return obj
+    @classmethod
+    def new_with_args(cls: Type[_T], **args) -> _T:
+        #: :meta private:
+        warn(
+            f"this method is deprecated: use `{cls.__name__}(**args)` "
+            f"to create a new instance",
+            DeprecationWarning,
+        )
+        return cls(**args)
 
     def __str__(self):
         s = f"{self.__class__.__name__}("
@@ -538,7 +545,7 @@ class Corgy(metaclass=_CorgyMeta):
             parser = argparse.ArgumentParser(**parser_args)
         cls.add_args_to_parser(parser)
         args = vars(parser.parse_args())
-        return cls.new_with_args(**args)
+        return cls(**args)
 
 
 class _CorgyParser(NamedTuple):
