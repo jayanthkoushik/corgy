@@ -23,11 +23,27 @@ used similar to Python dataclasses:
 ```python
 a = A()
 a.x = 1
+a.y  # AttributeError (y is not set)
 a.y = a.x + 1.1
 ```
 
-Note that the class’s `__init__` method only accepts keyword arguments. Refer to
-the documentation of `Corgy.__init__` for more information.
+Note that the class’s `__init__` method only accepts keyword arguments, and ignores
+arguments without a corresponding attribute. The following are all valid:
+
+```python
+A(x=1, y=2.1)
+A(x=1, z=3)  # y is not set, and z is ignored
+A(**{"x": 1, "y": 2.1, "z": 3})
+```
+
+For command line parsing, the `add_args_to_parser` class method can be used to add
+arguments to an `ArgumentParser` object. Refer to the method’s documentation for
+more details. `A.add_args_to_parser(parser)` is roughly equivalent to:
+
+```python
+parser.add_argument("--x", type=int, required=True)
+parser.add_argument("--y", type=float, required=True)
+```
 
 `Corgy` classes have their `__slots__` attribute set to the annotated arguments.
 So, if you want to use additional instance variables not tracked by `Corgy`, define
@@ -46,16 +62,6 @@ a.x = 2  # custom variable
 To allow arbitrary instance variables, add `__dict__` to `__slots__`. Names added
 through custom `__slots__` are not processed by `Corgy`, and will not be added to
 `ArgumentParser` objects by the class methods.
-
-For command line parsing, `x` and `y` are added to an `ArgumentParser` object with
-the appropriate arguments passed to `ArgumentParser.add_argument`. This is roughly
-equivalent to:
-
-```python
-parser = ArgumentParser()
-parser.add_argument("--x", type=int, required=True)
-parser.add_argument("--y", type=float, required=True)
-```
 
 `Corgy` recognizes a number of special annotations, which are used to control how
 the argument is parsed.
@@ -237,6 +243,22 @@ prefixed. In the above example, parsing using `B` would result in the arguments
 instance of `A`, and set as the `grp` property of `B`. Note that groups will ignore
 any custom flags when computing the prefix; elements within the group will use
 custom flags, but because they are prefixed with `--`, they will not be positional.
+
+If initializing a `Corgy` class with `__init__`, arguments for groups can be passed
+with their names prefixed with the group name and a colon:
+
+```python
+class C(Corgy):
+    x: int
+
+class D(Corgy):
+    x: int
+    c: C
+
+d = D(**{"x": 1, "c:x": 2})
+d.x  # 1
+d.c  # C(x=2)
+```
 
 
 #### _classmethod_ add_args_to_parser(parser: argparse.ArgumentParser, name_prefix: str = '')
