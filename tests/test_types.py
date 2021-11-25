@@ -174,7 +174,7 @@ class TestSubClassType(TestCase):
         class A:
             ...
 
-        class B(A):  # pylint: disable=unused-variable
+        class _(A):
             ...
 
         type_ = SubClassType(A)
@@ -212,16 +212,16 @@ class TestSubClassType(TestCase):
         class B(A):
             ...
 
-        class C(A):  # pylint: disable=unused-variable
+        class C(A):
             ...
 
-        class D(B):  # pylint: disable=unused-variable
+        class D(B):
             ...
 
         class E:
             ...
 
-        class F(A, E):  # pylint: disable=unused-variable
+        class F(A, E):
             ...
 
         type_ = SubClassType(A)
@@ -237,7 +237,7 @@ class TestSubClassType(TestCase):
         class B(A):
             ...
 
-        class C(A):  # pylint: disable=unused-variable
+        class _(A):
             ...
 
         type_ = SubClassType(A)

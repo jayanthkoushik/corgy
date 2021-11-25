@@ -16,8 +16,6 @@ if sys.version_info >= (3, 9):
 class TestCorgyMeta(unittest.TestCase):
     """Tests to check validity of classes inheriting from Corgy."""
 
-    # pylint: disable=unused-variable, unused-private-member
-
     @classmethod
     def setUpClass(cls):
         class _CorgyCls(Corgy):
@@ -79,19 +77,19 @@ class TestCorgyMeta(unittest.TestCase):
     def test_corgy_cls_raises_if_help_annotation_not_str(self):
         with self.assertRaises(TypeError):
 
-            class C1(Corgy):
+            class _(Corgy):
                 x: Annotated[int, 1]
 
     def test_corgy_cls_raises_if_flags_not_list(self):
         with self.assertRaises(TypeError):
 
-            class C1(Corgy):
+            class _(Corgy):
                 x: Annotated[int, "x help", "x"]
 
     def test_corgy_cls_raises_if_flag_list_empty(self):
         with self.assertRaises(TypeError):
 
-            class C1(Corgy):
+            class _(Corgy):
                 x: Annotated[int, "x help", []]
 
     def test_add_args_raises_if_custom_flags_on_group(self):
@@ -100,12 +98,12 @@ class TestCorgyMeta(unittest.TestCase):
             class G(Corgy):
                 x: int
 
-            class C(Corgy):
+            class _(Corgy):
                 g: Annotated[G, "group G", ["-g", "--grp"]]
 
     def test_corgy_cls_allows_dunder_defaults_as_var_name(self):
         class C(Corgy):
-            __defaults: int
+            __defaults: int  # pylint: disable=unused-private-member
             x: int = 0
 
         self.assertTrue(hasattr(C, "__defaults"))
@@ -117,15 +115,15 @@ class TestCorgyMeta(unittest.TestCase):
     def test_corgy_cls_raises_if_var_name_is_dunder_another_var(self):
         with self.assertRaises(TypeError):
 
-            class C1(Corgy):
+            class _C(Corgy):  # pylint: disable=unused-variable
                 x: int = 0
-                __x = 2
+                __x = 2  # pylint: disable=unused-private-member
 
         with self.assertRaises(TypeError):
 
-            class C2(Corgy):
+            class _C(Corgy):  # pylint: disable=unused-variable
                 x: int
-                __x: int
+                __x: int  # pylint: disable=unused-private-member
 
     def test_corgy_cls_can_have_dunder_name(self):
         self.assertTrue(hasattr(self._CorgyCls, "_CorgyCls__x1"))
