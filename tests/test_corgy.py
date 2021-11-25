@@ -842,3 +842,17 @@ class TestCorgyCustomParsers(unittest.TestCase):
 
         self.assertEqual(C.parsex("x"), 0)
         self.assertEqual(C.parsey("y"), 1)
+
+    def test_corgyparser_decorators_can_be_chained(self):
+        class C(Corgy):
+            x: int
+            y: int
+
+            @corgyparser("x")
+            @corgyparser("y")
+            @staticmethod
+            def parsexy(s: str):
+                return int(s)
+
+        self.assertEqual(C.parsexy("1"), 1)
+        self.assertEqual(C.parsexy("2"), 2)

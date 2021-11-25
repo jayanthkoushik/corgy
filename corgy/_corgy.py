@@ -115,11 +115,13 @@ class _CorgyMeta(type):
         for _, v in namespace.items():
             if not isinstance(v, _CorgyParser):
                 continue
-            var_name = v.var_name
-            if (var_name in namespace) and isinstance(namespace[var_name], property):
-                namespace["__parsers"][var_name] = v.fparse
-            else:
-                raise TypeError(f"invalid target for corgyparser: {v.var_name}")
+            for var_name in v.var_names:
+                if (var_name in namespace) and isinstance(
+                    namespace[var_name], property
+                ):
+                    namespace["__parsers"][var_name] = v.fparse
+                else:
+                    raise TypeError(f"invalid target for corgyparser: {var_name}")
 
         return super().__new__(cls, name, bases, namespace, **kwds)
 
@@ -587,7 +589,7 @@ class _CorgyParser(NamedTuple):
     keep track of parsers.
     """
 
-    var_name: str
+    var_names: Sequence[str]
     fparse: Callable[[str], Any]
 
     def __call__(self, s: str) -> Any:
@@ -617,6 +619,17 @@ def corgyparser(var_name: str) -> Callable[[Callable[[str], Any]], _CorgyParser]
             def parse_time(s):
                 return tuple(map(int, s.split(":")))
 
+    The `@corgyparser` decorator can be chained to use the same parser for multiple
+    arguments::
+
+        class A(Corgy):
+            x: int
+            y: int
+            @corgyparser("x")
+            @corgyparser("y")
+            @staticmethod
+            def parse_x_y(s):
+                return int(s)
     """
     if not isinstance(var_name, str):
         raise TypeError(
@@ -625,10 +638,14 @@ def corgyparser(var_name: str) -> Callable[[Callable[[str], Any]], _CorgyParser]
         )
 
     def wrapper(var_name, fparse):
+        if isinstance(fparse, _CorgyParser):
+            fparse.var_names.append(var_name)
+            return fparse
+
         if isinstance(fparse, staticmethod):
             fparse = fparse.__func__
         if not callable(fparse):
             raise TypeError("corgyparser can only decorate static functions")
-        return _CorgyParser(var_name, fparse)
+        return _CorgyParser([var_name], fparse)
 
     return partial(wrapper, var_name)

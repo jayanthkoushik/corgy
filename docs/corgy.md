@@ -298,6 +298,20 @@ class A(Corgy):
         return tuple(map(int, s.split(":")))
 ```
 
+The `@corgyparser` decorator can be chained to use the same parser for multiple
+arguments:
+
+```python
+class A(Corgy):
+    x: int
+    y: int
+    @corgyparser("x")
+    @corgyparser("y")
+    @staticmethod
+    def parse_x_y(s):
+        return int(s)
+```
+
 
 ### _class_ corgy.CorgyHelpFormatter(prog: str)
 Formatter class for `argparse` with a cleaner layout, and support for colors.
