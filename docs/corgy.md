@@ -277,6 +277,9 @@ Decorate a function as a custom parser for a variable.
 **NOTE**: This decorator is only available on Python 3.9 or higher.
 
 To use a custom function for parsing an argument with `Corgy`, use this decorator.
+Parsing functions must be static, and should only accept a single string argument.
+Decorating the function with `@staticmethod` is optional, but prevents type errors.
+`@corgyparser` must be the final decorator in the decorator chain.
 
 
 * **Parameters**
@@ -290,6 +293,7 @@ Example:
 class A(Corgy):
     time: tuple[int, int, int]
     @corgyparser("time")
+    @staticmethod
     def parse_time(s):
         return tuple(map(int, s.split(":")))
 ```

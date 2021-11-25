@@ -723,8 +723,6 @@ class TestCorgyCmdlineParsing(unittest.TestCase):
 class TestCorgyCustomParsers(unittest.TestCase):
     """Tests to check usage of the @corgyparser decorator."""
 
-    # pylint: disable=no-self-argument, unused-variable
-
     def test_corgyparser_raises_if_not_passed_name(self):
         with self.assertRaises(TypeError):
 
@@ -735,11 +733,11 @@ class TestCorgyCustomParsers(unittest.TestCase):
     def test_corgy_raises_if_corgyparser_target_invalid(self):
         with self.assertRaises(TypeError):
 
-            class A(Corgy):
+            class _(Corgy):
                 x: int
 
                 @corgyparser("y")
-                def parsex(s: str):  # type: ignore
+                def parsex(s: str):  # type: ignore # pylint: disable=no-self-argument
                     return 0
 
     def test_add_args_handles_corgyparser(self):
@@ -747,7 +745,7 @@ class TestCorgyCustomParsers(unittest.TestCase):
             x: Annotated[int, "x"]
 
             @corgyparser("x")
-            def parsex(s: str):  # type: ignore
+            def parsex(s: str):  # type: ignore # pylint: disable=no-self-argument
                 return 0
 
         parser = argparse.ArgumentParser()
@@ -762,7 +760,7 @@ class TestCorgyCustomParsers(unittest.TestCase):
             x: int = 1
 
             @corgyparser("x")
-            def parsex(s: str):  # type: ignore
+            def parsex(s: str):  # type: ignore # pylint: disable=no-self-argument
                 return 0
 
         parser = argparse.ArgumentParser()
@@ -777,7 +775,7 @@ class TestCorgyCustomParsers(unittest.TestCase):
             x: int
 
             @corgyparser("x")
-            def parsex(s: str):  # type: ignore
+            def parsex(s: str):  # type: ignore # pylint: disable=no-self-argument
                 return 0
 
         getattr(C, "__parsers")["x"] = MagicMock()
@@ -793,7 +791,7 @@ class TestCorgyCustomParsers(unittest.TestCase):
             x: int
 
             @corgyparser("x")
-            def parsex(s: str):  # type: ignore
+            def parsex(s: str):  # type: ignore # pylint: disable=no-self-argument
                 return -1
 
         parser = argparse.ArgumentParser()
@@ -802,3 +800,30 @@ class TestCorgyCustomParsers(unittest.TestCase):
 
         args = C.parse_from_cmdline(parser)
         self.assertEqual(args.x, -1)
+
+    def test_corgyparser_allows_decorating_staticmethod(self):
+        class C(Corgy):
+            x: int
+
+            @corgyparser("x")
+            @staticmethod
+            def parsex(s: str):
+                return 0
+
+        parser = argparse.ArgumentParser()
+        orig_parse_args = argparse.ArgumentParser.parse_args
+        parser.parse_args = lambda: orig_parse_args(parser, ["--x", "test"])
+
+        c = C.parse_from_cmdline(parser)
+        self.assertEqual(c.x, 0)
+
+    def test_corgyparser_raises_if_decorating_non_staticmethod(self):
+        with self.assertRaises(TypeError):
+
+            class _(Corgy):
+                x: int
+
+                @corgyparser("x")
+                @classmethod
+                def parsex(cls, s: str):
+                    return 0

@@ -598,6 +598,9 @@ def corgyparser(var_name: str) -> Callable[[Callable[[str], Any]], _CorgyParser]
         This decorator is only available on Python 3.9 or higher.
 
     To use a custom function for parsing an argument with `Corgy`, use this decorator.
+    Parsing functions must be static, and should only accept a single string argument.
+    Decorating the function with `@staticmethod` is optional, but prevents type errors.
+    `@corgyparser` must be the final decorator in the decorator chain.
 
     Args:
         var_name: The argument associated with the decorated parser.
@@ -607,8 +610,10 @@ def corgyparser(var_name: str) -> Callable[[Callable[[str], Any]], _CorgyParser]
         class A(Corgy):
             time: tuple[int, int, int]
             @corgyparser("time")
+            @staticmethod
             def parse_time(s):
                 return tuple(map(int, s.split(":")))
+
     """
     if not isinstance(var_name, str):
         raise TypeError(
@@ -617,6 +622,10 @@ def corgyparser(var_name: str) -> Callable[[Callable[[str], Any]], _CorgyParser]
         )
 
     def wrapper(var_name, fparse):
+        if isinstance(fparse, staticmethod):
+            fparse = fparse.__func__
+        if not callable(fparse):
+            raise TypeError("corgyparser can only decorate static functions")
         return _CorgyParser(var_name, fparse)
 
     return partial(wrapper, var_name)
