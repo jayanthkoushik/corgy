@@ -825,3 +825,20 @@ class TestCorgyCustomParsers(unittest.TestCase):
                 @classmethod
                 def parsex(cls, s: str):
                     return 0
+
+    def test_corgyparser_functions_are_callable(self):
+        class C(Corgy):
+            x: int
+            y: int
+
+            @corgyparser("x")
+            @staticmethod
+            def parsex(s: str):
+                return 0
+
+            @corgyparser("y")
+            def parsey(s: str):  # type: ignore # pylint: disable=no-self-argument
+                return 1
+
+        self.assertEqual(C.parsex("x"), 0)
+        self.assertEqual(C.parsey("y"), 1)
