@@ -406,24 +406,6 @@ class Corgy(metaclass=_CorgyMeta):
                 var_base_type = var_type
                 var_required = var_name not in getattr(cls, "__defaults")
 
-            # Check if the variable has a custom parser.
-            _parsers = getattr(cls, "__parsers")
-            if var_name in _parsers:
-                var_fparse = _parsers[var_name]
-                _kwargs: dict[str, Any] = {}
-                if var_name in getattr(cls, "__flags"):
-                    # Explicitly pass `dest` if custom flags are present.
-                    _kwargs["dest"] = var_dest
-                if var_help is not None:
-                    _kwargs["help"] = var_help
-                _defaults = getattr(cls, "__defaults")
-                if var_name in _defaults:
-                    _kwargs["default"] = _defaults[var_name]
-                if var_required:
-                    _kwargs["required"] = True
-                parser.add_argument(*var_flags, type=var_fparse, **_kwargs)
-                continue
-
             # Check if the variable is a sequence.
             var_nargs: Union[int, Literal["+", "*"], None]
             if hasattr(var_base_type, "__origin__") and (
@@ -492,8 +474,15 @@ class Corgy(metaclass=_CorgyMeta):
             else:
                 var_action = None
 
+            # Check if the variable has a custom parser.
+            _parsers = getattr(cls, "__parsers")
+            if var_name in _parsers:
+                var_add_type = _parsers[var_name]
+            else:
+                var_add_type = var_base_type
+
             # Add the variable to the parser.
-            _kwargs = {}
+            _kwargs: dict[str, Any] = {}
             if var_name in getattr(cls, "__flags"):
                 _kwargs["dest"] = var_dest
             if var_help is not None:
@@ -509,7 +498,9 @@ class Corgy(metaclass=_CorgyMeta):
                 _kwargs["default"] = _defaults[var_name]
             if var_required:
                 _kwargs["required"] = True
-            parser.add_argument(*var_flags, type=var_base_type, **_kwargs)
+            with suppress(AttributeError):
+                _kwargs["metavar"] = var_base_type.__metavar__
+            parser.add_argument(*var_flags, type=var_add_type, **_kwargs)
 
     def __init__(self, **args):
         grp_args_map: dict[str, Any] = defaultdict(dict)

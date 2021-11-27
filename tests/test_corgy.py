@@ -197,6 +197,18 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
             "--prefix:the-x-arg", type=int, required=True
         )
 
+    def test_add_args_handles_custom_metavar(self):
+        class T:
+            __metavar__ = "T"
+
+        class C(Corgy):
+            x: T
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with(
+            "--x", type=T, required=True, metavar="T"
+        )
+
     def test_add_args_handles_plain_type_annotation(self):
         class C(Corgy):
             x: int
@@ -856,3 +868,22 @@ class TestCorgyCustomParsers(unittest.TestCase):
 
         self.assertEqual(C.parsexy("1"), 1)
         self.assertEqual(C.parsexy("2"), 2)
+
+    def test_add_args_with_custom_parser_uses_custom_metavar(self):
+        class T:
+            __metavar__ = "T"
+
+        class C(Corgy):
+            x: T
+
+            @corgyparser("x")
+            @staticmethod
+            def parsex(s: str):
+                return 0
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument = MagicMock()
+        C.add_args_to_parser(parser)
+        parser.add_argument.assert_called_once_with(
+            "--x", type=C.parsex.fparse, required=True, metavar="T"
+        )

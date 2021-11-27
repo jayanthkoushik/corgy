@@ -282,7 +282,7 @@ class TestSubClassType(TestCase):
         parser.add_argument = MagicMock()
         D.add_args_to_parser(parser)
         parser.add_argument.assert_called_with(
-            "--x", type=ASubClasses, choices=(B, C), required=True
+            "--x", type=ASubClasses, choices=(B, C), required=True, metavar="cls"
         )
 
 
