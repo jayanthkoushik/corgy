@@ -485,15 +485,16 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
         class G(Corgy):
             x: int
 
-        G.add_args_to_parser = MagicMock()
-
         class C(Corgy):
             g: Annotated[G, "group G"]
 
+        grp_parser = MagicMock()
+        self.parser.add_argument_group = MagicMock(return_value=grp_parser)
+
         C.add_args_to_parser(self.parser)
         self.parser.add_argument_group.assert_called_once_with("g", "group G")
-        G.add_args_to_parser.assert_called_once_with(
-            self.parser.add_argument_group.return_value, "g"
+        grp_parser.add_argument.assert_called_once_with(
+            "--g:x", type=int, required=True
         )
 
     def test_add_args_allows_repeated_name_in_group(self):
@@ -530,6 +531,23 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
             required=True,
             dest="the_grp:the_x_arg",
         )
+
+    def test_add_args_makes_nested_groups_flat(self):
+        class G2(Corgy):
+            x: int
+
+        class G1(Corgy):
+            x: int
+            g2: G2
+
+        class C(Corgy):
+            x: int
+            g1: G1
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with("--x", type=int, required=True)
+        self.parser.add_argument_group.assert_any_call("g1", None)
+        self.parser.add_argument_group.assert_any_call("g1:g2", None)
 
     def test_add_args_infers_correct_base_type_from_complex_type_hint(self):
         class C(Corgy):

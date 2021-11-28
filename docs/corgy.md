@@ -261,7 +261,7 @@ d.c  # C(x=2)
 ```
 
 
-#### _classmethod_ add_args_to_parser(parser: argparse.ArgumentParser, name_prefix: str = '')
+#### _classmethod_ add_args_to_parser(parser: argparse.ArgumentParser, name_prefix: str = '', make_group: bool = False, group_help: Optional[str] = None)
 Add arguments for this class to the given parser.
 
 
@@ -274,6 +274,13 @@ Add arguments for this class to the given parser.
     * **name_prefix** – Prefix for argument names (default: empty string). Arguments
     will be named `--<name-prefix>:<var-name>`. If custom flags are present,
     `--<name-prefix>:<flag>` will be used instead (one for each flag).
+
+
+    * **make_group** – If `True`, the arguments will be added to a group within the
+    parser, and `name_prefix` will be used as the group name.
+
+
+    * **group_help** – Help text for the group. Ignored if `make_group` is `False`.
 
 
 

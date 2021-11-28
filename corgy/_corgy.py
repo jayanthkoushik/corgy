@@ -361,7 +361,13 @@ class Corgy(metaclass=_CorgyMeta):
     """
 
     @classmethod
-    def add_args_to_parser(cls, parser: argparse.ArgumentParser, name_prefix: str = ""):
+    def add_args_to_parser(
+        cls,
+        parser: argparse.ArgumentParser,
+        name_prefix: str = "",
+        make_group: bool = False,
+        group_help: Optional[str] = None,
+    ):
         """Add arguments for this class to the given parser.
 
         Args:
@@ -369,7 +375,14 @@ class Corgy(metaclass=_CorgyMeta):
             name_prefix: Prefix for argument names (default: empty string). Arguments
                 will be named `--<name-prefix>:<var-name>`. If custom flags are present,
                 `--<name-prefix>:<flag>` will be used instead (one for each flag).
+            make_group: If `True`, the arguments will be added to a group within the
+                parser, and `name_prefix` will be used as the group name.
+            group_help: Help text for the group. Ignored if `make_group` is `False`.
         """
+        base_parser = parser
+        if make_group:
+            parser = parser.add_argument_group(name_prefix, group_help)  # type: ignore
+
         for (var_name, var_type) in getattr(cls, "__annotations__").items():
             var_flags = getattr(cls, "__flags").get(
                 var_name, [f"--{var_name.replace('_', '-')}"]
@@ -388,8 +401,7 @@ class Corgy(metaclass=_CorgyMeta):
             # Check if the variable is also `Corgy` type.
             if type(var_type) is type(cls):
                 # Create an argument group using `<var_type>`.
-                grp_parser = parser.add_argument_group(var_dest, var_help)
-                var_type.add_args_to_parser(grp_parser, var_dest)
+                var_type.add_args_to_parser(base_parser, var_dest, True, var_help)
                 continue
 
             # Check if the variable is optional. `<var_name>: Optional[<var_type>]` is
