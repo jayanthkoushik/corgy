@@ -261,7 +261,7 @@ d.c  # C(x=2)
 ```
 
 
-#### _classmethod_ add_args_to_parser(parser: argparse.ArgumentParser, name_prefix: str = '', make_group: bool = False, group_help: Optional[str] = None)
+#### _classmethod_ add_args_to_parser(parser, name_prefix='', make_group=False, group_help=None)
 Add arguments for this class to the given parser.
 
 
@@ -284,7 +284,7 @@ Add arguments for this class to the given parser.
 
 
 
-#### _classmethod_ parse_from_cmdline(parser: Optional[argparse.ArgumentParser] = None, \*\*parser_args)
+#### _classmethod_ parse_from_cmdline(parser=None, \*\*parser_args)
 Parse an object of the class from command line arguments.
 
 
@@ -300,7 +300,7 @@ Parse an object of the class from command line arguments.
 
 
 
-### corgy.corgyparser(var_name: str)
+### corgy.corgyparser(var_name)
 Decorate a function as a custom parser for a variable.
 
 **NOTE**: This decorator is only available on Python 3.9 or higher.
@@ -342,7 +342,7 @@ class A(Corgy):
 ```
 
 
-### _class_ corgy.CorgyHelpFormatter(prog: str)
+### _class_ corgy.CorgyHelpFormatter(prog)
 Formatter class for `argparse` with a cleaner layout, and support for colors.
 
 `Corgy.parse_from_cmdline` uses this formatter by default, unless a different
@@ -437,7 +437,7 @@ on the argument type. The following attributes are recognized:
     ```
 
 
-#### _property_ using_colors(_: boo_ )
+#### _property_ using_colors()
 Whether colors are enabled.
 
 ## Submodules
@@ -447,7 +447,7 @@ Whether colors are enabled.
 Type factories for use with `corgy` (or standalone with `argparse`).
 
 
-### _class_ corgy.types.OutputFileType(mode: str = 'w', \*\*kwargs)
+### _class_ corgy.types.OutputFileType(mode='w', \*\*kwargs)
 `argparse.FileType` subclass restricted to write mode.
 
 Non-existing files are created (including parent directories).
@@ -463,7 +463,7 @@ Non-existing files are created (including parent directories).
 
 
 
-### _class_ corgy.types.InputFileType(mode: str = 'r', \*\*kwargs)
+### _class_ corgy.types.InputFileType(mode='r', \*\*kwargs)
 `argparse.FileType` subclass restricted to read mode.
 
 This class exists primarily to provide a counterpart to `OutputFileType`.
@@ -497,7 +497,7 @@ that it is readable. If everything succeeds, a `Path` instance is returned,
 otherwise `argparse.ArgumentTypeError` is raised.
 
 
-### _class_ corgy.types.SubClassType(cls: Type[corgy.types._T], allow_base: bool = False, use_full_names: bool = False)
+### _class_ corgy.types.SubClassType(cls, allow_base=False, use_full_names=False)
 Factory for creating a type representing a sub-class of a given class.
 
 
@@ -527,9 +527,7 @@ sub-classes added as valid choices.
 Return an iterator over valid choices for this type.
 
 
-### _class_ corgy.types.KeyValueType(\*, separator: str = "'='")
-
-### _class_ corgy.types.KeyValueType(key_type: Callable[[str], corgy.types._KT], val_type: Callable[[str], corgy.types._VT], \*, separator: str = "'='")
+### _class_ corgy.types.KeyValueType(key_type=<class 'str'>, val_type=<class 'str'>, \*, separator='=')
 Factory for creating a (key, value) pair type.
 
 When an instance of this class is called with a string of the form `key=value`,
