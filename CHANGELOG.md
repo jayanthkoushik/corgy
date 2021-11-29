@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.4.0](https://github.com/jayanthkoushik/corgy/compare/v2.3.0...v2.4.0) (2021-11-29)
+
+
+### Features
+
+* add nested groups to the base parser in `Corgy.add_args_to_parser` ([720178e](https://github.com/jayanthkoushik/corgy/commit/720178e7ff2a8de24c590346713ed55c197b20f5))
+* allow `[@staticmethod](https://github.com/staticmethod)` to be used with `[@corgyparser](https://github.com/corgyparser)` ([17c2115](https://github.com/jayanthkoushik/corgy/commit/17c2115017cfb35b470da200b9377ee1ba75aca8))
+* allow custom `__slots__` in `Corgy` classes ([1532b15](https://github.com/jayanthkoushik/corgy/commit/1532b15d3b167955294a83c61ad161e7394708b8))
+* allow functions decorated by `[@corgyparser](https://github.com/corgyparser)` to be used as static methods ([8ed8727](https://github.com/jayanthkoushik/corgy/commit/8ed8727a955dea5cb6f53ffad4621756ceb3d6bc))
+* allow multiple `[@corgyparser](https://github.com/corgyparser)` decorators on the same function ([a96d5b7](https://github.com/jayanthkoushik/corgy/commit/a96d5b7a4cef9edcc78e6a0611634174fbbbf49d))
+* implement `__repr__` for `types` members ([2b12191](https://github.com/jayanthkoushik/corgy/commit/2b12191f30032704a099a4a70d61ccc5493b2c46))
+* use custom metavar if present in `Corgy.add_args_to_parser` ([332ddc1](https://github.com/jayanthkoushik/corgy/commit/332ddc1e155ef0146e02fe37b5b8b2a129f99e1d))
+
 ## [2.3.0](https://github.com/jayanthkoushik/corgy/compare/v2.2.0...v2.3.0) (2021-11-24)
 
 
