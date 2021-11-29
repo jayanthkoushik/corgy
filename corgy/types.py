@@ -42,6 +42,9 @@ class OutputFileType(FileType):
                 ) from None
         return super().__call__(string)
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self._mode})"
+
 
 class InputFileType(FileType):
     """`argparse.FileType` subclass restricted to read mode.
@@ -59,6 +62,9 @@ class InputFileType(FileType):
         if any(c in mode for c in "wxa+"):
             raise ValueError(f"invalid mode for `{type(self)}`: `{mode}`")
         super().__init__(mode, **kwargs)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self._mode})"
 
 
 class OutputDirectoryType:
@@ -95,6 +101,9 @@ class OutputDirectoryType:
             raise ArgumentTypeError(f"`{string}` is not writable")
         return Path(string)
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}()"
+
 
 class InputDirectoryType:
     """Factory for creating a type representing a directory to be read from.
@@ -122,6 +131,9 @@ class InputDirectoryType:
         if not os.access(string, os.R_OK):
             raise ArgumentTypeError(f"`{string}` is not readable")
         return Path(string)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}()"
 
 
 _T = TypeVar("_T")
@@ -182,6 +194,9 @@ class SubClassType(Generic[_T]):
         if self.allow_base:
             yield self.cls
         yield from self._generate_subclasses(self.cls)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.cls.__name__})"
 
 
 _KT = TypeVar("_KT")
@@ -252,3 +267,14 @@ class KeyValueType(Generic[_KT, _VT]):
         except Exception as e:
             raise ArgumentTypeError(f"could not convert value: {e}") from None
         return key, val
+
+    def __repr__(self) -> str:
+        try:
+            key_repr = getattr(self, "key_type").__name__
+        except AttributeError:
+            key_repr = repr(getattr(self, "key_type"))
+        try:
+            val_repr = getattr(self, "val_type").__name__
+        except AttributeError:
+            val_repr = repr(getattr(self, "val_type"))
+        return f"{self.__class__.__name__}({key_repr}, {val_repr})"

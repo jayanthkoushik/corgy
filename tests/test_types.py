@@ -52,6 +52,9 @@ class TestOutputFileType(TestCase):
                 self.assertIsInstance(out_file, IOBase)
                 self.assertEqual(out_file.name, fname)
 
+    def test_output_file_type_repr(self):
+        self.assertEqual(repr(self.type), "OutputFileType(w)")
+
 
 class TestInputFileType(TestCase):
     def setUp(self):
@@ -80,6 +83,9 @@ class TestInputFileType(TestCase):
             with self.type(fname) as in_file:
                 self.assertIsInstance(in_file, IOBase)
                 self.assertEqual(in_file.name, fname)
+
+    def test_input_file_type_repr(self):
+        self.assertEqual(repr(self.type), "InputFileType(r)")
 
 
 class TestOutputDirectoryType(TestCase):
@@ -122,6 +128,9 @@ class TestOutputDirectoryType(TestCase):
             self.assertIsInstance(path, Path)
             self.assertEqual(str(path), dname)
 
+    def test_output_directory_type_repr(self):
+        self.assertEqual(repr(self.type), "OutputDirectoryType()")
+
 
 class TestInputDirectoryType(TestCase):
     def setUp(self):
@@ -153,6 +162,9 @@ class TestInputDirectoryType(TestCase):
             path = self.type(tmp_dir)
             self.assertIsInstance(path, Path)
             self.assertEqual(str(path), tmp_dir)
+
+    def test_input_directory_type_repr(self):
+        self.assertEqual(repr(self.type), "InputDirectoryType()")
 
 
 class TestSubClassType(TestCase):
@@ -285,6 +297,13 @@ class TestSubClassType(TestCase):
             "--x", type=ASubClasses, choices=(B, C), required=True, metavar="cls"
         )
 
+    def test_subclass_type_repr(self):
+        class A:
+            ...
+
+        type_ = SubClassType(A)
+        self.assertEqual(repr(type_), "SubClassType(A)")
+
 
 class TestKeyValuePairType(TestCase):
     def test_key_value_type_splits_input_string(self):
@@ -323,3 +342,13 @@ class TestKeyValuePairType(TestCase):
     def test_key_value_type_handles_function_as_type(self):
         type_ = KeyValueType(str, lambda x: x.upper())
         self.assertTupleEqual(type_("foo=bar"), ("foo", "BAR"))
+
+    def test_key_value_type_repr(self):
+        class A:
+            ...
+
+        def f():
+            ...
+
+        type_ = KeyValueType(f, A)
+        self.assertEqual(repr(type_), "KeyValueType(f, A)")
