@@ -329,6 +329,12 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
     and any attributes set on the type will be shared between all instances.
     """
 
+    # The object cache is initialized inside `__class_getitem__`, so every concrete
+    # sub-type has its own object cache. The cache uses the sub-class name, along with
+    # the class config attributes as key, so that the cache is invalidated when any
+    # of the config attributes change.
+    _object_cache: Dict[Tuple[str, bool, bool, bool], "SubClass[_T]"]
+
     allow_base: bool
     use_full_names: bool
     allow_indirect_subs: bool
@@ -364,6 +370,7 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
                     "use_full_names": cls._default_use_full_names,
                     "allow_indirect_subs": cls._default_allow_indirect_subs,
                     "_base": item,
+                    "_object_cache": {},
                     "__slots__": cls.__slots__,
                 },
             )
@@ -435,6 +442,12 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
     def __new__(cls, name: str) -> "SubClass[_T]":  # pylint: disable=arguments-differ
         cls._ensure_base_set()
 
+        cache_key = (name, cls.allow_base, cls.allow_indirect_subs, cls.use_full_names)
+        try:
+            return cls._object_cache[cache_key]
+        except KeyError:
+            pass
+
         subcls = None
         for subcls in cls._generate_base_subclasses():
             if cls._subclass_name(subcls) == name:
@@ -446,6 +459,7 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
 
         obj = super().__new__(cls)
         obj._subcls = subcls
+        cls._object_cache[cache_key] = obj
         return obj
 
     def __call__(self, *args, **kwargs) -> _T:

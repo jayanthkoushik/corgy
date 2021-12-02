@@ -364,6 +364,39 @@ class TestSubClass(TestCase):
             type_("B")
         self.assertIsInstance(type_(B.__module__ + "." + B.__qualname__)(), B)
 
+    def test_subclass_caches_instances(self):
+        class A:
+            ...
+
+        class B(A):  # pylint: disable=unused-variable
+            ...
+
+        class C(A):  # pylint: disable=unused-variable
+            ...
+
+        type_ = SubClass[A]
+        self.assertIs(type_("B"), type_("B"))
+        self.assertIs(type_("C"), type_("C"))
+
+    def test_subclass_cache_handles_change_in_type_attributes(self):
+        class A:
+            ...
+
+        class B(A):
+            ...
+
+        type_ = SubClass[A]
+        init_b = type_("B")
+        self.assertIs(type_("B"), init_b)
+
+        type_.use_full_names = True
+        with self.assertRaises(ArgumentTypeError):
+            type_("B")
+
+        new_b = type_(B.__module__ + "." + B.__qualname__)
+        self.assertIsNot(new_b, init_b)
+        self.assertIs(new_b, type_(B.__module__ + "." + B.__qualname__))
+
 
 class TestKeyValuePairs(TestCase):
     def test_key_value_pairs_init_returns_unique_class(self):
