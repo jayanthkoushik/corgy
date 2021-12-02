@@ -199,6 +199,14 @@ class TestSubClass(TestCase):
         self.assertIsNot(type_, SubClass)
         self.assertIsNot(type_, SubClass[A])
 
+    def test_subclass_raises_if_re_subscripted(self):
+        class A:
+            ...
+
+        type_ = SubClass[A]
+        with self.assertRaises(TypeError):
+            type_[A]  # type: ignore # pylint: disable=pointless-statement
+
     def test_subclass_returns_arg_named_class(self):
         class A:
             ...
@@ -346,6 +354,11 @@ class TestKeyValuePairs(TestCase):
         type_ = KeyValuePairs[str, int]
         self.assertIsNot(type_, KeyValuePairs)
         self.assertIsNot(type_, KeyValuePairs[str, int])
+
+    def test_key_value_pairs_raises_if_re_subscripted(self):
+        type_ = KeyValuePairs[str, int]
+        with self.assertRaises(TypeError):
+            type_[str, int]  # type: ignore # pylint: disable=pointless-statement
 
     def test_key_value_pairs_returns_dict_like(self):
         type_ = KeyValuePairs[str, str]

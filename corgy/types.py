@@ -335,6 +335,11 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
     __slots__ = ("_subcls",)
 
     def __class_getitem__(cls, item: Type[_T]) -> Type["SubClass[_T]"]:
+        if cls._base is not None:
+            raise TypeError(
+                f"cannot further sub-script "
+                f"`{cls.__name__}[{cls._subclass_name(cls._base)}]`"
+            )
         if not hasattr(item, "__subclasses__"):
             raise TypeError(f"`{item}` is not a valid class")
         return type(cls.__name__, (cls,), {"_base": item, "__slots__": cls.__slots__})
@@ -499,6 +504,11 @@ class KeyValuePairs(dict, Generic[_KT, _VT], metaclass=_KeyValuePairsMeta):
     def __class_getitem__(  # type: ignore
         cls, item: Tuple[Type[_KT], Type[_VT]]
     ) -> "Type[KeyValuePairs[_KT, _VT]]":
+        if hasattr(cls, "_kt"):
+            raise TypeError(
+                f"cannot further sub-script "
+                f"`{cls.__name__}[{cls._kt.__name__}, {cls._vt.__name__}]`"
+            )
         kt, vt = item
         return type(
             cls.__name__, (cls,), {"_kt": kt, "_vt": vt, "__slots__": cls.__slots__}
