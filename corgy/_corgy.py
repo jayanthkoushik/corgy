@@ -581,7 +581,9 @@ class _CorgyParser(NamedTuple):
         return self.fparse(s)
 
 
-def corgyparser(var_name: str) -> Callable[[Callable[[str], Any]], _CorgyParser]:
+def corgyparser(
+    var_name: str,
+) -> Callable[[Union[Callable[[str], Any], _CorgyParser]], _CorgyParser]:
     """Decorate a function as a custom parser for a variable.
 
     Note:
