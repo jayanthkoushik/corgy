@@ -5,7 +5,7 @@ from io import BufferedReader, BufferedWriter, TextIOWrapper
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Type, Union
-from unittest import TestCase
+from unittest import skipIf, TestCase
 from unittest.mock import MagicMock, patch
 
 from corgy.types import (
@@ -46,6 +46,7 @@ class _TestOutputFile(_TestFile):
             with self.assertRaises(ArgumentTypeError):
                 self.type(os.path.join(self.tmp_dir.name, "foo", "bar", "baz.file"))
 
+    @skipIf(os.name == "nt", "`chmod` does not seem to work on Windows")
     def test_output_file_fails_if_file_not_writeable(self):
         fname = os.path.join(self.tmp_dir.name, "foo.file")
         open(  # pylint: disable=unspecified-encoding,consider-using-with
@@ -90,6 +91,7 @@ class _TestInputFile(_TestFile):
         with self.assertRaises(ArgumentTypeError):
             self.type(os.path.join(self.tmp_dir.name, "nota.file"))
 
+    @skipIf(os.name == "nt", "`chmod` does not seem to work on Windows")
     def test_input_file_raises_if_file_not_readable(self):
         os.chmod(self.tmp_file_name, 0)
         with self.assertRaises(ArgumentTypeError):
@@ -157,6 +159,7 @@ class TestOutputDirectory(_TestDirectory):
             with self.assertRaises(ArgumentTypeError):
                 self.type(os.path.join(self.tmp_dir.name, "foo", "bar", "baz"))
 
+    @skipIf(os.name == "nt", "`chmod` does not seem to work on Windows")
     def test_output_directory_raises_if_dir_not_writeable(self):
         dname = os.path.join(self.tmp_dir.name, "foo", "bar", "baz")
         os.makedirs(dname)
@@ -173,6 +176,7 @@ class TestInputDirectory(_TestDirectory):
         with self.assertRaises(ArgumentTypeError):
             self.type(os.path.join(self.tmp_dir.name, "nota.dir"))
 
+    @skipIf(os.name == "nt", "`chmod` does not seem to work on Windows")
     def test_input_directory_raises_if_dir_not_readable(self):
         dname = os.path.join(self.tmp_dir.name, "foo", "bar", "baz")
         os.makedirs(dname)
