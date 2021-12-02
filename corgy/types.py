@@ -28,7 +28,7 @@ import sys
 from argparse import ArgumentTypeError
 from io import BufferedReader, BufferedWriter, FileIO, TextIOWrapper
 from pathlib import Path, PosixPath, WindowsPath
-from typing import Generic, Iterator, List, Optional, Tuple, Type, TypeVar
+from typing import Dict, Generic, Iterator, List, Optional, Tuple, Type, TypeVar
 
 if sys.version_info < (3, 8):
     from typing_extensions import Protocol
@@ -323,13 +323,22 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
             BaseSubType = SubClass[Base]
             BaseSubType.allow_indirect_subs = False
             BaseSubType("SubSub1") # fails, `SubSub1` is not a direct sub-class
+
+    Note that the types returned by the `SubClass[...]` syntax are cached using the
+    base class type. So all instances of `SubClass[Base]` will return the same type,
+    and any attributes set on the type will be shared between all instances.
     """
 
-    allow_base: bool = False
-    use_full_names: bool = False
-    allow_indirect_subs: bool = True
+    allow_base: bool
+    use_full_names: bool
+    allow_indirect_subs: bool
+
+    _default_allow_base = False
+    _default_use_full_names = False
+    _default_allow_indirect_subs = True
 
     _base: Optional[Type[_T]] = None
+    _type_cache: Dict[Type[_T], Type["SubClass[_T]"]] = {}
 
     _subcls: Type[_T]
     __slots__ = ("_subcls",)
@@ -342,7 +351,25 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
             )
         if not hasattr(item, "__subclasses__"):
             raise TypeError(f"`{item}` is not a valid class")
-        return type(cls.__name__, (cls,), {"_base": item, "__slots__": cls.__slots__})
+
+        try:
+            ret_type = cls._type_cache[item]
+        except (KeyError, TypeError) as e:
+            ret_type = type(
+                cls.__name__,
+                (cls,),
+                {
+                    "allow_base": cls._default_allow_base,
+                    "use_full_names": cls._default_use_full_names,
+                    "allow_indirect_subs": cls._default_allow_indirect_subs,
+                    "_base": item,
+                    "__slots__": cls.__slots__,
+                },
+            )
+            if not isinstance(e, TypeError):
+                # `TypeError` is raised if `item` is not hashable.
+                cls._type_cache[item] = ret_type
+        return ret_type
 
     @classmethod
     def _ensure_base_set(cls):
@@ -491,6 +518,15 @@ class KeyValuePairs(dict, Generic[_KT, _VT], metaclass=_KeyValuePairsMeta):
         default is `,`.
 
     * item_separator: The string that separates keys and values. The default is `=`.
+
+    Note that types returned by the `KeyValuePairs[...]` syntax are cached using the
+    key and value types::
+
+        >>> MapType = KeyValuePairs[str, int]
+        >>> MapType.sequence_separator = ";"
+        >>> MapType2 = KeyValuePairs[str, int]  # same as `MapType`
+        >>> MapType2.sequence_separator
+        ';'
     """
 
     sequence_separator: str = ","
@@ -498,6 +534,7 @@ class KeyValuePairs(dict, Generic[_KT, _VT], metaclass=_KeyValuePairsMeta):
 
     _kt: Type[_KT]
     _vt: Type[_VT]
+    _type_cache: Dict[Tuple[Type[_KT], Type[_VT]], Type["KeyValuePairs[_KT, _VT]"]] = {}
 
     __slots__ = ()
 
@@ -509,10 +546,26 @@ class KeyValuePairs(dict, Generic[_KT, _VT], metaclass=_KeyValuePairsMeta):
                 f"cannot further sub-script "
                 f"`{cls.__name__}[{cls._kt.__name__}, {cls._vt.__name__}]`"
             )
-        kt, vt = item
-        return type(
-            cls.__name__, (cls,), {"_kt": kt, "_vt": vt, "__slots__": cls.__slots__}
-        )
+
+        try:
+            ret_type = cls._type_cache[item]
+        except (KeyError, TypeError) as e:
+            kt, vt = item
+            ret_type = type(
+                cls.__name__,
+                (cls,),
+                {
+                    "_kt": kt,
+                    "_vt": vt,
+                    "sequence_separator": cls.sequence_separator,
+                    "item_separator": cls.item_separator,
+                    "__slots__": cls.__slots__,
+                },
+            )
+            if not isinstance(e, TypeError):
+                # `TypeError` is raised if the item is not hashable.
+                cls._type_cache[item] = ret_type
+        return ret_type
 
     @classmethod
     def __metavar__(cls) -> str:

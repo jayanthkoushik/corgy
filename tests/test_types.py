@@ -197,6 +197,22 @@ class TestSubClass(TestCase):
 
         type_ = SubClass[A]
         self.assertIsNot(type_, SubClass)
+
+    def test_subclass_init_caches_calls(self):
+        class A:
+            ...
+
+        type_ = SubClass[A]
+        self.assertIs(type_, SubClass[A])
+
+    def test_subclass_init_handles_type_being_unhashable(self):
+        class M(type):
+            __hash__ = None
+
+        class A(metaclass=M):
+            ...
+
+        type_ = SubClass[A]
         self.assertIsNot(type_, SubClass[A])
 
     def test_subclass_raises_if_re_subscripted(self):
@@ -353,7 +369,23 @@ class TestKeyValuePairs(TestCase):
     def test_key_value_pairs_init_returns_unique_class(self):
         type_ = KeyValuePairs[str, int]
         self.assertIsNot(type_, KeyValuePairs)
-        self.assertIsNot(type_, KeyValuePairs[str, int])
+
+    def test_key_value_pairs_init_caches_calls(self):
+        type_ = KeyValuePairs[str, int]
+        self.assertIs(type_, KeyValuePairs[str, int])
+        self.assertIsNot(type_, KeyValuePairs[int, str])
+
+    def test_key_value_pairs_init_handles_type_being_unhashable(self):
+        class M(type):
+            __hash__ = None
+
+        class A(metaclass=M):
+            ...
+
+        type_ = KeyValuePairs[A, str]
+        self.assertIsNot(type_, KeyValuePairs[A, str])
+        type_ = KeyValuePairs[str, A]
+        self.assertIsNot(type_, KeyValuePairs[str, A])
 
     def test_key_value_pairs_raises_if_re_subscripted(self):
         type_ = KeyValuePairs[str, int]
@@ -410,17 +442,23 @@ class TestKeyValuePairs(TestCase):
 
     def test_key_value_pairs_handles_custom_sequence_separator(self):
         type_ = KeyValuePairs[str, str]
-        type_.sequence_separator = ";"
-        dic = type_("foo=1;bar=2")
-        self.assertDictEqual(dic, {"foo": "1", "bar": "2"})
-        self.assertEqual(type_.__metavar__, "[key=val;...]")
+        with patch.object(type_, "sequence_separator", ";"):
+            dic = type_("foo=1;bar=2")
+            self.assertDictEqual(dic, {"foo": "1", "bar": "2"})
+            self.assertEqual(type_.__metavar__, "[key=val;...]")
 
     def test_key_value_pairs_handles_custom_item_separator(self):
         type_ = KeyValuePairs[str, str]
-        type_.item_separator = ":"
-        dic = type_("foo:1,bar:2")
-        self.assertDictEqual(dic, {"foo": "1", "bar": "2"})
-        self.assertEqual(type_.__metavar__, "[key:val,...]")
+        with patch.object(type_, "item_separator", ":"):
+            dic = type_("foo:1,bar:2")
+            self.assertDictEqual(dic, {"foo": "1", "bar": "2"})
+            self.assertEqual(type_.__metavar__, "[key:val,...]")
+
+    def test_key_value_pairs_subtype_not_affected_by_changes_to_base_type(self):
+        type_ = KeyValuePairs[str, int]
+        with patch.multiple(KeyValuePairs, sequence_separator=";", item_separator=":"):
+            self.assertEqual(type_.sequence_separator, ",")
+            self.assertEqual(type_.item_separator, "=")
 
 
 del _TestFile, _TestOutputFile, _TestInputFile, _TestDirectory

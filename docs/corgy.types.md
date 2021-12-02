@@ -203,6 +203,10 @@ attributes (preferably on the type returned by the `[...]` syntax).
     BaseSubType("SubSub1") # fails, `SubSub1` is not a direct sub-class
     ```
 
+Note that the types returned by the `SubClass[...]` syntax are cached using the
+base class type. So all instances of `SubClass[Base]` will return the same type,
+and any attributes set on the type will be shared between all instances.
+
 
 ### _class_ corgy.types.KeyValuePairs(values)
 Dictionary sub-class that is initialized from a string of key-value pairs.
@@ -237,3 +241,14 @@ This can be changed by setting the following class attributes:
 
 
 * item_separator: The string that separates keys and values. The default is `=`.
+
+Note that types returned by the `KeyValuePairs[...]` syntax are cached using the
+key and value types:
+
+```python
+>>> MapType = KeyValuePairs[str, int]
+>>> MapType.sequence_separator = ";"
+>>> MapType2 = KeyValuePairs[str, int]  # same as `MapType`
+>>> MapType2.sequence_separator
+';'
+```
