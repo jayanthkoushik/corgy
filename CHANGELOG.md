@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.0](https://github.com/jayanthkoushik/corgy/compare/v2.4.0...v3.0.0) (2021-12-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* rewrite `corgy.types` to work better with typing
+
+### Features
+
+* rewrite `corgy.types` to work better with typing ([252a823](https://github.com/jayanthkoushik/corgy/commit/252a82336d5a4b1fe2ef9dfc8bc31e1c15921bfd))
+
 ## [2.4.0](https://github.com/jayanthkoushik/corgy/compare/v2.3.0...v2.4.0) (2021-11-29)
 
 
