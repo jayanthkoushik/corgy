@@ -54,6 +54,7 @@ class _TestOutputFile(_TestFile):
         os.chmod(fname, stat.S_IREAD)
         with self.assertRaises(ArgumentTypeError):
             self.type(fname)
+        os.chmod(fname, stat.S_IREAD | stat.S_IWRITE)
 
     def test_output_file_repr(self):
         fname = os.path.join(self.tmp_dir.name, "foo.file")
@@ -93,6 +94,7 @@ class _TestInputFile(_TestFile):
         os.chmod(self.tmp_file_name, 0)
         with self.assertRaises(ArgumentTypeError):
             self.type(self.tmp_file_name)
+        os.chmod(self.tmp_file_name, stat.S_IREAD | stat.S_IWRITE)
 
     def test_input_file_repr(self):
         with self.type(self.tmp_file_name) as f:
@@ -157,9 +159,11 @@ class TestOutputDirectory(_TestDirectory):
 
     def test_output_directory_raises_if_dir_not_writeable(self):
         dname = os.path.join(self.tmp_dir.name, "foo", "bar", "baz")
-        os.makedirs(dname, stat.S_IREAD | stat.S_IEXEC)
+        os.makedirs(dname)
+        os.chmod(dname, stat.S_IREAD | stat.S_IEXEC)
         with self.assertRaises(ArgumentTypeError):
             self.type(dname)
+        os.chmod(dname, stat.S_IREAD | stat.S_IWRITE | stat.S_IEXEC)
 
 
 class TestInputDirectory(_TestDirectory):
@@ -171,7 +175,8 @@ class TestInputDirectory(_TestDirectory):
 
     def test_input_directory_raises_if_dir_not_readable(self):
         dname = os.path.join(self.tmp_dir.name, "foo", "bar", "baz")
-        os.makedirs(dname, stat.S_IEXEC)
+        os.makedirs(dname)
+        os.chmod(dname, 0)
         with self.assertRaises(ArgumentTypeError):
             self.type(dname)
         os.chmod(dname, stat.S_IREAD | stat.S_IWRITE | stat.S_IEXEC)
