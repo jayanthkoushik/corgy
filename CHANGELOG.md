@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.1.0](https://github.com/jayanthkoushik/corgy/compare/v3.0.0...v3.1.0) (2021-12-02)
+
+
+### Features
+
+* add `py.typed` to inform type checkers about annotations ([e008b7b](https://github.com/jayanthkoushik/corgy/commit/e008b7bd73cd51c06102cc688111b539db904159))
+* prevent re sub-scripting `types.SubClass` and `types.KeyValuePairs` ([fc2314b](https://github.com/jayanthkoushik/corgy/commit/fc2314b7a6c3a0b1f6bd1b85bfefc4a7b98d76d3))
+* remove deprecated `Corgy.new_with_args` ([1c0b270](https://github.com/jayanthkoushik/corgy/commit/1c0b27088cdbe21f9428e78567500cd43bd8e234))
+
 ## [3.0.0](https://github.com/jayanthkoushik/corgy/compare/v2.4.0...v3.0.0) (2021-12-02)
 
 
