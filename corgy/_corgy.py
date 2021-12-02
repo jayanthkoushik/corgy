@@ -19,7 +19,6 @@ from typing import (
     TypeVar,
     Union,
 )
-from warnings import warn
 
 from ._helpfmt import CorgyHelpFormatter
 
@@ -532,16 +531,6 @@ class Corgy(metaclass=_CorgyMeta):
             grp_type = getattr(self.__class__, grp_name).fget.__annotations__["return"]
             grp_obj = grp_type(**grp_args)
             setattr(self, grp_name, grp_obj)
-
-    @classmethod
-    def new_with_args(cls: Type[_T], **args) -> _T:
-        #: :meta private:
-        warn(
-            f"this method is deprecated: use `{cls.__name__}(**args)` "
-            f"to create a new instance",
-            DeprecationWarning,
-        )
-        return cls(**args)
 
     def __repr__(self):
         s = f"{self.__class__.__name__}("
