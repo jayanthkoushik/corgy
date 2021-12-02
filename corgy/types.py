@@ -28,7 +28,7 @@ import sys
 from argparse import ArgumentTypeError
 from io import BufferedReader, BufferedWriter, FileIO, TextIOWrapper
 from pathlib import Path, PosixPath, WindowsPath
-from typing import Dict, Generic, Iterator, List, Optional, Tuple, Type, TypeVar
+from typing import Dict, Generic, Iterator, List, Tuple, Type, TypeVar
 
 if sys.version_info < (3, 8):
     from typing_extensions import Protocol
@@ -337,14 +337,15 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
     _default_use_full_names = False
     _default_allow_indirect_subs = True
 
-    _base: Optional[Type[_T]] = None
     _type_cache: Dict[Type[_T], Type["SubClass[_T]"]] = {}
+
+    _base: Type[_T]
 
     _subcls: Type[_T]
     __slots__ = ("_subcls",)
 
     def __class_getitem__(cls, item: Type[_T]) -> Type["SubClass[_T]"]:
-        if cls._base is not None:
+        if hasattr(cls, "_base"):
             raise TypeError(
                 f"cannot further sub-script "
                 f"`{cls.__name__}[{cls._subclass_name(cls._base)}]`"
@@ -373,7 +374,7 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
 
     @classmethod
     def _ensure_base_set(cls):
-        if cls._base is None:
+        if not hasattr(cls, "_base"):
             raise TypeError(
                 f"`{cls.__name__}` must be associated with a base class first: "
                 f"use `{cls.__name__}[<class>]`"
@@ -382,7 +383,6 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
     @classmethod
     def _generate_base_subclasses(cls) -> Iterator[Type[_T]]:
         cls._ensure_base_set()
-        assert cls._base is not None  # to satisfy mypy
         if cls.allow_base:
             yield cls._base
         for base_subcls in cls._base.__subclasses__():
@@ -405,7 +405,6 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
     @classmethod
     def _metavar(cls) -> str:
         cls._ensure_base_set()
-        assert cls._base is not None  # to satisfy mypy
         return f"{cls.__name__}[{cls._subclass_name(cls._base)}]"
 
     @classmethod
@@ -421,7 +420,6 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
     @classmethod
     def _choices(cls) -> Tuple["SubClass[_T]", ...]:
         cls._ensure_base_set()
-        assert cls._base is not None  # to satisfy mypy
         choices: List["SubClass[_T]"] = []
         for subcls in cls._generate_base_subclasses():
             obj = super().__new__(cls)
