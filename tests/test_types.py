@@ -1,4 +1,5 @@
 import os
+import stat
 from argparse import ArgumentTypeError
 from io import BufferedReader, BufferedWriter, TextIOWrapper
 from pathlib import Path
@@ -50,7 +51,7 @@ class _TestOutputFile(_TestFile):
         open(  # pylint: disable=unspecified-encoding,consider-using-with
             fname, "x"
         ).close()
-        os.chmod(fname, 0o444)
+        os.chmod(fname, stat.S_IREAD)
         with self.assertRaises(ArgumentTypeError):
             self.type(fname)
 
@@ -89,7 +90,7 @@ class _TestInputFile(_TestFile):
             self.type(os.path.join(self.tmp_dir.name, "nota.file"))
 
     def test_input_file_raises_if_file_not_readable(self):
-        os.chmod(self.tmp_file_name, 0o000)
+        os.chmod(self.tmp_file_name, 0)
         with self.assertRaises(ArgumentTypeError):
             self.type(self.tmp_file_name)
 
@@ -156,7 +157,7 @@ class TestOutputDirectory(_TestDirectory):
 
     def test_output_directory_raises_if_dir_not_writeable(self):
         dname = os.path.join(self.tmp_dir.name, "foo", "bar", "baz")
-        os.makedirs(dname, 0o444)
+        os.makedirs(dname, stat.S_IREAD | stat.S_IEXEC)
         with self.assertRaises(ArgumentTypeError):
             self.type(dname)
 
@@ -170,10 +171,10 @@ class TestInputDirectory(_TestDirectory):
 
     def test_input_directory_raises_if_dir_not_readable(self):
         dname = os.path.join(self.tmp_dir.name, "foo", "bar", "baz")
-        os.makedirs(dname, 0o000)
+        os.makedirs(dname, stat.S_IEXEC)
         with self.assertRaises(ArgumentTypeError):
             self.type(dname)
-        os.chmod(dname, 0o777)
+        os.chmod(dname, stat.S_IREAD | stat.S_IWRITE | stat.S_IEXEC)
 
 
 class TestSubClass(TestCase):
