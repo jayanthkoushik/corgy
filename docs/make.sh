@@ -12,6 +12,11 @@ poetry run sphinx-apidoc \
     . tests
 
 poetry run sphinx-build \
+    -C \
+    -D extensions=sphinx.ext.autodoc,sphinx.ext.napoleon \
+    -D default_role=samp \
+    -D autodoc_member_order=bysource \
+    -D autodoc_typehints=none \
     -D highlight_language=python \
     -b markdown \
     -c docs \
