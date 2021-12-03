@@ -4,7 +4,7 @@ import re
 import shutil
 import sys
 import textwrap
-from argparse import Action, HelpFormatter, PARSER, SUPPRESS
+from argparse import Action, ArgumentParser, HelpFormatter, PARSER, SUPPRESS
 from functools import lru_cache, partial
 from itertools import cycle
 from types import ModuleType
@@ -617,3 +617,51 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         self._color_helper = _ColorHelper(self.use_colors)
         # Wrapping is managed by this class, so pass `sys.maxsize` to the superclass.
         super().__init__(prog, max_help_position=sys.maxsize, width=sys.maxsize)
+
+    class ShortHelpAction(Action):
+        """`argparse.Action` that displays the short help, and exits."""
+
+        def __call__(self, parser, namespace, values, option_string=None):
+            CorgyHelpFormatter.show_full_help = False
+            parser.print_help()
+            parser.exit()
+
+    class FullHelpAction(Action):
+        """`argparse.Action` that displays the full help, and exits."""
+
+        def __call__(self, parser, namespace, values, option_string=None):
+            CorgyHelpFormatter.show_full_help = True
+            parser.print_help()
+            parser.exit()
+
+    @classmethod
+    def add_short_full_helps(
+        cls,
+        parser: ArgumentParser,
+        short_help_flags: Sequence[str] = ("-h", "--help"),
+        full_help_flags: Sequence[str] = ("--helpfull",),
+        short_help_msg: str = "show help message and exit",
+        full_help_msg: str = "show full help messsage and exit",
+    ):
+        """Add arguments for displaying the short or full help.
+
+        The parser must be created with `add_help=False` to prevent a clash with the
+        added arguments.
+
+        Args:
+            parser: `ArgumentParser` instance to add the arguments to.
+            short_help_flags: Sequence of argument strings for the short help option.
+                Default is `("-h", "--help")`.
+            full_help_flags: Sequence of argument strings for the full help option.
+                Default is `("--helpfull")`.
+            short_help_msg: String to describe the short help option. Default is `"show
+                help message and exit"`.
+            full_help_msg: String to describe the full help option. Default is `"show
+                full help message and exit"`.
+        """
+        parser.add_argument(
+            *short_help_flags, nargs=0, action=cls.ShortHelpAction, help=short_help_msg
+        )
+        parser.add_argument(
+            *full_help_flags, nargs=0, action=cls.FullHelpAction, help=full_help_msg
+        )

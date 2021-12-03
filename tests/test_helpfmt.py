@@ -207,6 +207,61 @@ class TestCorgyHelpFormatterAPI(TestCase):
                 parser.format_help()
 
 
+class TestCorgyHelpFormatterHelpActions(TestCase):
+    """Tests to check the help actions in `CorgyHelpFormatter`."""
+
+    def setUp(self):
+        CorgyHelpFormatter.use_colors = False
+        self.parser = ArgumentParser(formatter_class=CorgyHelpFormatter, add_help=False)
+        self.parser.print_help = Mock()
+        self.parser.exit = Mock()
+
+    def tearDown(self):
+        CorgyHelpFormatter.show_full_help = True
+
+    def test_corgy_help_formatter_short_help_action(self):
+        self.parser.add_argument(
+            "-h", nargs=0, action=CorgyHelpFormatter.ShortHelpAction
+        )
+        self.parser.parse_args(["-h"])
+        self.parser.print_help.assert_called_once()
+        self.parser.exit.assert_called_once()
+        self.assertEqual(CorgyHelpFormatter.show_full_help, False)
+
+    def test_corgy_help_formatter_full_help_action(self):
+        self.parser.add_argument(
+            "-h", nargs=0, action=CorgyHelpFormatter.FullHelpAction
+        )
+        self.parser.parse_args(["-h"])
+        self.parser.print_help.assert_called_once()
+        self.parser.exit.assert_called_once()
+        self.assertEqual(CorgyHelpFormatter.show_full_help, True)
+
+    def test_corgy_help_formatter_add_short_full_helps(self):
+        self.parser.add_argument = Mock()
+        CorgyHelpFormatter.add_short_full_helps(
+            self.parser,
+            short_help_flags=("-h", "--helpshort"),
+            full_help_flags=("-H", "--helpfull"),
+            short_help_msg="show short help",
+            full_help_msg="show full help",
+        )
+        self.parser.add_argument.assert_any_call(
+            "-h",
+            "--helpshort",
+            nargs=0,
+            action=CorgyHelpFormatter.ShortHelpAction,
+            help="show short help",
+        )
+        self.parser.add_argument.assert_any_call(
+            "-H",
+            "--helpfull",
+            nargs=0,
+            action=CorgyHelpFormatter.FullHelpAction,
+            help="show full help",
+        )
+
+
 @skipIf(_CRAYONS is None, "`crayons` package not found")
 class TestCorgyHelpFormatterSingleArgs(TestCase):
     """Tests to check formatting of single arguments."""

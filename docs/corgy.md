@@ -444,6 +444,44 @@ on the argument type. The following attributes are recognized:
 #### _property_ using_colors()
 Whether colors are enabled.
 
+
+#### _class_ ShortHelpAction(option_strings, dest, nargs=None, const=None, default=None, type=None, choices=None, required=False, help=None, metavar=None)
+`argparse.Action` that displays the short help, and exits.
+
+
+#### _class_ FullHelpAction(option_strings, dest, nargs=None, const=None, default=None, type=None, choices=None, required=False, help=None, metavar=None)
+`argparse.Action` that displays the full help, and exits.
+
+
+#### _classmethod_ add_short_full_helps(parser, short_help_flags=('-h', '--help'), full_help_flags=('--helpfull',), short_help_msg='show help message and exit', full_help_msg='show full help messsage and exit')
+Add arguments for displaying the short or full help.
+
+The parser must be created with `add_help=False` to prevent a clash with the
+added arguments.
+
+
+* **Parameters**
+
+
+    * **parser** – `ArgumentParser` instance to add the arguments to.
+
+
+    * **short_help_flags** – Sequence of argument strings for the short help option.
+    Default is `("-h", "--help")`.
+
+
+    * **full_help_flags** – Sequence of argument strings for the full help option.
+    Default is `("--helpfull")`.
+
+
+    * **short_help_msg** – String to describe the short help option. Default is `"show
+    help message and exit"`.
+
+
+    * **full_help_msg** – String to describe the full help option. Default is `"show
+    full help message and exit"`.
+
+
 ## Submodules
 
 
