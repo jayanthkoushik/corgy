@@ -161,6 +161,9 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     * `marker_choices_sep`: The string used to separate individual choices in the choice
       list. The default is `/`.
 
+    * `show_full_help`: Whether to show the full help, including choices, and indicators
+      for required arguments. The default is `True`.
+
     Formatting of individual arguments can be customized with magic attributes defined
     on the argument type. The following attributes are recognized:
 
@@ -206,6 +209,8 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     marker_choices_begin = "{"
     marker_choices_end = "}"
     marker_choices_sep = "/"
+
+    show_full_help = True
 
     __slots__ = ("_color_helper",)
     _color_helper: _ColorHelper
@@ -366,7 +371,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         base_fmt = base_fmt[:-2]  # remove trailing `\0\n`
 
         # Create formatted choice list.
-        if action.choices:
+        if action.choices and self.show_full_help:
             if self.using_colors:
                 marker_choices_begin = _PLACEHOLDER_CHOICES_BEGIN
                 marker_choices_end = _PLACEHOLDER_CHOICES_END
@@ -393,11 +398,14 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 choice_list_fmt = choice_list_fmt[:-1]
             arg_qualifier = ""
         elif action.required:
-            arg_qualifier = (
-                _PLACEHOLDER_KWD_REQUIRED * len("required")
-                if self.using_colors
-                else "required"
-            )
+            if self.show_full_help:
+                arg_qualifier = (
+                    _PLACEHOLDER_KWD_REQUIRED * len("required")
+                    if self.using_colors
+                    else "required"
+                )
+            else:
+                arg_qualifier = ""
         elif action.default is None or action.default is SUPPRESS:
             arg_qualifier = (
                 _PLACEHOLDER_KWD_OPTIONAL * len("optional")

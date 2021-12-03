@@ -400,6 +400,10 @@ an argument. The defaults are `{` and `}`.
 * `marker_choices_sep`: The string used to separate individual choices in the choice
 list. The default is `/`.
 
+
+* `show_full_help`: Whether to show the full help, including choices, and indicators
+for required arguments. The default is `True`.
+
 Formatting of individual arguments can be customized with magic attributes defined
 on the argument type. The following attributes are recognized:
 

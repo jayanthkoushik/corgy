@@ -143,6 +143,26 @@ class TestCorgyHelpFormatterAPI(TestCase):
                 "      x help (optional)\n",
             )
 
+    def test_corgy_help_formatter_handles_changing_show_full_help(self):
+        CorgyHelpFormatter.use_colors = False
+        with patch.object(CorgyHelpFormatter, "show_full_help", False):
+            parser = ArgumentParser(formatter_class=CorgyHelpFormatter, add_help=False)
+            parser.add_argument("--x", type=int, help="x help", required=True)
+            parser.add_argument("--y", type=int, help="y help", choices=(1, 2))
+            parser.add_argument("--z", type=int, help="z help", default=0)
+
+            self.assertEqual(
+                parser.format_help(),
+                # options:
+                #   --x int  x help
+                #   --y int  y help (optional)
+                #   --z int  z help (default: 0)
+                "options:\n"
+                "  --x int  x help\n"
+                "  --y int  y help (optional)\n"
+                "  --z int  z help (default: 0)\n",
+            )
+
     @skipIf(_CRAYONS is None, "`crayons` package not found")
     def test_corgy_help_formatter_consistent_on_repeat_usage(self):
         CorgyHelpFormatter.use_colors = True
