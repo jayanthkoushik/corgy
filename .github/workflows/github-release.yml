@@ -17,7 +17,7 @@ jobs:
         python-version: 3.9
     - uses: actions/setup-node@v2
     - name: Run conventional-github-releaser
-      run: npx conventional-github-releaser -p @commitlint/config-conventional
+      run: npx conventional-github-releaser -p angular
       env:
         CONVENTIONAL_GITHUB_RELEASER_TOKEN: ${{ secrets.CONVENTIONAL_GITHUB_RELEASER_TOKEN }}
     - name: Install poetry
