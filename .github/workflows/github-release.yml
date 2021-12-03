@@ -14,7 +14,7 @@ jobs:
         fetch-depth: 0
     - uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: '3.9'
     - uses: actions/setup-node@v2
     - name: Run conventional-github-releaser
       run: npx conventional-github-releaser -p angular
