@@ -407,11 +407,17 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             else:
                 arg_qualifier = ""
         elif action.default is None or action.default is SUPPRESS:
-            arg_qualifier = (
-                _PLACEHOLDER_KWD_OPTIONAL * len("optional")
-                if self.using_colors
-                else "optional"
-            )
+            if action.nargs == 0:
+                # The argument takes no values, so no need to explicitly indicate that
+                # it is optional. For example, help and version actions are obviously
+                # optional.
+                arg_qualifier = ""
+            else:
+                arg_qualifier = (
+                    _PLACEHOLDER_KWD_OPTIONAL * len("optional")
+                    if self.using_colors
+                    else "optional"
+                )
         else:
             if self.using_colors:
                 arg_qualifier = (

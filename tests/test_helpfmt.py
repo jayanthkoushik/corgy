@@ -133,12 +133,12 @@ class TestCorgyHelpFormatterAPI(TestCase):
                 parser.format_help(),
                 # options:
                 #   -h/--help
-                #       show this help message and exit (optional)
+                #       show this help message and exit
                 #   --x A LONG METAVAR
                 #       x help (optional)
                 "options:\n"
                 "  -h/--help\n"
-                "      show this help message and exit (optional)\n"
+                "      show this help message and exit\n"
                 "  --x A LONG METAVAR\n"
                 "      x help (optional)\n",
             )
@@ -171,11 +171,10 @@ class TestCorgyHelpFormatterAPI(TestCase):
 
         desired_output = (
             # options:
-            #   -h/--help  show this help message and exit (optional)
+            #   -h/--help  show this help message and exit
             #   --x int    ([1/2] optional)
             f"options:\n"
-            f"  {_O('-h')}/{_O('--help')}  show this help message and exit "
-            f"({_K('optional')})\n"
+            f"  {_O('-h')}/{_O('--help')}  show this help message and exit\n"
             f"  {_O('--x')} {_M('int')}    ([{_C(1)}/{_C(2)}] {_K('optional')})\n"
         )
 
@@ -681,13 +680,12 @@ class TestCorgyHelpFormatterMultiArgs(TestCase):
         self.assertEqual(
             self.parser.format_help(),
             # options:
-            #   -h/--help       show this help message and exit (optional)
+            #   -h/--help       show this help message and exit
             #   --x int         x help
             #   -y/--why float  (required)
             #   -z str          z help (default: 'z')
             f"options:\n"
-            f"  {_O('-h')}/{_O('--help')}       show this help message and exit "
-            f"({_K('optional')})\n"
+            f"  {_O('-h')}/{_O('--help')}       show this help message and exit\n"
             f"  {_O('--x')} {_M('int')}         x help ({_K('optional')})\n"
             f"  {_O('-y')}/{_O('--why')} {_M('float')}  ({_K('required')})\n"
             f"  {_O('-z')} {_M('str')}          z help ({_K('default')}: {_D('z')})\n",
@@ -702,7 +700,6 @@ class TestCorgyHelpFormatterMultiArgs(TestCase):
                 #   -h/--help      show this
                 #                  help message
                 #                  and exit
-                #                  (optional)
                 #   -x/--ex float  helphelphelph
                 #                  elphelphelphe
                 #                  lphelphelphel
@@ -711,7 +708,6 @@ class TestCorgyHelpFormatterMultiArgs(TestCase):
                 f"  {_O('-h')}/{_O('--help')}      show this\n"
                 f"                 help message\n"
                 f"                 and exit\n"
-                f"                 ({_K('optional')})\n"
                 f"  {_O('-x')}/{_O('--ex')} {_M('float')}  helphelphelph\n"
                 f"                 elphelphelphe\n"
                 f"                 lphelphelphel\n"
@@ -725,12 +721,12 @@ class TestCorgyHelpFormatterMultiArgs(TestCase):
                 self.parser.format_help(),
                 # options:
                 #   -h/--help
-                #       show this help message and exit (optional)
+                #       show this help message and exit
                 #   -x/--ex float
                 #       helphelphelphelphelphelphelphelphelphelp (optional)
                 f"options:\n"
                 f"  {_O('-h')}/{_O('--help')}\n"
-                f"      show this help message and exit ({_K('optional')})\n"
+                f"      show this help message and exit\n"
                 f"  {_O('-x')}/{_O('--ex')} {_M('float')}\n"
                 f"      helphelphelphelphelphelphelphelphelphelp ({_K('optional')})\n",
             )
@@ -750,7 +746,7 @@ class TestCorgyHelpFormatterMultiArgs(TestCase):
             #   arg        arg help
             #
             # options:
-            #   -h/--help  show this help message and exit (optional)
+            #   -h/--help  show this help message and exit
             #   --x str    x help (optional)
             #
             # group 1:
@@ -764,8 +760,7 @@ class TestCorgyHelpFormatterMultiArgs(TestCase):
             f"  {_O('arg')}        arg help\n"
             f"\n"
             f"options:\n"
-            f"  {_O('-h')}/{_O('--help')}  show this help message and exit "
-            f"({_K('optional')})\n"
+            f"  {_O('-h')}/{_O('--help')}  show this help message and exit\n"
             f"  {_O('--x')} {_M('str')}    x help ({_K('optional')})\n"
             f"\n"
             f"group 1:\n"
@@ -790,14 +785,13 @@ class TestCorgyHelpFormatterMultiArgs(TestCase):
             #   CMD        sub commands (['x'/'y'])
             #
             # options:
-            #   -h/--help  show this help message and exit (optional)
+            #   -h/--help  show this help message and exit
             #   --arg str  (optional)
             f"positional arguments:\n"
             f"  {_O('CMD')}        sub commands ([{_C('x')}/{_C('y')}])\n"
             f"\n"
             f"options:\n"
-            f"  {_O('-h')}/{_O('--help')}  show this help message and exit "
-            f"({_K('optional')})\n"
+            f"  {_O('-h')}/{_O('--help')}  show this help message and exit\n"
             f"  {_O('--arg')} {_M('str')}  ({_K('optional')})\n",
         )
 
