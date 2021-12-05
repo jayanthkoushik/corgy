@@ -150,12 +150,13 @@ class TestCorgyMeta(unittest.TestCase):
         c.y = 1
         self.assertEqual(c.y, 1)
 
-    def test_corgy_cls_has_correct_repr(self):
+    def test_corgy_cls_has_correct_repr_str(self):
         c = self._CorgyCls()
         c.x1 = [0, 1]
         c.x2 = 2
         c.x4 = "8"
         self.assertEqual(repr(c), "_CorgyCls(x1=[0, 1], x2=2, x3=3, x4='8')")
+        self.assertEqual(str(c), "_CorgyCls(x1=[0, 1], x2=2, x3=3, x4=8)")
 
     def test_corgy_cls_repr_handles_unset_values(self):
         c = self._CorgyCls()

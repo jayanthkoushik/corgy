@@ -532,19 +532,25 @@ class Corgy(metaclass=_CorgyMeta):
             grp_obj = grp_type(**grp_args)
             setattr(self, grp_name, grp_obj)
 
-    def __repr__(self):
+    def _str(self, f_str: Callable[..., str]) -> str:
         s = f"{self.__class__.__name__}("
         for i, arg_name in enumerate(getattr(self.__class__, "__annotations__")):
             if i != 0:
                 s = s + ", "
             s = s + f"{arg_name}="
             try:
-                _val_s = repr(getattr(self, arg_name))
+                _val_s = f_str(getattr(self, arg_name))
             except AttributeError:
                 _val_s = "<unset>"
             s = s + _val_s
         s = s + ")"
         return s
+
+    def __repr__(self) -> str:
+        return self._str(repr)
+
+    def __str__(self) -> str:
+        return self._str(str)
 
     @classmethod
     def parse_from_cmdline(
