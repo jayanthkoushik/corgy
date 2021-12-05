@@ -60,7 +60,7 @@ class _TestOutputFile(_TestFile):
     def test_output_file_repr_str(self):
         fname = os.path.join(self.tmp_dir.name, "foo.file")
         with self.type(fname) as f:
-            self.assertEqual(repr(f), f"{self.type.__name__}('{fname}')")
+            self.assertEqual(repr(f), f"{self.type.__name__}({fname!r})")
             self.assertEqual(str(f), fname)
 
 
@@ -101,7 +101,7 @@ class _TestInputFile(_TestFile):
 
     def test_input_file_repr_str(self):
         with self.type(self.tmp_file_name) as f:
-            self.assertEqual(repr(f), f"{self.type.__name__}('{self.tmp_file_name}')")
+            self.assertEqual(repr(f), f"{self.type.__name__}({self.tmp_file_name!r})")
             self.assertEqual(str(f), self.tmp_file_name)
 
 
@@ -145,7 +145,7 @@ class _TestDirectory(TestCase):
 
     def test_directory_repr(self):
         with self.type(self.tmp_dir.name) as d:
-            self.assertEqual(repr(d), f"{self.type.__name__}('{self.tmp_dir.name}')")
+            self.assertEqual(repr(d), f"{self.type.__name__}({self.tmp_dir.name!r})")
             self.assertEqual(str(d), self.tmp_dir.name)
 
 
