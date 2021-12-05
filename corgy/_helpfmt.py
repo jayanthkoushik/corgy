@@ -178,21 +178,6 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             >>> p.print_help()
             options:
               --arg METAVAR  (optional)
-
-    * `__corgy_fmt_choice__`: Formatting of argument choices/defaults can be customized
-        by defining a function of this name on the argument type. The function should
-        take a single argument, the choice, and return a string. Usage::
-
-            >>> class T:
-                @staticmethod
-                def __corgy_fmt_choice__(choice):
-                    return f"CHOICE-{choice}"
-            >>> p = ArgumentParser(formatter_class=CorgyHelpFormatter, add_help=False)
-            >>> p.add_argument("--arg", type=T, choices=["a", "b", "c"], default="a")
-            >>> p.print_help()
-            options:
-              --arg T  ({CHOICE-a/CHOICE-b/CHOICE-c} default: CHOICE-a)
-
     """
 
     use_colors: Optional[bool] = None
@@ -242,11 +227,11 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
 
     @staticmethod
     def _stringify(obj, type_) -> str:
-        if hasattr(type_, "__corgy_fmt_choice__"):
-            return type_.__corgy_fmt_choice__(obj)
         try:
             return obj.__name__
         except AttributeError:
+            if type_ is not None:
+                return type_.__repr__(obj)
             return repr(obj)
 
     def _sub_non_ws_with_colored_repl(
