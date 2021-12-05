@@ -431,9 +431,9 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
             return s
 
         self.assertEqual(
-            self._get_arg_help("--x", type=custom_type),
+            self._get_arg_help("--x", type=custom_type, default="x"),
             #   --x custom_type  (optional)
-            f"  {_O('--x')} {_M('custom_type')}  ({_K('optional')})",
+            f"  {_O('--x')} {_M('custom_type')}  ({_K('default')}: {_D('x')})",
         )
 
     def test_corgy_help_formatter_handles_custom_metavar(self):

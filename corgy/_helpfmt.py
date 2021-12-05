@@ -230,9 +230,10 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         try:
             return obj.__name__
         except AttributeError:
-            if type_ is not None:
+            try:
                 return type_.__str__(obj)
-            return str(obj)
+            except:  # pylint: disable=bare-except
+                return str(obj)
 
     def _sub_non_ws_with_colored_repl(
         self, match: re.Match, replacement: Optional[str], color: str
