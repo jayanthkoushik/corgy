@@ -84,7 +84,10 @@ class OutputTextFile(TextIOWrapper):
         super().__init__(buffer, **kwargs)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.buffer.name})"
+        return f"{self.__class__.__name__}({self.buffer.name!r})"
+
+    def __str__(self) -> str:
+        return str(self.buffer.name)
 
 
 class OutputBinFile(BufferedWriter):
@@ -107,7 +110,10 @@ class OutputBinFile(BufferedWriter):
         super().__init__(stream)
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.name})"
+        return f"{self.__class__.__name__}({self.name!r})"
+
+    def __str__(self) -> str:
+        return str(self.name)
 
 
 class InputTextFile(TextIOWrapper):
@@ -133,7 +139,10 @@ class InputTextFile(TextIOWrapper):
         super().__init__(buffer)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.buffer.name})"
+        return f"{self.__class__.__name__}({self.buffer.name!r})"
+
+    def __str__(self) -> str:
+        return str(self.buffer.name)
 
 
 class InputBinFile(BufferedReader):
@@ -158,7 +167,10 @@ class InputBinFile(BufferedReader):
         super().__init__(stream)
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.name})"
+        return f"{self.__class__.__name__}({self.name!r})"
+
+    def __str__(self) -> str:
+        return str(self.name)
 
 
 class OutputDirectory(Path):
@@ -192,7 +204,7 @@ class OutputDirectory(Path):
         return super().__new__(cls_, path)
 
     def __repr__(self) -> str:
-        return f"OutputDirectory({super().__str__()})"
+        return f"OutputDirectory({super().__str__()!r})"
 
 
 class _WindowsOutputDirectory(OutputDirectory, WindowsPath):
@@ -231,7 +243,7 @@ class InputDirectory(Path):
         return super().__new__(cls_, path)
 
     def __repr__(self) -> str:
-        return f"InputDirectory({super().__str__()})"
+        return f"InputDirectory({super().__str__()!r})"
 
 
 class _WindowsInputDirectory(InputDirectory, WindowsPath):
@@ -471,6 +483,15 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
     def __hash__(self) -> int:
         return hash(self._subcls)
 
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}[{self._base.__name__}]"
+            f"({self._subclass_name(self._subcls)!r})"
+        )
+
+    def __str__(self) -> str:
+        return self._subclass_name(self._subcls)
+
 
 class _StrMapper(Protocol):
     def __new__(cls, _: str):
@@ -495,7 +516,7 @@ class KeyValuePairs(dict, Generic[_KT, _VT], metaclass=_KeyValuePairsMeta):
 
         >>> MapType = KeyValuePairs[str, int]
         >>> map = MapType("a=1,b=2")
-        >>> map
+        >>> print(map)
         {'a': 1, 'b': 2}
 
     This class supports the class indexing syntax to specify the types for keys and
@@ -534,7 +555,7 @@ class KeyValuePairs(dict, Generic[_KT, _VT], metaclass=_KeyValuePairsMeta):
     _vt: Type[_VT]
     _type_cache: Dict[Tuple[Type[_KT], Type[_VT]], Type["KeyValuePairs[_KT, _VT]"]] = {}
 
-    __slots__ = ()
+    __slots__ = ("_src",)
 
     def __class_getitem__(  # type: ignore
         cls, item: Tuple[Type[_KT], Type[_VT]]
@@ -575,6 +596,7 @@ class KeyValuePairs(dict, Generic[_KT, _VT], metaclass=_KeyValuePairsMeta):
         return f"[key{cls.item_separator}val{cls.sequence_separator}...]"
 
     def __init__(self, values: str):
+        self._src = values
         kt: Type[_KT] = getattr(self, "_kt", str)
         vt: Type[_VT] = getattr(self, "_vt", str)
 
@@ -604,3 +626,11 @@ class KeyValuePairs(dict, Generic[_KT, _VT], metaclass=_KeyValuePairsMeta):
                 ) from None
             dic[k] = v
         super().__init__(dic)
+
+    def __repr__(self) -> str:
+        kt: Type[_KT] = getattr(self, "_kt", str)
+        vt: Type[_VT] = getattr(self, "_vt", str)
+        return f"{self.__class__.__name__}[{kt.__name__}, {vt.__name__}]({self._src!r})"
+
+    def __str__(self) -> str:
+        return super().__repr__()

@@ -216,7 +216,7 @@ Example:
 ```python
 >>> MapType = KeyValuePairs[str, int]
 >>> map = MapType("a=1,b=2")
->>> map
+>>> print(map)
 {'a': 1, 'b': 2}
 ```
 

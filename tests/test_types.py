@@ -57,10 +57,11 @@ class _TestOutputFile(_TestFile):
             self.type(fname)
         os.chmod(fname, stat.S_IREAD | stat.S_IWRITE)
 
-    def test_output_file_repr(self):
+    def test_output_file_repr_str(self):
         fname = os.path.join(self.tmp_dir.name, "foo.file")
         with self.type(fname) as f:
-            self.assertEqual(repr(f), f"{self.type.__name__}({fname})")
+            self.assertEqual(repr(f), f"{self.type.__name__}('{fname}')")
+            self.assertEqual(str(f), fname)
 
 
 class TestOutputTextFile(_TestOutputFile):
@@ -98,9 +99,10 @@ class _TestInputFile(_TestFile):
             self.type(self.tmp_file_name)
         os.chmod(self.tmp_file_name, stat.S_IREAD | stat.S_IWRITE)
 
-    def test_input_file_repr(self):
+    def test_input_file_repr_str(self):
         with self.type(self.tmp_file_name) as f:
-            self.assertEqual(repr(f), f"{self.type.__name__}({self.tmp_file_name})")
+            self.assertEqual(repr(f), f"{self.type.__name__}('{self.tmp_file_name}')")
+            self.assertEqual(str(f), self.tmp_file_name)
 
 
 class TestInputTextFile(_TestInputFile):
@@ -143,7 +145,8 @@ class _TestDirectory(TestCase):
 
     def test_directory_repr(self):
         with self.type(self.tmp_dir.name) as d:
-            self.assertEqual(repr(d), f"{self.type.__name__}({self.tmp_dir.name})")
+            self.assertEqual(repr(d), f"{self.type.__name__}('{self.tmp_dir.name}')")
+            self.assertEqual(str(d), self.tmp_dir.name)
 
 
 class TestOutputDirectory(_TestDirectory):
@@ -395,6 +398,34 @@ class TestSubClass(TestCase):
         self.assertIsNot(new_b, init_b)
         self.assertIs(new_b, type_(B.__module__ + "." + B.__qualname__))
 
+    def test_subclass_repr_str(self):
+        class A:
+            ...
+
+        class B(A):  # pylint: disable=unused-variable
+            ...
+
+        type_ = SubClass[A]
+        init_b = type_("B")
+
+        self.assertEqual(repr(init_b), "SubClass[A]('B')")
+        self.assertEqual(str(init_b), "B")
+
+    def test_subclass_repr_str_with_full_names(self):
+        class A:
+            ...
+
+        class B(A):
+            ...
+
+        type_ = SubClass[A]
+        type_.use_full_names = True
+        b_full_name = B.__module__ + "." + B.__qualname__
+        init_b = type_(b_full_name)
+
+        self.assertEqual(repr(init_b), f"SubClass[A]('{b_full_name}')")
+        self.assertEqual(str(init_b), b_full_name)
+
 
 class TestKeyValuePairs(TestCase):
     def test_key_value_pairs_init_returns_unique_class(self):
@@ -490,6 +521,18 @@ class TestKeyValuePairs(TestCase):
         with patch.multiple(KeyValuePairs, sequence_separator=";", item_separator=":"):
             self.assertEqual(type_.sequence_separator, ",")
             self.assertEqual(type_.item_separator, "=")
+
+    def test_key_value_pairs_repr_str(self):
+        type_ = KeyValuePairs[str, int]
+        dic = type_("foo=1,bar=2")
+        self.assertEqual(repr(dic), "KeyValuePairs[str, int]('foo=1,bar=2')")
+        self.assertEqual(str(dic), "{'foo': 1, 'bar': 2}")
+
+    def test_key_value_pairs_repr_str_with_custom_separators(self):
+        with patch.multiple(KeyValuePairs, sequence_separator=";", item_separator=":"):
+            dic = KeyValuePairs("foo:1;bar:2")
+            self.assertEqual(repr(dic), "KeyValuePairs[str, str]('foo:1;bar:2')")
+            self.assertEqual(str(dic), "{'foo': '1', 'bar': '2'}")
 
 
 del _TestFile, _TestOutputFile, _TestInputFile, _TestDirectory
