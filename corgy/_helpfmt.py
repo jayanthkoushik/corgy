@@ -150,7 +150,8 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
       default), the current terminal width is used.
 
     * `max_help_position`: How far to the right (from the start), the help string can
-      start from. If `None`, there is no limit. The default is `40`.
+      start from. If `None`, there is no limit. The default is to use half the current
+      terminal width.
 
     * `marker_extras_<begin/end>`: The strings used to enclose the extra help text
       (choices, default values etc.). The defaults are `(` and `)`.
@@ -202,7 +203,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     color_options = "BOLD"
 
     output_width: Optional[int] = None
-    max_help_position: Optional[int] = 40
+    max_help_position: Optional[int] = shutil.get_terminal_size().columns // 2
 
     marker_extras_begin = "("
     marker_extras_end = ")"

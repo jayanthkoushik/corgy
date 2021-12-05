@@ -386,7 +386,8 @@ default), the current terminal width is used.
 
 
 * `max_help_position`: How far to the right (from the start), the help string can
-start from. If `None`, there is no limit. The default is `40`.
+start from. If `None`, there is no limit. The default is to use half the current
+terminal width.
 
 
 * `marker_extras_<begin/end>`: The strings used to enclose the extra help text
