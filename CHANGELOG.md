@@ -1,5 +1,36 @@
 # Changelog
 
+## [4.0.0](https://github.com/jayanthkoushik/corgy/compare/v3.1.0...v4.0.0) (2021-12-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* `__corgy_fmt_choice__` is no longer used to format
+choices in `CorgyHelpFormatter`
+
+### Features
+
+* add `Action` classes for showing short/full help ([627eae5](https://github.com/jayanthkoushik/corgy/commit/627eae5a31bd04c0b5165fd9b3ed7ee7602a716a))
+* add `CorgyHelpFormatter.show_full_help` option to configure help verbosity ([f25ee3f](https://github.com/jayanthkoushik/corgy/commit/f25ee3f39206319ff8189e052acbc6b3f682796f))
+* add more informative `__repr__` and `__str__` for `types` classes ([d1881f6](https://github.com/jayanthkoushik/corgy/commit/d1881f6e05de4dea839db8a941210745eb90d6a8))
+* disable explicit `optional` marker for arguments with `nargs=0` in `CorgyHelpFormatter` ([6c76be8](https://github.com/jayanthkoushik/corgy/commit/6c76be889c7b69c820512ae663b41837e04fc00d))
+* implement `Corgy.__str__` which calls `__str__` on members ([7c1c003](https://github.com/jayanthkoushik/corgy/commit/7c1c0032577081c3d3dddcfe5c6126afa46e6d75))
+* make `CorgyHelpFormatter.max_help_position` adaptive ([543bca8](https://github.com/jayanthkoushik/corgy/commit/543bca88b06541cdfd3260dcc47710ff76c61d12))
+* simplify `types.SubClass.__metavar__` ([0b4e74c](https://github.com/jayanthkoushik/corgy/commit/0b4e74c1f284bc879d61a56954e5afa02b38df4b))
+* use `__str__` instead of `__repr__` to display choices and defaults in `CorgyHelpFormatter` ([9d6af55](https://github.com/jayanthkoushik/corgy/commit/9d6af55ee1700d42450242614c20d93170c7987f))
+
+
+### Bug Fixes
+
+* handle current directory output file types ([538e810](https://github.com/jayanthkoushik/corgy/commit/538e810dee583e1c2e8a6e63d7356f457f6b302c))
+* handle exceptions when stringifying inside `CorgyHelpFormatter` ([50a7764](https://github.com/jayanthkoushik/corgy/commit/50a77641f1d3f498a14b9b09b11b603594907600))
+* update `corgyparser` type annotation to allow nested wrapping ([08ef0ae](https://github.com/jayanthkoushik/corgy/commit/08ef0ae89e658291d1191b34d899978fa6c3f115))
+
+
+### revert
+
+* remove support for `__corgy_fmt_choice__` since `__repr__` can do the same ([0070ff0](https://github.com/jayanthkoushik/corgy/commit/0070ff0cf4da1bcb38327bc6a2d32d864e1db34b))
+
 ## [3.1.0](https://github.com/jayanthkoushik/corgy/compare/v3.0.0...v3.1.0) (2021-12-02)
 
 
