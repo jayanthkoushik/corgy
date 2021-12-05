@@ -231,8 +231,8 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             return obj.__name__
         except AttributeError:
             if type_ is not None:
-                return type_.__repr__(obj)
-            return repr(obj)
+                return type_.__str__(obj)
+            return str(obj)
 
     def _sub_non_ws_with_colored_repl(
         self, match: re.Match, replacement: Optional[str], color: str

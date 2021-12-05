@@ -15,13 +15,9 @@ _CRAYONS = _COLOR_HELPER.crayons
 # Shortcuts for color functions to make ground truths in assert statements concise.
 _M = lambda s: _COLOR_HELPER.colorize(s, CorgyHelpFormatter.color_metavars)
 _K = lambda s: _COLOR_HELPER.colorize(s, CorgyHelpFormatter.color_keywords)
-_C = lambda s: _COLOR_HELPER.colorize(repr(s), CorgyHelpFormatter.color_choices)
-_D = lambda s: _COLOR_HELPER.colorize(repr(s), CorgyHelpFormatter.color_defaults)
+_C = lambda s: _COLOR_HELPER.colorize(s, CorgyHelpFormatter.color_choices)
+_D = lambda s: _COLOR_HELPER.colorize(s, CorgyHelpFormatter.color_defaults)
 _O = lambda s: _COLOR_HELPER.colorize(s, CorgyHelpFormatter.color_options)
-
-# Versions of `_C`/`_D` which do not call `repr` on the object.
-_Cs = lambda s: _COLOR_HELPER.colorize(s, CorgyHelpFormatter.color_choices)
-_Ds = lambda s: _COLOR_HELPER.colorize(s, CorgyHelpFormatter.color_defaults)
 
 # Make outputs independent of terminal width.
 CorgyHelpFormatter.output_width = 80
@@ -555,26 +551,25 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
                 # This is awful.
                 #   --x str  x help ([
                 f"  {_O('--x')} {_M('str')}  x help (["
-                # 'a'/'b'/
+                # a/b/
                 + _C("a") + "/" + _C("b") + "/"
-                # '--x str/'
-                + _Cs("'--x") + " " + _Cs("str'") + "/"
-                # '[\'a\'/"b"]'/
-                + _Cs("'[\\'a\\'/\"b\"]'") + "/"
-                # "default: 'a'"/
-                + _Cs('"default:') + " " + _Cs("'a'\"") + "/"
-                # '--x str  x help
-                + _Cs("'--x") + " " + _Cs("str") + "  " + _Cs("x") + " " + _Cs("help")
-                #  ([\'a\'/"b"]
-                + " " + _Cs("([\\'a\\'/\"b\"]")
-                #  default: \'a\')}
-                + " " + _Cs("default:") + " " + _Cs("\\'a\\')'") + "] "
-                # default: 'a'
+                # --x str/
+                + _C("--x") + " " + _C("str") + "/"
+                # ['a'/"b"]/
+                + _C("['a'/\"b\"]") + "/"
+                # default: 'a'/
+                + _C("default:") + " " + _C("'a'") + "/"
+                # --x str  x help
+                + _C("--x") + " " + _C("str") + "  " + _C("x") + " " + _C("help")
+                #  (['a'/"b"]
+                + " " + _C("(['a'/\"b\"]")
+                #  default: 'a')}]
+                + " " + _C("default:") + " " + _C("'a')") + "] "
+                # default: a
                 + f"{_K('default')}: {_D('a')})",
             )
 
     def test_corgy_help_formatter_handles_long_choice(self):
-        _q = "'"  # can't use escapes inside f-strings
         with patch.multiple(CorgyHelpFormatter, output_width=15, max_help_position=5):
             self.assertEqual(
                 self._get_arg_help(
@@ -584,21 +579,21 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
                     default="a",
                 ),
                 #   --x str
-                #       (['a'/'su
-                #       percalifr
-                #       agilistic
-                #       expialido
-                #       cious cho
-                #       ice'/'b']
+                #       ([a/super
+                #       califragi
+                #       listicexp
+                #       ialidocio
+                #       us
+                #       choice/b]
                 #       default:
-                #       'a')
+                #       a)
                 f"  {_O('--x')} {_M('str')}\n"
-                f"      ([{_C('a')}/{_Cs(_q+'su')}\n"
-                f"      {_Cs('percalifr')}\n"
-                f"      {_Cs('agilistic')}\n"
-                f"      {_Cs('expialido')}\n"
-                f"      {_Cs('cious')} {_Cs('cho')}\n"
-                f"      {_Cs('ice'+_q)}/{_C('b')}]\n"
+                f"      ([{_C('a')}/{_C('super')}\n"
+                f"      {_C('califragi')}\n"
+                f"      {_C('listicexp')}\n"
+                f"      {_C('ialidocio')}\n"
+                f"      {_C('us')}\n"
+                f"      {_C('choice')}/{_C('b')}]\n"
                 f"      {_K('default')}:\n"
                 f"      {_D('a')})",
             )
@@ -615,7 +610,7 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
 
         self.assertEqual(
             self._get_arg_help("--arg", choices=[A]),
-            f"  {_O('--arg')}  ([{_Cs('A')}] {_K('optional')})",
+            f"  {_O('--arg')}  ([{_C('A')}] {_K('optional')})",
         )
 
     def test_corgy_help_formatter_uses_name_for_default(self):
@@ -624,7 +619,7 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
 
         self.assertEqual(
             self._get_arg_help("--arg", default=A),
-            f"  {_O('--arg')}  ({_K('default')}: {_Ds('A')})",
+            f"  {_O('--arg')}  ({_K('default')}: {_D('A')})",
         )
 
     def test_corgy_help_formatter_uses_custom_choice_strs(self):
@@ -637,7 +632,7 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
 
         self.assertEqual(
             self._get_arg_help("--arg", type=A, choices=[A(1), A("a")]),
-            f"  {_O('--arg')} {_M('A')}  ([{_Cs('A:1')}/{_Cs('A:a')}] "
+            f"  {_O('--arg')} {_M('A')}  ([{_C('A:1')}/{_C('A:a')}] "
             f"{_K('optional')})",
         )
 
@@ -663,7 +658,7 @@ class TestCorgyHelpFormatterMultiArgs(TestCase):
             #   -h/--help       show this help message and exit
             #   --x int         x help
             #   -y/--why float  (required)
-            #   -z str          z help (default: 'z')
+            #   -z str          z help (default: z)
             f"options:\n"
             f"  {_O('-h')}/{_O('--help')}       show this help message and exit\n"
             f"  {_O('--x')} {_M('int')}         x help ({_K('optional')})\n"
@@ -762,7 +757,7 @@ class TestCorgyHelpFormatterMultiArgs(TestCase):
         self.assertEqual(
             self.parser.format_help(),
             # positional arguments:
-            #   CMD        sub commands (['x'/'y'])
+            #   CMD        sub commands ([x/y])
             #
             # options:
             #   -h/--help  show this help message and exit
