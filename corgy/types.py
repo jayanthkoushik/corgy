@@ -251,10 +251,6 @@ class _SubClassMeta(type):
     # Python < 3.9 does not support `classmethod` combined with `property`,
     # so we need to define class properties as properties on the metaclass.
     @property
-    def __metavar__(cls):
-        return cls._metavar()
-
-    @property
     def __choices__(cls):
         return cls._choices()
 
@@ -348,6 +344,7 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
     _base: Type[_T]
 
     _subcls: Type[_T]
+    __metavar__ = "cls"
     __slots__ = ("_subcls",)
 
     def __class_getitem__(cls, item: Type[_T]) -> Type["SubClass[_T]"]:
@@ -402,17 +399,6 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
         if cls.use_full_names:
             return subcls.__module__ + "." + subcls.__qualname__
         return subcls.__name__
-
-    @classmethod
-    def __metavar__(cls) -> str:
-        # This is defined as a class property in the metaclass, and is repeated here so
-        # Sphinx can pick it up.
-        ...
-
-    @classmethod
-    def _metavar(cls) -> str:
-        cls._ensure_base_set()
-        return f"{cls.__name__}[{cls._subclass_name(cls._base)}]"
 
     @classmethod
     def __choices__(cls) -> Tuple["SubClass[_T]", ...]:

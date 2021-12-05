@@ -308,9 +308,7 @@ class TestSubClass(TestCase):
 
     def test_subclass_metavar(self):
         type_ = SubClass[int]
-        self.assertEqual(type_.__metavar__, "SubClass[int]")
-        type_.use_full_names = True
-        self.assertEqual(type_.__metavar__, "SubClass[builtins.int]")
+        self.assertEqual(type_.__metavar__, "cls")
 
     def test_subclass_corgy_fmt_choice(self):
         class A:
