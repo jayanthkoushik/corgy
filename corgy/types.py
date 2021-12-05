@@ -50,7 +50,7 @@ __all__ = (
 def _get_output_stream(name: str) -> FileIO:
     """Open a file for writing (creating folders if necessary)."""
     filedir = os.path.dirname(name)
-    if not os.path.exists(filedir):
+    if filedir and not os.path.exists(filedir):
         try:
             os.makedirs(filedir)
         except OSError as e:
