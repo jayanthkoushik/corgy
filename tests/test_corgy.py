@@ -1,18 +1,27 @@
+import argparse
 import sys
 import unittest
+from typing import Optional, Sequence
 from unittest import skipIf
+from unittest.mock import MagicMock, patch
+
+SequenceType = Sequence
 
 if sys.version_info >= (3, 9):
-    import argparse
-    from collections.abc import Sequence
-    from typing import Annotated, Literal, Optional, Sequence as SequenceType
-    from unittest.mock import MagicMock, patch
+    from collections.abc import Sequence  # pylint: disable=reimported
+    from typing import Annotated, Literal
+else:
+    from typing_extensions import Annotated
 
-    import corgy
-    from corgy import Corgy, CorgyHelpFormatter, corgyparser
+    if sys.version_info >= (3, 8):
+        from typing import Literal
+    else:
+        from typing_extensions import Literal
+
+import corgy
+from corgy import Corgy, CorgyHelpFormatter, corgyparser
 
 
-@skipIf(sys.version_info < (3, 9), "Python 3.9 or higher needed")
 class TestCorgyMeta(unittest.TestCase):
     """Tests to check validity of classes inheriting from Corgy."""
 
@@ -171,7 +180,6 @@ class TestCorgyMeta(unittest.TestCase):
         self.assertEqual(repr(d), "D(x=1, c=_CorgyCls(x1=[0, 1], x2=2, x3=3, x4='8'))")
 
 
-@skipIf(sys.version_info < (3, 9), "Python 3.9 or higher needed")
 class TestCorgyAddArgsToParser(unittest.TestCase):
     """Tests to check that Corgy properly adds arguments to ArgumentParsers."""
 
@@ -362,6 +370,7 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with("--x", type=T, default=t)
 
+    @skipIf(sys.version_info < (3, 9), "`BooleanOptionalAction` unavailable")
     def test_add_args_converts_bool_to_action(self):
         class C(Corgy):
             x: bool
@@ -371,6 +380,7 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
             "--x", type=bool, action=argparse.BooleanOptionalAction, required=True
         )
 
+    @skipIf(sys.version_info < (3, 9), "`BooleanOptionalAction` unavailable")
     def test_add_args_handles_default_for_bool_type(self):
         class C(Corgy):
             x: bool = False
@@ -414,6 +424,7 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with("--x", type=int, nargs="*")
 
+    @skipIf(sys.version_info < (3, 9), "`typing.Sequence` doesn't accept multiple args")
     def test_add_args_sets_nargs_to_plus_for_non_empty_sequence_type(self):
         class C(Corgy):
             x: Sequence[int, ...]  # type: ignore
@@ -441,6 +452,7 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
             "--x", type=int, nargs="*", required=True, choices=(1, 2, 3)
         )
 
+    @skipIf(sys.version_info < (3, 9), "`typing.Sequence` doesn't accept multiple args")
     def test_add_args_handles_fixed_length_sequence_with_chocies(self):
         class C(Corgy):
             x: Sequence[Literal[1, 2, 3], Literal[1, 2, 3]]
@@ -450,6 +462,7 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
             "--x", type=int, nargs=2, required=True, choices=(1, 2, 3)
         )
 
+    @skipIf(sys.version_info < (3, 9), "`typing.Sequence` doesn't accept multiple args")
     def test_add_args_raises_if_fixed_length_sequence_choices_not_all_same(self):
         class C(Corgy):
             x: Sequence[Literal[1, 2, 3], Literal[1, 2]]
@@ -457,6 +470,7 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
         with self.assertRaises(TypeError):
             C.add_args_to_parser(self.parser)
 
+    @skipIf(sys.version_info < (3, 9), "`typing.Sequence` doesn't accept multiple args")
     def test_add_args_handles_fixed_length_typed_sequence(self):
         class C(Corgy):
             x: Sequence[int, int, int]
@@ -466,6 +480,7 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
             "--x", type=int, nargs=3, required=True
         )
 
+    @skipIf(sys.version_info < (3, 9), "`typing.Sequence` doesn't accept multiple args")
     def test_add_args_handles_length_2_typed_sequence(self):
         class C(Corgy):
             x: Sequence[int, int]
@@ -475,6 +490,7 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
             "--x", type=int, nargs=2, required=True
         )
 
+    @skipIf(sys.version_info < (3, 9), "`typing.Sequence` doesn't accept multiple args")
     def test_add_args_raises_if_fixed_length_sequence_types_not_all_same(self):
         class C(Corgy):
             x: Sequence[int, str, int]
@@ -579,7 +595,6 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
         )
 
 
-@skipIf(sys.version_info < (3, 9), "Python 3.9 or higher needed")
 class TestCorgyCmdlineParsing(unittest.TestCase):
     """Test cases to check parsing of command line arguments by Corgy."""
 
@@ -748,7 +763,6 @@ class TestCorgyCmdlineParsing(unittest.TestCase):
             _ = c.y
 
 
-@skipIf(sys.version_info < (3, 9), "Python 3.9 or higher needed")
 class TestCorgyCustomParsers(unittest.TestCase):
     """Tests to check usage of the @corgyparser decorator."""
 

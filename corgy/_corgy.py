@@ -1,9 +1,5 @@
-import sys
-
-if sys.version_info < (3, 9):
-    raise ImportError("`corgy._corgy` requires Python 3.9 or higher.")
-
 import argparse
+import sys
 from collections import defaultdict
 from collections.abc import Sequence as AbstractSequence
 from contextlib import suppress
@@ -11,7 +7,7 @@ from functools import partial
 from typing import (
     Any,
     Callable,
-    Literal,
+    Dict,
     NamedTuple,
     Optional,
     Sequence,
@@ -19,6 +15,11 @@ from typing import (
     TypeVar,
     Union,
 )
+
+if sys.version_info >= (3, 9):
+    from typing import Literal
+else:
+    from typing_extensions import Literal
 
 from ._helpfmt import CorgyHelpFormatter
 
@@ -54,8 +55,10 @@ class _CorgyMeta(type):
         namespace["__flags"] = {}
         for var_name, var_ano in namespace["__annotations__"].items():
             # Check for name conflicts.
-            if f"_{name.lstrip('_')}__{var_name}" in (
-                namespace | namespace["__annotations__"]
+            _mangled_name = f"_{name.lstrip('_')}__{var_name}"
+            if (
+                _mangled_name in namespace
+                or _mangled_name in namespace["__annotations__"]
             ):
                 raise TypeError(
                     f"cannot use name `__{var_name}`: internal clash with `{var_name}`"
@@ -144,9 +147,6 @@ class _CorgyMeta(type):
 class Corgy(metaclass=_CorgyMeta):
     """Base class for collections of variables.
 
-    Note:
-        This class is only available on Python 3.9 or higher.
-
     To create a command line interface, subclass `Corgy`, and declare your arguments
     using type annotations::
 
@@ -195,6 +195,10 @@ class Corgy(metaclass=_CorgyMeta):
     `Corgy` recognizes a number of special annotations, which are used to control how
     the argument is parsed.
 
+    Note:
+        If any of the following annotations are unavilable in the Python version being
+        used, you can import them from `typing_extension` (which is available on PyPI).
+
     **Annotated**:
     `typing.Annotated` can be used to add a help message::
 
@@ -239,8 +243,8 @@ class Corgy(metaclass=_CorgyMeta):
 
     **Sequence**
     `collections.abc.Sequence` can be used to specify that an argument accepts multiple
-    space-separated values. `typing.Sequence` can also be used, but is not recommended
-    as it is deprecated since Python 3.9.
+    space-separated values. On Python versions below 3.9, `typing.Sequence` must be
+    used instead.
 
     There are a few different ways to use `Sequence`, each resulting in different
     conditions for the parser. The simplest case is a plain sequence::
@@ -256,14 +260,16 @@ class Corgy(metaclass=_CorgyMeta):
     `--x` in the command line. After parsing, `x` will be a `list`. To denote an
     optional sequence, use `Optional[Sequence[...]]`.
 
+    The sequence length can be controlled by the arguments to `Sequence`. However, this
+    feature is only available in Python 3.9 and above, since `typing.Sequence` only
+    accepts a single argument.
+
     To specify that a sequence must be non-empty, use::
 
         x: Sequence[int, ...]
 
     This will result in `nargs` being set to `+` in the call to
-    `ArgumentParser.add_argument`. Using this syntax **requires**
-    `collections.abc.Sequence`, since `typing.Sequence` does not accept `...` as an
-    argument.
+    `ArgumentParser.add_argument`.
 
     Finally, you can specify a fixed length sequence::
 
@@ -307,7 +313,7 @@ class Corgy(metaclass=_CorgyMeta):
 
     **Bool**
     `bool` types (when not in a sequence) are converted to
-    `argparse.BooleanOptionalAction`::
+    `argparse.BooleanOptionalAction` on Python 3.9 and above::
 
         class A(Corgy):
             arg: bool
@@ -481,7 +487,7 @@ class Corgy(metaclass=_CorgyMeta):
             # `--<var-name>`/`--no-<var-name>` arguments.
             var_action: Optional[Type[argparse.Action]]
             if var_base_type is bool and var_nargs is None:
-                var_action = argparse.BooleanOptionalAction
+                var_action = getattr(argparse, "BooleanOptionalAction", None)
             else:
                 var_action = None
 
@@ -493,7 +499,7 @@ class Corgy(metaclass=_CorgyMeta):
                 var_add_type = var_base_type
 
             # Add the variable to the parser.
-            _kwargs: dict[str, Any] = {}
+            _kwargs: Dict[str, Any] = {}
             if var_name in getattr(cls, "__flags"):
                 _kwargs["dest"] = var_dest
             if var_help is not None:
@@ -514,7 +520,7 @@ class Corgy(metaclass=_CorgyMeta):
             parser.add_argument(*var_flags, type=var_add_type, **_kwargs)
 
     def __init__(self, **args):
-        grp_args_map: dict[str, Any] = defaultdict(dict)
+        grp_args_map: Dict[str, Any] = defaultdict(dict)
 
         for arg_name, arg_val in args.items():
             if ":" in arg_name:
@@ -554,7 +560,7 @@ class Corgy(metaclass=_CorgyMeta):
 
     @classmethod
     def parse_from_cmdline(
-        cls: type[_T], parser: Optional[argparse.ArgumentParser] = None, **parser_args
+        cls: Type[_T], parser: Optional[argparse.ArgumentParser] = None, **parser_args
     ) -> _T:
         """Parse an object of the class from command line arguments.
 
@@ -591,9 +597,6 @@ def corgyparser(
     var_name: str,
 ) -> Callable[[Union[Callable[[str], Any], _CorgyParser]], _CorgyParser]:
     """Decorate a function as a custom parser for a variable.
-
-    Note:
-        This decorator is only available on Python 3.9 or higher.
 
     To use a custom function for parsing an argument with `Corgy`, use this decorator.
     Parsing functions must be static, and should only accept a single string argument.

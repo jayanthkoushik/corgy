@@ -6,8 +6,6 @@ Corgy package for elegant command line parsing.
 ### _class_ corgy.Corgy(\*\*args)
 Base class for collections of variables.
 
-**NOTE**: This class is only available on Python 3.9 or higher.
-
 To create a command line interface, subclass `Corgy`, and declare your arguments
 using type annotations:
 
@@ -66,6 +64,9 @@ through custom `__slots__` are not processed by `Corgy`, and will not be added t
 `Corgy` recognizes a number of special annotations, which are used to control how
 the argument is parsed.
 
+**NOTE**: If any of the following annotations are unavilable in the Python version being
+used, you can import them from `typing_extension` (which is available on PyPI).
+
 **Annotated**:
 `typing.Annotated` can be used to add a help message:
 
@@ -119,8 +120,8 @@ be required.
 
 **Sequence**
 `collections.abc.Sequence` can be used to specify that an argument accepts multiple
-space-separated values. `typing.Sequence` can also be used, but is not recommended
-as it is deprecated since Python 3.9.
+space-separated values. On Python versions below 3.9, `typing.Sequence` must be
+used instead.
 
 There are a few different ways to use `Sequence`, each resulting in different
 conditions for the parser. The simplest case is a plain sequence:
@@ -140,6 +141,10 @@ Note that since the argument is required, parsing an empty list will still requi
 `--x` in the command line. After parsing, `x` will be a `list`. To denote an
 optional sequence, use `Optional[Sequence[...]]`.
 
+The sequence length can be controlled by the arguments to `Sequence`. However, this
+feature is only available in Python 3.9 and above, since `typing.Sequence` only
+accepts a single argument.
+
 To specify that a sequence must be non-empty, use:
 
 ```python
@@ -147,9 +152,7 @@ x: Sequence[int, ...]
 ```
 
 This will result in `nargs` being set to `+` in the call to
-`ArgumentParser.add_argument`. Using this syntax **requires**
-`collections.abc.Sequence`, since `typing.Sequence` does not accept `...` as an
-argument.
+`ArgumentParser.add_argument`.
 
 Finally, you can specify a fixed length sequence:
 
@@ -203,7 +206,7 @@ x: A
 
 **Bool**
 `bool` types (when not in a sequence) are converted to
-`argparse.BooleanOptionalAction`:
+`argparse.BooleanOptionalAction` on Python 3.9 and above:
 
 ```python
 class A(Corgy):
@@ -302,8 +305,6 @@ Parse an object of the class from command line arguments.
 
 ### corgy.corgyparser(var_name)
 Decorate a function as a custom parser for a variable.
-
-**NOTE**: This decorator is only available on Python 3.9 or higher.
 
 To use a custom function for parsing an argument with `Corgy`, use this decorator.
 Parsing functions must be static, and should only accept a single string argument.
