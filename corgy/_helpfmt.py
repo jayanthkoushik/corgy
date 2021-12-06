@@ -11,9 +11,6 @@ from types import ModuleType
 from typing import Optional, Sequence, Tuple, Union
 from unittest.mock import patch
 
-if sys.version_info >= (3, 9):
-    from argparse import BooleanOptionalAction
-
 __all__ = ("CorgyHelpFormatter",)
 
 # These placeholders are used to replace special characters and words, so they can be
@@ -212,10 +209,6 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         f"(?={_PLACEHOLDER_CHOICES_END}|{_PLACEHOLDER_CHOICES_SEP})",
         re.DOTALL,
     )
-
-    # Regex to match the default value added to help by `BooleanOptionalAction`.
-    if sys.version_info >= (3, 9):
-        _pattern_bool_opt_default = re.compile(r" \(default: .*\)")
 
     @staticmethod
     @lru_cache(maxsize=None)
@@ -419,12 +412,6 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 arg_qualifier = (
                     f"default: {self._stringify(action.default, action.type)}"
                 )
-
-            if sys.version_info >= (3, 9):
-                if isinstance(action, BooleanOptionalAction) and action.help:
-                    # BooleanOptionalAction adds the default value to the help text.
-                    # Remove it, since we already have it.
-                    action.help = self._pattern_bool_opt_default.sub("", action.help)
 
         # Add qualifier to choice list e.g. `({a/b/c} required)`.
         if choice_list_fmt or arg_qualifier:

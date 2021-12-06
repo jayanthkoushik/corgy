@@ -20,6 +20,7 @@ else:
 
 import corgy
 from corgy import Corgy, CorgyHelpFormatter, corgyparser
+from corgy._corgy import BooleanOptionalAction
 
 
 class TestCorgyMeta(unittest.TestCase):
@@ -370,24 +371,22 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with("--x", type=T, default=t)
 
-    @skipIf(sys.version_info < (3, 9), "`BooleanOptionalAction` unavailable")
     def test_add_args_converts_bool_to_action(self):
         class C(Corgy):
             x: bool
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
-            "--x", type=bool, action=argparse.BooleanOptionalAction, required=True
+            "--x", type=bool, action=BooleanOptionalAction, required=True
         )
 
-    @skipIf(sys.version_info < (3, 9), "`BooleanOptionalAction` unavailable")
     def test_add_args_handles_default_for_bool_type(self):
         class C(Corgy):
             x: bool = False
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
-            "--x", type=bool, action=argparse.BooleanOptionalAction, default=False
+            "--x", type=bool, action=BooleanOptionalAction, default=False
         )
 
     def test_add_args_does_not_convert_bool_sequence_to_action(self):

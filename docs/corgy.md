@@ -205,8 +205,7 @@ x: A
 ```
 
 **Bool**
-`bool` types (when not in a sequence) are converted to
-`argparse.BooleanOptionalAction` on Python 3.9 and above:
+`bool` types (when not in a sequence) are converted to a pair of options:
 
 ```python
 class A(Corgy):
