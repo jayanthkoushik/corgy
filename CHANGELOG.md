@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.1.0](https://github.com/jayanthkoushik/corgy/compare/v4.0.0...v4.1.0) (2021-12-06)
+
+
+### Features
+
+* fully support Python 3.7 and 3.8 ([9648ef8](https://github.com/jayanthkoushik/corgy/commit/9648ef8f85cc441abe80c418f26f45a7f889fb71))
+* use local version of `BooleanOptionalAction` to support Python 3.7 and 3.8 ([61c5a89](https://github.com/jayanthkoushik/corgy/commit/61c5a897f1a227b51f702ad9be29f52aba479ec3))
+
 ## [4.0.0](https://github.com/jayanthkoushik/corgy/compare/v3.1.0...v4.0.0) (2021-12-05)
 
 
