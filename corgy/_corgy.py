@@ -423,6 +423,17 @@ class Corgy(metaclass=_CorgyMeta):
             else:
                 var_dest = var_name
 
+            if not any(_flag.startswith("-") for _flag in var_flags):
+                var_flags = [var_name]
+                var_positional = True
+            elif all(_flag.startswith("-") for _flag in var_flags):
+                var_positional = False
+            else:
+                raise TypeError(
+                    f"inconsistent positional/optional flags for {var_name}: "
+                    f"{var_flags}"
+                )
+
             var_help = getattr(cls, var_name).__doc__  # doc is stored in the property
 
             # Check if the variable is also `Corgy` type.
@@ -522,7 +533,7 @@ class Corgy(metaclass=_CorgyMeta):
 
             # Add the variable to the parser.
             _kwargs: Dict[str, Any] = {}
-            if var_name in getattr(cls, "__flags"):
+            if var_name in getattr(cls, "__flags") and not var_positional:
                 _kwargs["dest"] = var_dest
             if var_help is not None:
                 _kwargs["help"] = var_help
@@ -535,7 +546,7 @@ class Corgy(metaclass=_CorgyMeta):
             _defaults = getattr(cls, "__defaults")
             if var_name in _defaults:
                 _kwargs["default"] = _defaults[var_name]
-            if var_required:
+            if var_required and not var_positional:
                 _kwargs["required"] = True
             with suppress(AttributeError):
                 _kwargs["metavar"] = var_base_type.__metavar__
