@@ -46,6 +46,10 @@ and opened in text mode (`w`). Existing files will be truncated. `ArgumentTypeEr
 is raised if any of the operations fail.
 
 
+#### init()
+No-op for compatibility with `LazyOutputTextFile`.
+
+
 ### _class_ corgy.types.OutputBinFile(path)
 Type for an output binary file.
 
@@ -59,6 +63,10 @@ This class is a thin wrapper around `BufferedWriter` that accepts a path, instea
 of a file stream. The file will be created if it does not exist (including any
 parent directories), and opened in binary mode. Existing files will be truncated.
 `ArgumentTypeError` is raised if any of the operations fail.
+
+
+#### init()
+No-op for compatibility with `LazyOutputBinFile`.
 
 
 ### _class_ corgy.types.LazyOutputTextFile(path, \*\*kwargs)

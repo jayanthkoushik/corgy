@@ -91,6 +91,9 @@ class OutputTextFile(TextIOWrapper):
     def __str__(self) -> str:
         return str(self.buffer.name)
 
+    def init(self):
+        """No-op for compatibility with `LazyOutputTextFile`."""
+
 
 class LazyOutputTextFile(OutputTextFile):
     """`OutputTextFile` sub-class that does not auto-initialize.
@@ -135,6 +138,9 @@ class OutputBinFile(BufferedWriter):
 
     def __str__(self) -> str:
         return str(self.name)
+
+    def init(self):
+        """No-op for compatibility with `LazyOutputBinFile`."""
 
 
 class LazyOutputBinFile(OutputBinFile):
