@@ -43,6 +43,7 @@ __all__ = (
     "InputTextFile",
     "InputBinFile",
     "OutputDirectory",
+    "LazyOutputDirectory",
     "InputDirectory",
     "SubClass",
     "KeyValuePairs",
@@ -251,6 +252,9 @@ class OutputDirectory(Path):
     def __repr__(self) -> str:
         return f"OutputDirectory({super().__str__()!r})"
 
+    def init(self):
+        """No-op for compatibility with `LazyOutputDirectory`."""
+
 
 class _WindowsOutputDirectory(OutputDirectory, WindowsPath):
     # pylint: disable=abstract-method
@@ -258,6 +262,39 @@ class _WindowsOutputDirectory(OutputDirectory, WindowsPath):
 
 
 class _PosixOutputDirectory(OutputDirectory, PosixPath):
+    # pylint: disable=abstract-method
+    __slots__ = ()
+
+
+class LazyOutputDirectory(OutputDirectory):
+    """`OutputDirectory` sub-class that does not auto-initialize.
+
+    Useful for "default" folders, which only need to be created if an alternative is not
+    provided. `init` must be called on instances to ensure that the directory exists.
+    """
+
+    __slots__ = ()
+
+    def __new__(cls, path: str):
+        cls_ = (
+            _WindowsLazyOutputDirectory
+            if os.name == "nt"
+            else _PosixLazyOutputDirectory
+        )
+        return Path.__new__(cls_, path)
+
+    def init(self):
+        """Initialize the directory."""
+        # Just try to create an `OutputDirectory` instance with the same path.
+        OutputDirectory(str(self))
+
+
+class _WindowsLazyOutputDirectory(LazyOutputDirectory, WindowsPath):
+    # pylint: disable=abstract-method
+    __slots__ = ()
+
+
+class _PosixLazyOutputDirectory(LazyOutputDirectory, PosixPath):
     # pylint: disable=abstract-method
     __slots__ = ()
 

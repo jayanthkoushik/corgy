@@ -136,6 +136,21 @@ If the path does not exist, a directory with the path name will be created
 if the path is not a directory, or if the directory is not writable.
 
 
+#### init()
+No-op for compatibility with `LazyOutputDirectory`.
+
+
+### _class_ corgy.types.LazyOutputDirectory(path)
+`OutputDirectory` sub-class that does not auto-initialize.
+
+Useful for “default” folders, which only need to be created if an alternative is not
+provided. `init` must be called on instances to ensure that the directory exists.
+
+
+#### init()
+Initialize the directory.
+
+
 ### _class_ corgy.types.InputDirectory(path)
 `Path` sub-class representing a directory to be read from.
 

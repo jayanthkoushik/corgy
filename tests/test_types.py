@@ -14,6 +14,7 @@ from corgy.types import (
     InputTextFile,
     KeyValuePairs,
     LazyOutputBinFile,
+    LazyOutputDirectory,
     LazyOutputTextFile,
     OutputBinFile,
     OutputDirectory,
@@ -196,6 +197,26 @@ class TestOutputDirectory(_TestDirectory):
         with self.assertRaises(ArgumentTypeError):
             self.type(dname)
         os.chmod(dname, stat.S_IREAD | stat.S_IWRITE | stat.S_IEXEC)
+
+
+class TestLazyOutputDirectory(TestCase):
+    def setUp(self):
+        self.tmp_dir = TemporaryDirectory()  # pylint: disable=consider-using-with
+
+    def tearDown(self):
+        self.tmp_dir.cleanup()
+
+    def test_lazy_output_directory_does_not_auto_create_dir(self):
+        dname = os.path.join(self.tmp_dir.name, "foo")
+        LazyOutputDirectory(dname)
+        self.assertFalse(os.path.exists(dname))
+
+    def test_lazy_output_directory_creates_dir_on_init(self):
+        dname = os.path.join(self.tmp_dir.name, "foo", "bar", "baz")
+        d = LazyOutputDirectory(dname)
+        d.init()
+        self.assertTrue(os.path.exists(dname))
+        self.assertEqual(str(d), dname)
 
 
 class TestInputDirectory(_TestDirectory):
