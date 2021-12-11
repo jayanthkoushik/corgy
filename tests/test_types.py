@@ -13,6 +13,8 @@ from corgy.types import (
     InputDirectory,
     InputTextFile,
     KeyValuePairs,
+    LazyOutputBinFile,
+    LazyOutputTextFile,
     OutputBinFile,
     OutputDirectory,
     OutputTextFile,
@@ -78,6 +80,30 @@ class TestOutputBinFile(_TestOutputFile):
     def test_output_bin_file_type(self):
         with self.type(os.path.join(self.tmp_dir.name, "foo.bin")) as f:
             self.assertIsInstance(f, BufferedWriter)
+
+
+class _TestLazyOutputFile(_TestFile):
+    type: Union[Type[LazyOutputTextFile], Type[LazyOutputBinFile],]
+
+    def test_lazy_output_file_does_not_auto_create_file(self):
+        fname = os.path.join(self.tmp_dir.name, "foo.file")
+        self.type(fname)
+        self.assertFalse(os.path.exists(fname))
+
+    def test_lazy_output_file_creates_on_calling_init(self):
+        fname = os.path.join(self.tmp_dir.name, "foo.file")
+        f = self.type(fname)
+        f.init()
+        self.assertTrue(os.path.exists(fname))
+        f.close()
+
+
+class TestLazyOutputTextFile(_TestLazyOutputFile):
+    type = LazyOutputTextFile
+
+
+class TestLazyOutputBinFile(_TestLazyOutputFile):
+    type = LazyOutputBinFile
 
 
 class _TestInputFile(_TestFile):
@@ -535,4 +561,4 @@ class TestKeyValuePairs(TestCase):
             self.assertEqual(str(dic), "{'foo': '1', 'bar': '2'}")
 
 
-del _TestFile, _TestOutputFile, _TestInputFile, _TestDirectory
+del _TestFile, _TestOutputFile, _TestLazyOutputFile, _TestInputFile, _TestDirectory

@@ -61,6 +61,28 @@ parent directories), and opened in binary mode. Existing files will be truncated
 `ArgumentTypeError` is raised if any of the operations fail.
 
 
+### _class_ corgy.types.LazyOutputTextFile(path, \*\*kwargs)
+`OutputTextFile` sub-class that does not auto-initialize.
+
+Useful for “default” files, which only need to be created if an alternative is not
+provided. `init` must be called on instances before they can be used.
+
+
+#### init()
+Initialize the file.
+
+
+### _class_ corgy.types.LazyOutputBinFile(path)
+`OutputBinFile` sub-class that does not auto-initialize.
+
+Useful for “default” files, which only need to be created if an alternative is not
+provided. `init` must be called on instances before they can be used.
+
+
+#### init()
+Initialize the file.
+
+
 ### _class_ corgy.types.InputTextFile(path, \*\*kwargs)
 `TextIOWrapper` sub-class representing an input file.
 

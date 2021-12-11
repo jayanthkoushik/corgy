@@ -38,6 +38,8 @@ else:
 __all__ = (
     "OutputTextFile",
     "OutputBinFile",
+    "LazyOutputTextFile",
+    "LazyOutputBinFile",
     "InputTextFile",
     "InputBinFile",
     "OutputDirectory",
@@ -90,6 +92,25 @@ class OutputTextFile(TextIOWrapper):
         return str(self.buffer.name)
 
 
+class LazyOutputTextFile(OutputTextFile):
+    """`OutputTextFile` sub-class that does not auto-initialize.
+
+    Useful for "default" files, which only need to be created if an alternative is not
+    provided. `init` must be called on instances before they can be used.
+    """
+
+    __slots__ = ("_path", "_kwargs")
+
+    def __init__(self, path: str, **kwargs):
+        # pylint: disable=super-init-not-called
+        self._path = path
+        self._kwargs = kwargs
+
+    def init(self):
+        """Initialize the file."""
+        super().__init__(self._path, **self._kwargs)
+
+
 class OutputBinFile(BufferedWriter):
     """Type for an output binary file.
 
@@ -114,6 +135,24 @@ class OutputBinFile(BufferedWriter):
 
     def __str__(self) -> str:
         return str(self.name)
+
+
+class LazyOutputBinFile(OutputBinFile):
+    """`OutputBinFile` sub-class that does not auto-initialize.
+
+    Useful for "default" files, which only need to be created if an alternative is not
+    provided. `init` must be called on instances before they can be used.
+    """
+
+    __slots__ = ("_path",)
+
+    def __init__(self, path: str):
+        # pylint: disable=super-init-not-called
+        self._path = path
+
+    def init(self):
+        """Initialize the file."""
+        super().__init__(self._path)
 
 
 class InputTextFile(TextIOWrapper):
