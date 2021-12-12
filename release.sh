@@ -18,7 +18,7 @@ echo "DRY RUN"
 echo "======="
 echo ""
 
-eval ${cmd} --dry-run ${@:1}
+eval ${cmd} --dry-run -a ${@:1}
 
 echo ""
 echo "======="
@@ -33,5 +33,5 @@ while true; do
     esac
 done
 
-eval ${cmd} ${@:1}
+eval ${cmd} -a ${@:1}
 git push --follow-tags

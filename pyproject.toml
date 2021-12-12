@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "corgy"
-version = "4.1.0"
+version = "0.0.0"  # managed by `poetry-dynamic-versioning`
 description = "Elegant command line parsing"
 authors = ["Jayanth Koushik <jnkoushik@gmail.com>"]
 license = "MIT"
@@ -44,6 +44,14 @@ mypy = ">=0.9"
 pydocstyle = "^6.1"
 sphinx = "^4.2"
 sphinx-markdown-builder = { git = "https://github.com/clayrisser/sphinx-markdown-builder" }
+
+[tool.poetry-dynamic-versioning]
+enable = true
+vcs = "git"
+style = "semver"
+
+[tool.poetry-dynamic-versioning.substitution]
+files = ["*/_version.py"]
 
 [tool.black]
 line-length = 88
@@ -97,5 +105,5 @@ add-ignore = "D100,D101,D102,D103,D104,D105,D106,D107"
 ignore_missing_imports = true
 
 [build-system]
-requires = ["poetry>=1.0"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]
+build-backend = "poetry.core.masonry.api"
