@@ -28,7 +28,7 @@ import sys
 from argparse import ArgumentTypeError
 from io import BufferedReader, BufferedWriter, FileIO, TextIOWrapper
 from pathlib import Path, PosixPath, WindowsPath
-from typing import Dict, Generic, Iterator, List, Tuple, Type, TypeVar
+from typing import Dict, Generic, Iterator, List, Mapping, Tuple, Type, TypeVar, Union
 
 if sys.version_info < (3, 8):
     from typing_extensions import Protocol
@@ -49,8 +49,10 @@ __all__ = (
     "KeyValuePairs",
 )
 
+StrOrPath = Union[str, Path]
 
-def _get_output_stream(name: str) -> FileIO:
+
+def _get_output_stream(name: StrOrPath) -> FileIO:
     """Open a file for writing (creating folders if necessary)."""
     filedir = os.path.dirname(name)
     if filedir and not os.path.exists(filedir):
@@ -61,7 +63,7 @@ def _get_output_stream(name: str) -> FileIO:
                 f"could not create parent directory for `{name}`: {e}"
             ) from None
     try:
-        return FileIO(name, "w")
+        return FileIO(str(name), "w")
     except OSError as e:
         raise ArgumentTypeError(f"could not open `{name}`: {e}") from None
 
@@ -81,7 +83,7 @@ class OutputTextFile(TextIOWrapper):
     __metavar__ = "file"
     __slots__ = ()
 
-    def __init__(self, path: str, **kwargs):
+    def __init__(self, path: StrOrPath, **kwargs):
         stream = _get_output_stream(path)
         buffer = BufferedWriter(stream)
         super().__init__(buffer, **kwargs)
@@ -105,7 +107,7 @@ class LazyOutputTextFile(OutputTextFile):
 
     __slots__ = ("_path", "_kwargs")
 
-    def __init__(self, path: str, **kwargs):
+    def __init__(self, path: StrOrPath, **kwargs):
         # pylint: disable=super-init-not-called
         self._path = path
         self._kwargs = kwargs
@@ -130,7 +132,7 @@ class OutputBinFile(BufferedWriter):
     __metavar__ = "file"
     __slots__ = ()
 
-    def __init__(self, path: str):
+    def __init__(self, path: StrOrPath):
         stream = _get_output_stream(path)
         super().__init__(stream)
 
@@ -153,7 +155,7 @@ class LazyOutputBinFile(OutputBinFile):
 
     __slots__ = ("_path",)
 
-    def __init__(self, path: str):
+    def __init__(self, path: StrOrPath):
         # pylint: disable=super-init-not-called
         self._path = path
 
@@ -176,9 +178,9 @@ class InputTextFile(TextIOWrapper):
     __metavar__ = "file"
     __slots__ = ()
 
-    def __init__(self, path: str, **kwargs):
+    def __init__(self, path: StrOrPath, **kwargs):
         try:
-            stream = FileIO(path, "r")
+            stream = FileIO(str(path), "r")
         except OSError as e:
             raise ArgumentTypeError(f"could not open `{path}`: {e}") from None
         buffer = BufferedReader(stream)
@@ -205,9 +207,9 @@ class InputBinFile(BufferedReader):
     __metavar__ = "file"
     __slots__ = ()
 
-    def __init__(self, path: str):
+    def __init__(self, path: StrOrPath):
         try:
-            stream = FileIO(path, "r")
+            stream = FileIO(str(path), "r")
         except OSError as e:
             raise ArgumentTypeError(f"could not open `{path}`: {e}") from None
         super().__init__(stream)
@@ -233,7 +235,7 @@ class OutputDirectory(Path):
     __metavar__ = "dir"
     __slots__ = ()
 
-    def __new__(cls, path: str):  # pylint: disable=arguments-differ
+    def __new__(cls, path: StrOrPath):  # pylint: disable=arguments-differ
         try:
             os.makedirs(path, exist_ok=True)
         except OSError as e:
@@ -275,7 +277,7 @@ class LazyOutputDirectory(OutputDirectory):
 
     __slots__ = ()
 
-    def __new__(cls, path: str):
+    def __new__(cls, path: StrOrPath):
         cls_ = (
             _WindowsLazyOutputDirectory
             if os.name == "nt"
@@ -312,7 +314,7 @@ class InputDirectory(Path):
     __metavar__ = "dir"
     __slots__ = ()
 
-    def __new__(cls, path: str):  # pylint: disable=arguments-differ
+    def __new__(cls, path: StrOrPath):  # pylint: disable=arguments-differ
         if not os.path.exists(path):
             raise ArgumentTypeError(f"`{path}` does not exist")
         if not os.path.isdir(path):
@@ -628,6 +630,13 @@ class KeyValuePairs(dict, Generic[_KT, _VT], metaclass=_KeyValuePairsMeta):
         >>> MapType2 = KeyValuePairs[str, int]  # same as `MapType`
         >>> MapType2.sequence_separator
         ';'
+
+    `KeyValuePairs` instances can also be initialized with a dictionary. However, note
+    that the dictionary is not type-checked and is used as-is::
+
+        >>> dic = KeyValuePairs[str, int]({"a": 1, "b": 2})
+        >>> repr(dic)
+        >>> KeyValuePairs[str, int]({'a': 1, 'b': 2})
     """
 
     sequence_separator: str = ","
@@ -677,8 +686,13 @@ class KeyValuePairs(dict, Generic[_KT, _VT], metaclass=_KeyValuePairsMeta):
     def _metavar(cls) -> str:
         return f"[key{cls.item_separator}val{cls.sequence_separator}...]"
 
-    def __init__(self, values: str):
+    def __init__(self, values: Union[str, Mapping[_KT, _VT]]):
         self._src = values
+
+        if isinstance(values, Mapping):
+            super().__init__(values)
+            return
+
         kt: Type[_KT] = getattr(self, "_kt", str)
         vt: Type[_VT] = getattr(self, "_vt", str)
 

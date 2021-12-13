@@ -66,6 +66,11 @@ class _TestOutputFile(_TestFile):
             self.assertEqual(repr(f), f"{self.type.__name__}({fname!r})")
             self.assertEqual(str(f), fname)
 
+    def test_output_file_accepts_path(self):
+        fname = self.tmp_dir.name / Path("foo.file")
+        with self.type(fname):
+            self.assertTrue(fname.exists())
+
 
 class TestOutputTextFile(_TestOutputFile):
     type = OutputTextFile
@@ -131,6 +136,11 @@ class _TestInputFile(_TestFile):
             self.assertEqual(repr(f), f"{self.type.__name__}({self.tmp_file_name!r})")
             self.assertEqual(str(f), self.tmp_file_name)
 
+    def test_input_file_accepts_path(self):
+        fname = Path(self.tmp_file_name)
+        with self.type(fname) as f:
+            self.assertEqual(f.name, str(fname))
+
 
 class TestInputTextFile(_TestInputFile):
     type = InputTextFile
@@ -174,6 +184,10 @@ class _TestDirectory(TestCase):
         with self.type(self.tmp_dir.name) as d:
             self.assertEqual(repr(d), f"{self.type.__name__}({self.tmp_dir.name!r})")
             self.assertEqual(str(d), self.tmp_dir.name)
+
+    def test_directory_accepts_path(self):
+        d = self.type(Path(self.tmp_dir.name))
+        self.assertEqual(str(d), self.tmp_dir.name)
 
 
 class TestOutputDirectory(_TestDirectory):
@@ -580,6 +594,11 @@ class TestKeyValuePairs(TestCase):
             dic = KeyValuePairs("foo:1;bar:2")
             self.assertEqual(repr(dic), "KeyValuePairs[str, str]('foo:1;bar:2')")
             self.assertEqual(str(dic), "{'foo': '1', 'bar': '2'}")
+
+    def test_key_value_pairs_accepts_dict(self):
+        dic = KeyValuePairs[str, int]({"foo": 1, "bar": 2})
+        self.assertDictEqual(dic, {"foo": 1, "bar": 2})
+        self.assertEqual(repr(dic), "KeyValuePairs[str, int]({'foo': 1, 'bar': 2})")
 
 
 del _TestFile, _TestOutputFile, _TestLazyOutputFile, _TestInputFile, _TestDirectory

@@ -297,3 +297,12 @@ key and value types:
 >>> MapType2.sequence_separator
 ';'
 ```
+
+`KeyValuePairs` instances can also be initialized with a dictionary. However, note
+that the dictionary is not type-checked and is used as-is:
+
+```python
+>>> dic = KeyValuePairs[str, int]({"a": 1, "b": 2})
+>>> repr(dic)
+>>> KeyValuePairs[str, int]({'a': 1, 'b': 2})
+```
