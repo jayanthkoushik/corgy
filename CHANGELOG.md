@@ -1,5 +1,22 @@
 # Changelog
 
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+## [4.2.0](https://github.com/jayanthkoushik/corgy/compare/v4.1.0...v4.2.0) (2021-12-14)
+
+
+### Features
+
+* add copy constructors for `corgy.types` classes ([664d4c2](https://github.com/jayanthkoushik/corgy/commit/664d4c2d34712bf6b55eeb2a561734d08ba3d3e1))
+* add dummy `init` methods to non-lazy output file types for compatibility ([1a19df5](https://github.com/jayanthkoushik/corgy/commit/1a19df502081942c4ad881161fcaaeb007c0fa71))
+* add lazy output directory type ([1f64087](https://github.com/jayanthkoushik/corgy/commit/1f64087b6704ead04b8c41274a80a9794d65508d))
+* add lazy output file types ([e1225b1](https://github.com/jayanthkoushik/corgy/commit/e1225b1ae3b9f58e1314b9d05532dee72e40cf70))
+
+
+### Bug Fixes
+
+* correctly handle positional argument flags in `Corgy` ([8d2f382](https://github.com/jayanthkoushik/corgy/commit/8d2f3825123d16a855fe3900369a88eaf56ccbd1))
+
 ## [4.1.0](https://github.com/jayanthkoushik/corgy/compare/v4.0.0...v4.1.0) (2021-12-06)
 
 
