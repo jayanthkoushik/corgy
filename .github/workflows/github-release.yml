@@ -22,6 +22,8 @@ jobs:
         CONVENTIONAL_GITHUB_RELEASER_TOKEN: ${{ secrets.CONVENTIONAL_GITHUB_RELEASER_TOKEN }}
     - name: Install poetry
       run: curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
+    - name: Install poetry-dynamic-versioning
+      run: python -m pip install poetry-dynamic-versioning
     - name: Build dist
       run: $HOME/.poetry/bin/poetry build
     - name: Add wheel to release
