@@ -21,6 +21,9 @@ if sys.version_info >= (3, 9):
 else:
     from typing_extensions import Literal
 
+if sys.version_info >= (3, 10):
+    from types import UnionType
+
 from ._helpfmt import CorgyHelpFormatter
 
 # The main interface is the `Corgy` class. `_CorgyMeta` modifies creation of `Corgy`
@@ -53,6 +56,16 @@ class BooleanOptionalAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         if option_string in self.option_strings:
             setattr(namespace, self.dest, not option_string.startswith("--no-"))
+
+
+def _is_union_type(t) -> bool:
+    """Check if the argument is a union type."""
+    if sys.version_info >= (3, 10):
+        # This checks for the `|` based syntax introduced in Python 3.10.
+        p310_check = t.__class__ is UnionType
+    else:
+        p310_check = False
+    return p310_check or (hasattr(t, "__origin__") and t.__origin__ is Union)
 
 
 class _CorgyMeta(type):
@@ -245,6 +258,7 @@ class Corgy(metaclass=_CorgyMeta):
     `typing.Optional` can be used to mark an argument as optional::
 
         x: Optional[int]
+        x: int | None  # Python 3.10+ (can also use `Optional`)
 
     Another way to mark an argument as optional is to provide a default value::
 
@@ -445,8 +459,7 @@ class Corgy(metaclass=_CorgyMeta):
             # Check if the variable is optional. `<var_name>: Optional[<var_type>]` is
             # equivalent to `<var_name>: Union[<var_type>, None]`.
             if (
-                hasattr(var_type, "__origin__")
-                and var_type.__origin__ is Union
+                _is_union_type(var_type)
                 and len(var_type.__args__) == 2
                 and var_type.__args__[1] is type(None)
             ):

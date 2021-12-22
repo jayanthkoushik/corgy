@@ -240,6 +240,14 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with("--x", type=int)
 
+    @skipIf(sys.version_info < (3, 10), "`|` syntax needs Python 3.10 or higher")
+    def test_add_args_handles_annotated_new_style_optional(self):
+        class C(Corgy):
+            x: int | None  # type: ignore # pylint: disable=unsupported-binary-operation
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with("--x", type=int)
+
     def test_add_args_handles_annotated_optional_with_default(self):
         class C(Corgy):
             x: Optional[int] = 0

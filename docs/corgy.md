@@ -95,6 +95,7 @@ other special annotations should be part of the type.
 
 ```python
 x: Optional[int]
+x: int | None  # Python 3.10+ (can also use `Optional`)
 ```
 
 Another way to mark an argument as optional is to provide a default value:
