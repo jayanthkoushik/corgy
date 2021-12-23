@@ -179,10 +179,6 @@ class TestCorgyHelpFormatterAPI(TestCase):
         parser.add_argument("--x", type=int, choices=[1, 2])
         self.assertEqual(parser.format_help(), desired_output)
 
-    def test_corgy_help_formatter_does_not_construct_usage_if_none_provided(self):
-        parser = ArgumentParser(formatter_class=CorgyHelpFormatter)
-        self.assertEqual(parser.format_usage(), "")
-
     def test_corgy_help_formatter_shows_custom_usage_iff_called_directly(self):
         parser = ArgumentParser(
             formatter_class=CorgyHelpFormatter, add_help=False, usage="custom usage"
@@ -764,6 +760,57 @@ class TestCorgyHelpFormatterMultiArgs(TestCase):
             f"options:\n"
             f"  {_O('-h')}/{_O('--help')}  show this help message and exit\n"
             f"  {_O('--arg')} {_M('str')}  ({_K('optional')})\n",
+        )
+
+
+class TestCorgyHelpFormatterUsage(TestCase):
+    """Tests to check formatting of usage string."""
+
+    def setUp(self):
+        self.parser = ArgumentParser(
+            formatter_class=CorgyHelpFormatter, add_help=False, prog=""
+        )
+
+    def test_corgy_help_formatter_usage_with_positional_arg(self):
+        self.parser.add_argument("arg", type=int)
+        self.assertEqual(
+            self.parser.format_usage(),
+            # usage: arg
+            "usage: arg\n",
+        )
+
+    def test_corgy_help_formatter_usage_with_required_arg(self):
+        self.parser.add_argument("--arg", type=str, required=True)
+        self.assertEqual(
+            self.parser.format_usage(),
+            # usage: --arg str
+            "usage: --arg str\n",
+        )
+
+    def test_corgy_help_formatter_usage_with_optional_arg(self):
+        self.parser.add_argument("--arg", type=str)
+        self.assertEqual(
+            self.parser.format_usage(),
+            # usage: [--arg str]
+            "usage: [--arg str]\n",
+        )
+
+    def test_corgy_help_formatter_usage_with_group(self):
+        self.parser.add_argument("--arg", type=str)
+        grp_parser = self.parser.add_argument_group("grp")
+        grp_parser.add_argument("--grp:arg", type=str)
+        self.assertEqual(
+            self.parser.format_usage(),
+            # usage: [--arg str] [--grp:arg str]
+            "usage: [--arg str] [--grp:arg str]\n",
+        )
+
+    def test_corgy_help_formatter_usage_with_choices(self):
+        self.parser.add_argument("--arg", type=int, choices=(1, 2))
+        self.assertEqual(
+            self.parser.format_usage(),
+            # usage: [--arg int]
+            "usage: [--arg int]\n",
         )
 
 

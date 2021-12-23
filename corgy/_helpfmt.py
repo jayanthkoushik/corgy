@@ -587,10 +587,22 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         super().add_usage(*args, **kwargs)
 
     def _format_usage(self, usage: str, *args, **kwargs) -> str:
-        if usage is None:
-            # Don't build usage from options, if it is not specified.
-            return ""
-        return super()._format_usage(usage, *args, **kwargs)
+        with patch.object(self._color_helper, "crayons", None):
+            # Disable colors for usage string.
+            fmt = super()._format_usage(usage, *args, **kwargs)
+
+        if not fmt:
+            return fmt
+
+        output_width = self.output_width or shutil.get_terminal_size().columns
+        # Wrap usage to output width.
+        fmt = textwrap.fill(
+            fmt,
+            width=output_width,
+            subsequent_indent=" " * self._indent_increment,
+            break_on_hyphens=False,
+        )
+        return fmt + "\n"
 
     def __init__(self, prog: str):
         # noqa: D107
