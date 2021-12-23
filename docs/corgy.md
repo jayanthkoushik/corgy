@@ -403,8 +403,8 @@ an argument. The defaults are `{` and `}`.
 list. The default is `/`.
 
 
-* `show_full_help`: Whether to show the full help, including choices, and indicators
-for required arguments. The default is `True`.
+* `show_full_help`: Whether to show the full help, including choices, indicators for
+required arguments, and the usage string. The default is `True`.
 
 Formatting of individual arguments can be customized with magic attributes defined
 on the argument type. The following attributes are recognized:

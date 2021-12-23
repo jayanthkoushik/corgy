@@ -62,7 +62,9 @@ class TestCorgyHelpFormatterAPI(TestCase):
             color_metavars="BLUE",
             color_options="yellow",
         ):
-            parser = ArgumentParser(formatter_class=CorgyHelpFormatter, add_help=False)
+            parser = ArgumentParser(
+                formatter_class=CorgyHelpFormatter, add_help=False, usage=SUPPRESS
+            )
             parser.add_argument(
                 "--x", type=int, choices=[1, 2], help="x help", default=1
             )
@@ -90,7 +92,9 @@ class TestCorgyHelpFormatterAPI(TestCase):
             marker_choices_end=" ) ",
             marker_choices_sep="|",
         ):
-            parser = ArgumentParser(formatter_class=CorgyHelpFormatter, add_help=False)
+            parser = ArgumentParser(
+                formatter_class=CorgyHelpFormatter, add_help=False, usage=SUPPRESS
+            )
             parser.add_argument("-x", "--x", type=int, choices=[1, 2])
 
             self.assertEqual(
@@ -100,11 +104,16 @@ class TestCorgyHelpFormatterAPI(TestCase):
     def test_corgy_help_formatter_handles_changing_output_width(self):
         CorgyHelpFormatter.use_colors = False
         with patch.object(CorgyHelpFormatter, "output_width", 10):
-            parser = ArgumentParser(formatter_class=CorgyHelpFormatter, add_help=False)
+            parser = ArgumentParser(
+                formatter_class=CorgyHelpFormatter, add_help=False, prog=""
+            )
             parser.add_argument("--x", type=int, help="x help")
 
             self.assertEqual(
                 parser.format_help(),
+                "usage:\n"
+                "  [--x\n"
+                "  int]\n\n"
                 "options:\n"
                 "  --x int\n"
                 "      x\n"
@@ -117,7 +126,7 @@ class TestCorgyHelpFormatterAPI(TestCase):
     def test_corgy_help_formatter_handles_changing_max_help_position(self):
         CorgyHelpFormatter.use_colors = False
         with patch.multiple(CorgyHelpFormatter, output_width=100, max_help_position=10):
-            parser = ArgumentParser(formatter_class=CorgyHelpFormatter)
+            parser = ArgumentParser(formatter_class=CorgyHelpFormatter, usage=SUPPRESS)
             parser.add_argument(
                 "--x", type=int, metavar="A LONG METAVAR", help="x help"
             )
@@ -139,7 +148,11 @@ class TestCorgyHelpFormatterAPI(TestCase):
     def test_corgy_help_formatter_handles_changing_show_full_help(self):
         CorgyHelpFormatter.use_colors = False
         with patch.object(CorgyHelpFormatter, "show_full_help", False):
-            parser = ArgumentParser(formatter_class=CorgyHelpFormatter, add_help=False)
+            parser = ArgumentParser(
+                formatter_class=CorgyHelpFormatter,
+                add_help=False,
+                usage="this shouldn't show",
+            )
             parser.add_argument("--x", type=int, help="x help", required=True)
             parser.add_argument("--y", type=int, help="y help", choices=(1, 2))
             parser.add_argument("--z", type=int, help="z help", default=0)
@@ -159,13 +172,16 @@ class TestCorgyHelpFormatterAPI(TestCase):
     @skipIf(_CRAYONS is None, "`crayons` package not found")
     def test_corgy_help_formatter_consistent_on_repeat_usage(self):
         CorgyHelpFormatter.use_colors = True
-        parser = ArgumentParser(formatter_class=CorgyHelpFormatter)
+        parser = ArgumentParser(formatter_class=CorgyHelpFormatter, prog="")
         parser.add_argument("--x", type=int, choices=[1, 2])
 
         desired_output = (
+            # usage: [-h] [--x int]
+            #
             # options:
             #   -h/--help  show this help message and exit
             #   --x int    ([1/2] optional)
+            f"usage: [-h] [--x int]\n\n"
             f"options:\n"
             f"  {_O('-h')}/{_O('--help')}  show this help message and exit\n"
             f"  {_O('--x')} {_M('int')}    ([{_C(1)}/{_C(2)}] {_K('optional')})\n"
@@ -175,21 +191,14 @@ class TestCorgyHelpFormatterAPI(TestCase):
         self.assertEqual(parser.format_help(), desired_output)
 
         # Test with a new parser.
-        parser = ArgumentParser(formatter_class=CorgyHelpFormatter)
+        parser = ArgumentParser(formatter_class=CorgyHelpFormatter, prog="")
         parser.add_argument("--x", type=int, choices=[1, 2])
         self.assertEqual(parser.format_help(), desired_output)
-
-    def test_corgy_help_formatter_shows_custom_usage_iff_called_directly(self):
-        parser = ArgumentParser(
-            formatter_class=CorgyHelpFormatter, add_help=False, usage="custom usage"
-        )
-        self.assertEqual(parser.format_usage(), "usage: custom usage\n")
-        self.assertEqual(parser.format_help(), "")
 
     @skipIf(_CRAYONS is None, "`crayons` package not found")
     def test_corgy_help_formatter_raises_if_using_invalid_color(self):
         with patch.object(CorgyHelpFormatter, "color_metavars", "ELUB"):
-            parser = ArgumentParser(formatter_class=CorgyHelpFormatter)
+            parser = ArgumentParser(formatter_class=CorgyHelpFormatter, usage=SUPPRESS)
             parser.add_argument("--x", type=str)
             with self.assertRaises(ValueError):
                 parser.format_help()
@@ -200,7 +209,9 @@ class TestCorgyHelpFormatterHelpActions(TestCase):
 
     def setUp(self):
         CorgyHelpFormatter.use_colors = False
-        self.parser = ArgumentParser(formatter_class=CorgyHelpFormatter, add_help=False)
+        self.parser = ArgumentParser(
+            formatter_class=CorgyHelpFormatter, add_help=False, usage=SUPPRESS
+        )
         self.parser.print_help = Mock()
         self.parser.exit = Mock()
 
@@ -257,7 +268,9 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
     def setUp(self):
         _COLOR_HELPER.crayons = _CRAYONS
         CorgyHelpFormatter.use_colors = True
-        self.parser = ArgumentParser(formatter_class=CorgyHelpFormatter, add_help=False)
+        self.parser = ArgumentParser(
+            formatter_class=CorgyHelpFormatter, add_help=False, usage=SUPPRESS
+        )
         self.maxDiff = None  # color codes can lead to very long diffs
 
     def _get_arg_help(self, *args, **kwargs):
@@ -636,7 +649,7 @@ class TestCorgyHelpFormatterMultiArgs(TestCase):
     def setUp(self):
         _COLOR_HELPER.crayons = _CRAYONS
         CorgyHelpFormatter.use_colors = True
-        self.parser = ArgumentParser(formatter_class=CorgyHelpFormatter)
+        self.parser = ArgumentParser(formatter_class=CorgyHelpFormatter, usage=SUPPRESS)
         self.maxDiff = None
 
     def test_corgy_help_formatter_handles_multi_arg_alignment(self):
@@ -813,6 +826,21 @@ class TestCorgyHelpFormatterUsage(TestCase):
             "usage: [--arg int]\n",
         )
 
+    def test_corgy_help_formatter_always_shows_usage_when_called_explicitly(self):
+        with patch.object(CorgyHelpFormatter, "show_full_help", False):
+            self.parser.add_argument("--arg", type=str)
+            self.assertEqual(
+                self.parser.format_usage(),
+                # usage: [--arg str]
+                "usage: [--arg str]\n",
+            )
+            self.assertEqual(
+                self.parser.format_help(),
+                # options:
+                #   --arg str  (optional)
+                f"options:\n" f"  {_O('--arg')} {_M('str')}  ({_K('optional')})\n",
+            )
+
 
 class _NoColorTestMeta(type):
     """Metaclass to create versions of test classes that don't use colors."""
@@ -841,7 +869,9 @@ class TestCorgyHelpFormatterSingleArgsNoColor(
     def setUp(self):
         _COLOR_HELPER.crayons = None
         CorgyHelpFormatter.use_colors = False
-        self.parser = ArgumentParser(formatter_class=CorgyHelpFormatter, add_help=False)
+        self.parser = ArgumentParser(
+            formatter_class=CorgyHelpFormatter, add_help=False, usage=SUPPRESS
+        )
 
 
 class TestCorgyHelpFormatterMultiArgsNoColor(
@@ -852,4 +882,4 @@ class TestCorgyHelpFormatterMultiArgsNoColor(
     def setUp(self):
         _COLOR_HELPER.crayons = None
         CorgyHelpFormatter.use_colors = False
-        self.parser = ArgumentParser(formatter_class=CorgyHelpFormatter)
+        self.parser = ArgumentParser(formatter_class=CorgyHelpFormatter, usage=SUPPRESS)

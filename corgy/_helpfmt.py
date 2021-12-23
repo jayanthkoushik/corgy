@@ -159,8 +159,8 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     * `marker_choices_sep`: The string used to separate individual choices in the choice
       list. The default is `/`.
 
-    * `show_full_help`: Whether to show the full help, including choices, and indicators
-      for required arguments. The default is `True`.
+    * `show_full_help`: Whether to show the full help, including choices, indicators for
+      required arguments, and the usage string. The default is `True`.
 
     Formatting of individual arguments can be customized with magic attributes defined
     on the argument type. The following attributes are recognized:
@@ -576,8 +576,13 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
 
     def add_usage(self, *args, **kwargs):
         #: :meta private:
+        if self.show_full_help:
+            super().add_usage(*args, **kwargs)
+            return
+
         # Only add usage if called directly from `ArgumentParser.format_usage`. This
-        # prevents usage from being shown inside help output.
+        # prevents usage from being shown inside help output when `show_full_help` is
+        # `False`.
         current_frame = inspect.currentframe()
         if not current_frame:
             return
