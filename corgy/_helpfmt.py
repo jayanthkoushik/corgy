@@ -584,12 +584,11 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         # prevents usage from being shown inside help output when `show_full_help` is
         # `False`.
         current_frame = inspect.currentframe()
-        if not current_frame:
-            return
-        caller_frame = current_frame.f_back
-        if not caller_frame or caller_frame.f_code.co_name != "format_usage":
-            return
-        super().add_usage(*args, **kwargs)
+        while current_frame:
+            if current_frame.f_code.co_name == "format_usage":
+                super().add_usage(*args, **kwargs)
+                break
+            current_frame = current_frame.f_back
 
     def _format_usage(self, usage: str, *args, **kwargs) -> str:
         with patch.object(self._color_helper, "crayons", None):
