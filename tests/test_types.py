@@ -374,16 +374,6 @@ class TestSubClass(TestCase):
         type_ = SubClass[int]
         self.assertEqual(type_.__metavar__, "cls")
 
-    def test_subclass_corgy_fmt_choice(self):
-        class A:
-            ...
-
-        class B(A):  # pylint: disable=unused-variable
-            ...
-
-        type_ = SubClass[A]
-        self.assertEqual(type_.__corgy_fmt_choice__(type_("B")), "B")
-
     def test_subclass_call_with_params(self):
         class A:
             def __init__(self, x):

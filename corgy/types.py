@@ -516,11 +516,6 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
             choices.append(obj)
         return tuple(choices)
 
-    @staticmethod
-    def __corgy_fmt_choice__(value: "SubClass[_T]"):
-        # :meta private:
-        return value._subclass_name(value._subcls)
-
     def __new__(cls, name: str) -> "SubClass[_T]":  # pylint: disable=arguments-differ
         cls._ensure_base_set()
 
