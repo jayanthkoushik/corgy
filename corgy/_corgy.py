@@ -68,6 +68,17 @@ def _is_union_type(t) -> bool:
     return p310_check or (hasattr(t, "__origin__") and t.__origin__ is Union)
 
 
+def _is_sequence_type(t) -> bool:
+    """Check if the argument is a sequence type."""
+    if t is Sequence or t is AbstractSequence:
+        return True
+    if hasattr(t, "__origin__") and (
+        t.__origin__ is Sequence or t.__origin__ is AbstractSequence
+    ):
+        return True
+    return False
+
+
 class _CorgyMeta(type):
     """Metaclass for `Corgy`.
 
@@ -471,10 +482,12 @@ class Corgy(metaclass=_CorgyMeta):
 
             # Check if the variable is a sequence.
             var_nargs: Union[int, Literal["+", "*"], None]
-            if hasattr(var_base_type, "__origin__") and (
-                var_base_type.__origin__ is Sequence
-                or var_base_type.__origin__ is AbstractSequence
-            ):
+            if _is_sequence_type(var_base_type):
+                if not hasattr(var_base_type, "__args__"):
+                    raise TypeError(
+                        f"`{var_name}` is a sequence, but has no type arguments: "
+                        f"use `{var_base_type}[<types>]"
+                    )
                 if len(var_base_type.__args__) == 1:
                     var_nargs = "*"
                 elif (

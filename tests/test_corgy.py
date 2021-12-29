@@ -415,6 +415,19 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
             "--x", type=bool, required=True, nargs="*"
         )
 
+    def test_add_args_raises_if_sequence_has_no_types(self):
+        class C(Corgy):
+            x: Sequence
+
+        class D(Corgy):
+            x: SequenceType
+
+        with self.assertRaises(TypeError):
+            C.add_args_to_parser(self.parser)
+
+        with self.assertRaises(TypeError):
+            D.add_args_to_parser(self.parser)
+
     def test_add_args_sets_nargs_to_asterisk_for_sequence_type(self):
         class C(Corgy):
             x: Sequence[int]
