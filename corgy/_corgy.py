@@ -483,7 +483,9 @@ class Corgy(metaclass=_CorgyMeta):
             # Check if the variable is a sequence.
             var_nargs: Union[int, Literal["+", "*"], None]
             if _is_sequence_type(var_base_type):
-                if not hasattr(var_base_type, "__args__"):
+                if not hasattr(var_base_type, "__args__") or isinstance(
+                    var_base_type.__args__[0], TypeVar
+                ):
                     raise TypeError(
                         f"`{var_name}` is a sequence, but has no type arguments: "
                         f"use `{var_base_type}[<types>]"
