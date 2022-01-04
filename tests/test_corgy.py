@@ -180,6 +180,27 @@ class TestCorgyMeta(unittest.TestCase):
         d = D(x=1, c=self._CorgyCls(x1=[0, 1], x2=2, x4="8"))
         self.assertEqual(repr(d), "D(x=1, c=_CorgyCls(x1=[0, 1], x2=2, x3=3, x4='8'))")
 
+    def test_corgy_cls_as_dict(self):
+        c = self._CorgyCls(x1=[0, 1], x2=2, x3=30, x4="40")
+        self.assertDictEqual(c.as_dict(), {"x1": [0, 1], "x2": 2, "x3": 30, "x4": "40"})
+
+    def test_corgy_cls_as_dict_uses_default_values(self):
+        c = self._CorgyCls(x1=[0, 1], x2=2, x3=30)
+        self.assertDictEqual(c.as_dict(), {"x1": [0, 1], "x2": 2, "x3": 30, "x4": "4"})
+
+    def test_corgy_cls_as_dict_ignores_unset_attrs_without_defaults(self):
+        c = self._CorgyCls(x3=30, x4="40")
+        self.assertDictEqual(c.as_dict(), {"x3": 30, "x4": "40"})
+
+    def test_corgy_cls_as_dict_handles_groups(self):
+        class D(Corgy):
+            x: int
+            c: self._CorgyCls
+
+        c = self._CorgyCls()
+        d = D(x=1, c=c)
+        self.assertDictEqual(d.as_dict(), {"x": 1, "c": c})
+
 
 class TestCorgyAddArgsToParser(unittest.TestCase):
     """Tests to check that Corgy properly adds arguments to ArgumentParsers."""

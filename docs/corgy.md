@@ -287,6 +287,14 @@ Add arguments for this class to the given parser.
 
 
 
+#### as_dict()
+Return the object as a dictionary.
+
+The returned dictionary maps attribute names to their values. Unset attributes
+are omitted, unless they have default values. This method is not recursive, and
+attributes which are `Corgy` instances are returned as is.
+
+
 #### _classmethod_ parse_from_cmdline(parser=None, \*\*parser_args)
 Parse an object of the class from command line arguments.
 
