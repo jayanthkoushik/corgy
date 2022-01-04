@@ -25,6 +25,7 @@ Examples::
 """
 import os
 import sys
+import typing
 from argparse import ArgumentTypeError
 from io import BufferedReader, BufferedWriter, FileIO, TextIOWrapper
 from pathlib import Path, PosixPath, WindowsPath
@@ -688,8 +689,8 @@ class KeyValuePairs(dict, Generic[_KT, _VT], metaclass=_KeyValuePairsMeta):
             super().__init__(values)
             return
 
-        kt: Type[_KT] = getattr(self, "_kt", str)
-        vt: Type[_VT] = getattr(self, "_vt", str)
+        kt: Type[_KT] = getattr(self, "_kt", typing.cast(Type[_KT], str))
+        vt: Type[_VT] = getattr(self, "_vt", typing.cast(Type[_VT], str))
 
         if not values:
             super().__init__()
@@ -719,8 +720,8 @@ class KeyValuePairs(dict, Generic[_KT, _VT], metaclass=_KeyValuePairsMeta):
         super().__init__(dic)
 
     def __repr__(self) -> str:
-        kt: Type[_KT] = getattr(self, "_kt", str)
-        vt: Type[_VT] = getattr(self, "_vt", str)
+        kt: Type[_KT] = getattr(self, "_kt", typing.cast(Type[_KT], str))
+        vt: Type[_VT] = getattr(self, "_vt", typing.cast(Type[_VT], str))
         return f"{self.__class__.__name__}[{kt.__name__}, {vt.__name__}]({self._src!r})"
 
     def __str__(self) -> str:
