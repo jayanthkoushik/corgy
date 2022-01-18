@@ -1,5 +1,6 @@
 import os
 import stat
+import sys
 from argparse import ArgumentTypeError
 from io import BufferedReader, BufferedWriter, TextIOWrapper
 from pathlib import Path
@@ -8,7 +9,9 @@ from typing import Type, Union
 from unittest import skipIf, TestCase
 from unittest.mock import MagicMock, patch
 
+from corgy import Corgy
 from corgy.types import (
+    InitArgs,
     InputBinFile,
     InputDirectory,
     InputTextFile,
@@ -589,6 +592,67 @@ class TestKeyValuePairs(TestCase):
         dic = KeyValuePairs[str, int]({"foo": 1, "bar": 2})
         self.assertDictEqual(dic, {"foo": 1, "bar": 2})
         self.assertEqual(repr(dic), "KeyValuePairs[str, int]({'foo': 1, 'bar': 2})")
+
+
+class TestInitArgs(TestCase):
+    def test_init_args_generates_correct_corgy_class(self):
+        class A:
+            def __init__(self, x: int, y: str):
+                ...
+
+        type_ = InitArgs[A]
+        self.assertTrue(issubclass(type_, Corgy))
+        self.assertTrue(hasattr(type_, "x"))
+        self.assertIsInstance(type_.x, property)
+        self.assertTrue(hasattr(type_, "y"))
+        self.assertIsInstance(type_.y, property)
+
+    def test_init_args_instance_can_be_used_to_init_class(self):
+        class A:
+            def __init__(self, x: int, y: str):
+                self.x = x
+                self.y = y
+
+        type_ = InitArgs[A]
+        a_args = type_(x=1, y="2")
+        a = A(**a_args.as_dict())
+        self.assertEqual(a.x, 1)
+        self.assertEqual(a.y, "2")
+
+    def test_init_args_raises_if_re_subscripted(self):
+        class A:
+            def __init__(self, x: int, y: str):
+                ...
+
+        type_ = InitArgs[A]
+        with self.assertRaises(TypeError):
+            type_ = type_[A]  # type: ignore
+
+    def test_init_args_raises_if_missing_annotation(self):
+        class A:
+            def __init__(self, x: int, y):
+                ...
+
+        with self.assertRaises(TypeError):
+            _ = InitArgs[A]
+
+    def test_init_args_handles_default_values(self):
+        class A:
+            def __init__(self, x: int, y: str = "foo"):
+                ...
+
+        type_ = InitArgs[A]
+        a_args = type_(x=1)
+        self.assertDictEqual(a_args.as_dict(), {"x": 1, "y": "foo"})
+
+    @skipIf(sys.version_info < (3, 8), "positional-only parameters require Python 3.8+")
+    def test_init_args_raises_if_pos_only_arg_present(self):
+        class A:
+            def __init__(self, x: int, /, y: str):
+                ...
+
+        with self.assertRaises(TypeError):
+            _ = InitArgs[A]
 
 
 del _TestFile, _TestOutputFile, _TestLazyOutputFile, _TestInputFile, _TestDirectory

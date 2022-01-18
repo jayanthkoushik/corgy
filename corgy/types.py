@@ -23,6 +23,7 @@ Examples::
     parser = ArgumentParser()
     parser.add_argument("--in-dir", type=InputDirectory, help="an existing directory")
 """
+import inspect
 import os
 import sys
 import typing
@@ -30,6 +31,8 @@ from argparse import ArgumentTypeError
 from io import BufferedReader, BufferedWriter, FileIO, TextIOWrapper
 from pathlib import Path, PosixPath, WindowsPath
 from typing import Dict, Generic, Iterator, List, Mapping, Tuple, Type, TypeVar, Union
+
+from ._corgy import Corgy
 
 if sys.version_info < (3, 8):
     from typing_extensions import Protocol
@@ -48,6 +51,7 @@ __all__ = (
     "InputDirectory",
     "SubClass",
     "KeyValuePairs",
+    "InitArgs",
 )
 
 StrOrPath = Union[str, Path]
@@ -726,3 +730,75 @@ class KeyValuePairs(dict, Generic[_KT, _VT], metaclass=_KeyValuePairsMeta):
 
     def __str__(self) -> str:
         return super().__repr__()
+
+
+class InitArgs(Corgy, Generic[_T]):
+    """Corgy wrapper around arguments of a class's `__init__`.
+
+    Example::
+
+        $ cat test.py
+        class Foo:
+            def __init__(
+                self,
+                a: Annotated[int, "a help"],
+                b: Annotated[Sequence[str], "b help"],
+                c: Annotated[float, "c help"] = 0.0,
+            ):
+                ...
+        FooInitArgs = InitArgs[Foo]
+        foo_init_args = FooInitArgs.parse_from_cmdline()
+        foo = Foo(**foo_init_args.as_dict())
+
+        $ python test.py --help
+        usage: test.py [-h] --a int --b [str ...] [--c float]
+
+        options:
+          -h/--help      show this help message and exit
+          --a int        a help (required)
+          --b [str ...]  b help (required)
+          --c float      c help (default: 0.0)
+
+    This is a generic class, and on using the `InitArgs[Cls]` syntax, a concrete
+    `Corgy` class is created, which has attributes corresponding to the arguments of
+    `Cls.__init__`, with types inferred from annotations. The returned class can be used
+    as any other `Corgy` class, including as a type annotation within another `Corgy`
+    class.
+
+    All arguments of the `__init__` method must be annotated, following the same rules
+    as for other `Corgy` classes. Positional only arguments are not supported, since
+    they are not associated with an argument name. `TypeError` is raised if either of
+    these conditions is not met.
+    """
+
+    __slots__ = ()
+
+    def __class_getitem__(cls, item: Type[_T]) -> Type["InitArgs[_T]"]:
+        if hasattr(cls, "__annotations__"):
+            raise TypeError(
+                f"cannot further sub-script `{cls.__name__}[{item.__name__}]`"
+            )
+
+        item_sig = inspect.signature(item)
+        item_annotations, item_defaults = {}, {}
+        for param_name, param in item_sig.parameters.items():
+            if param.annotation is inspect.Parameter.empty:
+                raise TypeError(
+                    f"`{item}` is missing annotation for parameter `{param_name}`"
+                )
+
+            if param.kind is inspect.Parameter.POSITIONAL_ONLY:
+                raise TypeError(
+                    f"positional-only paramter `{param_name}` is incompatible with "
+                    f"`{cls.__name__}`"
+                )
+
+            item_annotations[param_name] = param.annotation
+            if param.default is not inspect.Parameter.empty:
+                item_defaults[param_name] = param.default
+
+        return type(
+            f"{cls.__name__}[{item.__name__}]",
+            (cls,),
+            {"__annotations__": item_annotations, **item_defaults},
+        )

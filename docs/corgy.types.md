@@ -306,3 +306,44 @@ that the dictionary is not type-checked and is used as-is:
 >>> repr(dic)
 >>> KeyValuePairs[str, int]({'a': 1, 'b': 2})
 ```
+
+
+### _class_ corgy.types.InitArgs(\*\*args)
+Corgy wrapper around arguments of a class’s `__init__`.
+
+Example:
+
+```python
+$ cat test.py
+class Foo:
+    def __init__(
+        self,
+        a: Annotated[int, "a help"],
+        b: Annotated[Sequence[str], "b help"],
+        c: Annotated[float, "c help"] = 0.0,
+    ):
+        ...
+FooInitArgs = InitArgs[Foo]
+foo_init_args = FooInitArgs.parse_from_cmdline()
+foo = Foo(**foo_init_args.as_dict())
+
+$ python test.py --help
+usage: test.py [-h] --a int --b [str ...] [--c float]
+
+options:
+  -h/--help      show this help message and exit
+  --a int        a help (required)
+  --b [str ...]  b help (required)
+  --c float      c help (default: 0.0)
+```
+
+This is a generic class, and on using the `InitArgs[Cls]` syntax, a concrete
+`Corgy` class is created, which has attributes corresponding to the arguments of
+`Cls.__init__`, with types inferred from annotations. The returned class can be used
+as any other `Corgy` class, including as a type annotation within another `Corgy`
+class.
+
+All arguments of the `__init__` method must be annotated, following the same rules
+as for other `Corgy` classes. Positional only arguments are not supported, since
+they are not associated with an argument name. `TypeError` is raised if either of
+these conditions is not met.
