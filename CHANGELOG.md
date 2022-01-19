@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.3.0](https://github.com/jayanthkoushik/corgy/compare/v4.2.0...v4.3.0) (2022-01-19)
+
+
+### Features
+
+* add `as_dict` method to convert `Corgy` classes to dicts ([08c2e0a](https://github.com/jayanthkoushik/corgy/commit/08c2e0a7c7f3421d4f503ef7f81ffb86e917b7b0))
+* add `InitArgs` type to generate `Corgy` classes for constructors ([1c8ab43](https://github.com/jayanthkoushik/corgy/commit/1c8ab434f0d60b2233c6879828ba6f490c44d3dd))
+* allow default usage formatting with `CorgyHelpFormatter` ([863997e](https://github.com/jayanthkoushik/corgy/commit/863997e4ec99650f9bf62384c2eaabc071a36fa7))
+* show usage with help if `CorgyHelpFormatter.show_full_help` is `True` ([ff6685d](https://github.com/jayanthkoushik/corgy/commit/ff6685d0684bf25d2f757697ed88cc7bf7fd2198))
+* support new style optional type annotations in Python 3.10+ ([267d459](https://github.com/jayanthkoushik/corgy/commit/267d459174e0f7341e5d71dba413d951a09a3a4f))
+
+
+### Bug Fixes
+
+* handle `__args__` being present when checking for empty sequences ([370a954](https://github.com/jayanthkoushik/corgy/commit/370a954afe062c51e54818b2f7169caca6c0fe08))
+* identify sequence types without `[]` in `Corgy` classes ([a5b42b5](https://github.com/jayanthkoushik/corgy/commit/a5b42b578e9eea0875e8bc574c0a2f38a881905c))
+
 ## [4.2.0](https://github.com/jayanthkoushik/corgy/compare/v4.1.0...v4.2.0) (2021-12-14)
 
 
