@@ -647,12 +647,16 @@ class TestInitArgs(TestCase):
 
     @skipIf(sys.version_info < (3, 8), "positional-only parameters require Python 3.8+")
     def test_init_args_raises_if_pos_only_arg_present(self):
-        class A:
-            def __init__(self, x: int, /, y: str):
-                ...
-
-        with self.assertRaises(TypeError):
-            _ = InitArgs[A]
+        # We need to use `exec` to prevent syntax error in Python 3.7.
+        # pylint: disable=exec-used
+        exec(
+            "class A:\n"
+            "    def __init__(self, x: int, /, y: str): ...\n"
+            "with self.assertRaises(TypeError):\n"
+            "    InitArgs[A]",
+            globals(),
+            locals(),
+        )
 
 
 del _TestFile, _TestOutputFile, _TestLazyOutputFile, _TestInputFile, _TestDirectory
