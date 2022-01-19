@@ -30,7 +30,18 @@ import typing
 from argparse import ArgumentTypeError
 from io import BufferedReader, BufferedWriter, FileIO, TextIOWrapper
 from pathlib import Path, PosixPath, WindowsPath
-from typing import Dict, Generic, Iterator, List, Mapping, Tuple, Type, TypeVar, Union
+from typing import (
+    Dict,
+    Generic,
+    Iterator,
+    List,
+    Mapping,
+    NoReturn,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from ._corgy import Corgy
 
@@ -774,11 +785,6 @@ class InitArgs(Corgy, Generic[_T]):
     __slots__ = ()
 
     def __class_getitem__(cls, item: Type[_T]) -> Type["InitArgs[_T]"]:
-        if hasattr(cls, "__annotations__"):
-            raise TypeError(
-                f"cannot further sub-script `{cls.__name__}[{item.__name__}]`"
-            )
-
         item_sig = inspect.signature(item)
         item_annotations, item_defaults = {}, {}
         for param_name, param in item_sig.parameters.items():
@@ -797,8 +803,17 @@ class InitArgs(Corgy, Generic[_T]):
             if param.default is not inspect.Parameter.empty:
                 item_defaults[param_name] = param.default
 
+        def new_cls_getitem(newcls, _item: Type[_T]) -> NoReturn:
+            raise TypeError(
+                f"cannot further sub-script `{newcls.__name__}[{_item.__name__}]`"
+            )
+
         return type(
             f"{cls.__name__}[{item.__name__}]",
             (cls,),
-            {"__annotations__": item_annotations, **item_defaults},
+            {
+                "__annotations__": item_annotations,
+                "__class_getitem__": new_cls_getitem,
+                **item_defaults,
+            },
         )
