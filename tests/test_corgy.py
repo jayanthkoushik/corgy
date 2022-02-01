@@ -201,6 +201,14 @@ class TestCorgyMeta(unittest.TestCase):
         d = D(x=1, c=c)
         self.assertDictEqual(d.as_dict(), {"x": 1, "c": c})
 
+    def test_corgy_cls_usable_without_annotations(self):
+        class C(Corgy):
+            ...
+
+        c = C()
+        self.assertEqual(repr(c), "C()")
+        self.assertDictEqual(c.as_dict(), {})
+
 
 class TestCorgyAddArgsToParser(unittest.TestCase):
     """Tests to check that Corgy properly adds arguments to ArgumentParsers."""

@@ -96,6 +96,9 @@ class _CorgyMeta(type):
         else:
             namespace["__slots__"] = list(namespace["__slots__"])
         if "__annotations__" not in namespace:
+            namespace["__annotations__"] = {}
+
+        if not namespace["__annotations__"]:
             return super().__new__(cls, name, bases, namespace, **kwds)
 
         namespace["__defaults"] = {}
