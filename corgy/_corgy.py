@@ -584,6 +584,9 @@ class Corgy(metaclass=_CorgyMeta):
             parser.add_argument(*var_flags, type=var_add_type, **_kwargs)
 
     def __init__(self, **args):
+        if self.__class__ is Corgy:
+            raise TypeError("`Corgy` is an abstract class and cannot be instantiated")
+
         grp_args_map: Dict[str, Any] = defaultdict(dict)
 
         for arg_name, arg_val in args.items():

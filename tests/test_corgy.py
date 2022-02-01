@@ -201,6 +201,10 @@ class TestCorgyMeta(unittest.TestCase):
         d = D(x=1, c=c)
         self.assertDictEqual(d.as_dict(), {"x": 1, "c": c})
 
+    def test_corgy_cls_raises_if_initialized_directly(self):
+        with self.assertRaises(TypeError):
+            Corgy()
+
     def test_corgy_cls_usable_without_annotations(self):
         class C(Corgy):
             ...
