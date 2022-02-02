@@ -337,6 +337,15 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
             "the_x_arg", type=int, help="x help"
         )
 
+    def test_add_handles_positional_optional(self):
+        class C(Corgy):
+            the_x_arg: Annotated[Optional[int], "x help", ["the-x-arg"]]
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with(
+            "the_x_arg", type=int, help="x help", nargs="?"
+        )
+
     def test_add_args_converts_literal_to_choices(self):
         class C(Corgy):
             x: Literal[1, 2, 3]
@@ -729,6 +738,21 @@ class TestCorgyCmdlineParsing(unittest.TestCase):
         self.parser.parse_args = lambda: self.orig_parse_args(self.parser, ["1"])
         c = C.parse_from_cmdline(self.parser)
         self.assertEqual(c.var, 1)
+
+    def test_cmdline_positional_optional_args_are_pared_without_value(self):
+        class C(Corgy):
+            var: Annotated[Optional[int], "x help", ["x"]]
+
+        for args in [[], ["1"]]:
+            with self.subTest(args=args):
+                self.parser = argparse.ArgumentParser()
+                # pylint: disable=cell-var-from-loop
+                self.parser.parse_args = lambda: self.orig_parse_args(self.parser, args)
+                c = C.parse_from_cmdline(self.parser)
+                if not args:
+                    self.assertIsNone(c.var)
+                else:
+                    self.assertEqual(c.var, 1)
 
     def test_cmdline_parsing_handles_group_arguments(self):
         class G(Corgy):

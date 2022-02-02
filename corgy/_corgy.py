@@ -292,6 +292,9 @@ class Corgy(metaclass=_CorgyMeta):
     Note:
         Default values are not type checked, and can be arbitrary objects.
 
+    When parsing, non-sequence positional arguments marked optional will have `nargs`
+    set to `?`, and will accept a single argument or none.
+
     **Sequence**
     `collections.abc.Sequence` can be used to specify that an argument accepts multiple
     space-separated values. On Python versions below 3.9, `typing.Sequence` must be
@@ -484,7 +487,7 @@ class Corgy(metaclass=_CorgyMeta):
                 var_required = var_name not in getattr(cls, "__defaults")
 
             # Check if the variable is a sequence.
-            var_nargs: Union[int, Literal["+", "*"], None]
+            var_nargs: Union[int, Literal["+", "*", "?"], None]
             if _is_sequence_type(var_base_type):
                 if not hasattr(var_base_type, "__args__") or isinstance(
                     var_base_type.__args__[0], TypeVar
@@ -514,6 +517,9 @@ class Corgy(metaclass=_CorgyMeta):
                         )
                     var_nargs = len(var_base_type.__args__)
                 var_base_type = var_base_type.__args__[0]
+            elif var_positional and not var_required:
+                # "Optional" positional argument: set `nargs` to `?`.
+                var_nargs = "?"
             else:
                 var_nargs = None
 

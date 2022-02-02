@@ -119,6 +119,9 @@ be required.
 
 **NOTE**: Default values are not type checked, and can be arbitrary objects.
 
+When parsing, non-sequence positional arguments marked optional will have `nargs`
+set to `?`, and will accept a single argument or none.
+
 **Sequence**
 `collections.abc.Sequence` can be used to specify that an argument accepts multiple
 space-separated values. On Python versions below 3.9, `typing.Sequence` must be
