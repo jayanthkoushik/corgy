@@ -23,6 +23,7 @@ Examples::
     parser = ArgumentParser()
     parser.add_argument("--in-dir", type=InputDirectory, help="an existing directory")
 """
+import atexit
 import inspect
 import os
 import sys
@@ -93,6 +94,7 @@ def _get_wrapped_buf(cls, buffer):
     if obj is None:
         obj = cls.__new__(cls)
         super(cls, obj).__init__(buffer, line_buffering=True)
+        atexit.register(cls.close, obj)
         setattr(cls, obj_name, obj)
     return obj
 
@@ -118,7 +120,8 @@ class OutputTextFile(TextIOWrapper, metaclass=_OutputTextFileMeta):
 
     The file will be created if it does not exist (including any parent directories),
     and opened in text mode (`w`). Existing files will be truncated. `ArgumentTypeError`
-    is raised if any of the operations fail.
+    is raised if any of the operations fail. An `atexit` handler will be registered to
+    close the file on program termination.
     """
 
     __metavar__ = "file"
@@ -128,6 +131,7 @@ class OutputTextFile(TextIOWrapper, metaclass=_OutputTextFileMeta):
         stream = _get_output_stream(path)
         buffer = BufferedWriter(stream)
         super().__init__(buffer, **kwargs)
+        atexit.register(self.__class__.close, self)
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.buffer.name!r})"
@@ -179,7 +183,8 @@ class OutputBinFile(BufferedWriter):
     This class is a thin wrapper around `BufferedWriter` that accepts a path, instead
     of a file stream. The file will be created if it does not exist (including any
     parent directories), and opened in binary mode. Existing files will be truncated.
-    `ArgumentTypeError` is raised if any of the operations fail.
+    `ArgumentTypeError` is raised if any of the operations fail. An `atexit` handler
+    will be registered to close the file on program termination.
     """
 
     __metavar__ = "file"
@@ -188,6 +193,7 @@ class OutputBinFile(BufferedWriter):
     def __init__(self, path: StrOrPath):
         stream = _get_output_stream(path)
         super().__init__(stream)
+        atexit.register(self.__class__.close, self)
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.name!r})"
@@ -233,7 +239,8 @@ class InputTextFile(TextIOWrapper, metaclass=_InputTextFileMeta):
         kwargs: Keyword only arguments that are passed to `TextIOWrapper`.
 
     The file must exist, and will be opened in text mode (`r`). `ArgumentTypeError` is
-    raised if this fails.
+    raised if this fails. An `atexit` handler will be registered to close the file on
+    program termination.
     """
 
     __metavar__ = "file"
@@ -246,6 +253,7 @@ class InputTextFile(TextIOWrapper, metaclass=_InputTextFileMeta):
             raise ArgumentTypeError(f"could not open `{path}`: {e}") from None
         buffer = BufferedReader(stream)
         super().__init__(buffer)
+        atexit.register(self.__class__.close, self)
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.buffer.name!r})"
@@ -268,7 +276,8 @@ class InputBinFile(BufferedReader):
 
     This class is a thin wrapper around `BufferedReader` that accepts a path, instead
     of a file stream. The file must exist, and will be opened in binary mode.
-    `ArgumentTypeError` is raised if this fails.
+    `ArgumentTypeError` is raised if this fails. An `atexit` handler will be registered
+    to close the file on program termination.
     """
 
     __metavar__ = "file"
@@ -280,6 +289,7 @@ class InputBinFile(BufferedReader):
         except OSError as e:
             raise ArgumentTypeError(f"could not open `{path}`: {e}") from None
         super().__init__(stream)
+        atexit.register(self.__class__.close, self)
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.name!r})"

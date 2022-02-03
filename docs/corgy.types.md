@@ -43,7 +43,8 @@ parser.add_argument("--in-dir", type=InputDirectory, help="an existing directory
 
 The file will be created if it does not exist (including any parent directories),
 and opened in text mode (`w`). Existing files will be truncated. `ArgumentTypeError`
-is raised if any of the operations fail.
+is raised if any of the operations fail. An `atexit` handler will be registered to
+close the file on program termination.
 
 
 #### init()
@@ -66,7 +67,8 @@ Type for an output binary file.
 This class is a thin wrapper around `BufferedWriter` that accepts a path, instead
 of a file stream. The file will be created if it does not exist (including any
 parent directories), and opened in binary mode. Existing files will be truncated.
-`ArgumentTypeError` is raised if any of the operations fail.
+`ArgumentTypeError` is raised if any of the operations fail. An `atexit` handler
+will be registered to close the file on program termination.
 
 
 #### init()
@@ -109,7 +111,8 @@ Initialize the file.
 
 
 The file must exist, and will be opened in text mode (`r`). `ArgumentTypeError` is
-raised if this fails.
+raised if this fails. An `atexit` handler will be registered to close the file on
+program termination.
 
 
 #### stdin_wrapper(_ = InputTextFile('<stdin>'_ )
@@ -125,7 +128,8 @@ Type for an input binary file.
 
 This class is a thin wrapper around `BufferedReader` that accepts a path, instead
 of a file stream. The file must exist, and will be opened in binary mode.
-`ArgumentTypeError` is raised if this fails.
+`ArgumentTypeError` is raised if this fails. An `atexit` handler will be registered
+to close the file on program termination.
 
 
 ### _class_ corgy.types.OutputDirectory(path)
