@@ -50,6 +50,10 @@ is raised if any of the operations fail.
 No-op for compatibility with `LazyOutputTextFile`.
 
 
+#### stdout_wrapper(_ = OutputTextFile('<stdout>'_ )
+
+#### stderr_wrapper(_ = OutputTextFile('<stderr>'_ )
+
 ### _class_ corgy.types.OutputBinFile(path)
 Type for an output binary file.
 
@@ -107,6 +111,8 @@ Initialize the file.
 The file must exist, and will be opened in text mode (`r`). `ArgumentTypeError` is
 raised if this fails.
 
+
+#### stdin_wrapper(_ = InputTextFile('<stdin>'_ )
 
 ### _class_ corgy.types.InputBinFile(path)
 Type for an input binary file.

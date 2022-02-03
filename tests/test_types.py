@@ -82,6 +82,20 @@ class TestOutputTextFile(_TestOutputFile):
         with self.type(os.path.join(self.tmp_dir.name, "foo.txt")) as f:
             self.assertIsInstance(f, TextIOWrapper)
 
+    def test_output_text_file_stdouterr_wrappers(self):
+        for wrapper, buffer in zip(
+            [OutputTextFile.stdout_wrapper, OutputTextFile.stderr_wrapper],
+            [sys.__stdout__.buffer, sys.__stderr__.buffer],
+        ):
+            with self.subTest(wrapper=wrapper):
+                self.assertIsInstance(wrapper, OutputTextFile)
+                self.assertIs(wrapper.buffer, buffer)
+                if buffer is sys.__stdout__.buffer:
+                    # Singleton test.
+                    self.assertIs(OutputTextFile.stdout_wrapper, wrapper)
+                else:
+                    self.assertIs(OutputTextFile.stderr_wrapper, wrapper)
+
 
 class TestOutputBinFile(_TestOutputFile):
     type = OutputBinFile
@@ -151,6 +165,12 @@ class TestInputTextFile(_TestInputFile):
     def test_input_text_file_type(self):
         with self.type(self.tmp_file_name) as f:
             self.assertIsInstance(f, TextIOWrapper)
+
+    def test_input_text_file_stdin_wrapper(self):
+        wrapper = InputTextFile.stdin_wrapper
+        self.assertIsInstance(wrapper, InputTextFile)
+        self.assertIs(wrapper.buffer, sys.__stdin__.buffer)
+        self.assertIs(InputTextFile.stdin_wrapper, wrapper)  # singleton test
 
 
 class TestInputBinFile(_TestInputFile):
