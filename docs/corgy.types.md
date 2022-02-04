@@ -51,9 +51,13 @@ close the file on program termination.
 No-op for compatibility with `LazyOutputTextFile`.
 
 
-#### stdout_wrapper(_ = OutputTextFile('<stdout>'_ )
+#### _class property_ stdout_wrapper()
+`sys.__stdout__` wrapped with `TextIOWrapper` (line buffered).
 
-#### stderr_wrapper(_ = OutputTextFile('<stderr>'_ )
+
+#### _class property_ stderr_wrapper()
+`sys.__stderr__` wrapped with `TextIOWrapper` (line buffered).
+
 
 ### _class_ corgy.types.OutputBinFile(path)
 Type for an output binary file.
@@ -115,7 +119,9 @@ raised if this fails. An `atexit` handler will be registered to close the file o
 program termination.
 
 
-#### stdin_wrapper(_ = InputTextFile('<stdin>'_ )
+#### _class property_ stdin_wrapper()
+`sys.__stdin__` wrapped with `TextIOWrapper`.
+
 
 ### _class_ corgy.types.InputBinFile(path)
 Type for an input binary file.
