@@ -269,6 +269,29 @@ base class type. So all instances of `SubClass[Base]` will return the same type,
 and any attributes set on the type will be shared between all instances.
 
 
+#### _class property_ \__choices__()
+Return a tuple of `SubClass` instances for valid sub-classes of the base.
+
+Each item in the tuple is an instance of `SubClass`, and corresponds to a valid
+sub-class of the base-class associated with this type.
+
+
+#### \__call__(\*args, \*\*kwargs)
+Return an instance of the sub-class associated with this type.
+
+Example:
+
+```python
+class Base: ...
+class Sub1(Base): ...
+
+BaseSubType = SubClass[Base]
+BaseSub = BaseSubType("Sub1")  # an instance of the `SubClass` type
+
+base_sub = BaseSub()  # an instance of `Sub1`
+```
+
+
 ### _class_ corgy.types.KeyValuePairs(values)
 Dictionary sub-class that is initialized from a string of key-value pairs.
 

@@ -17,6 +17,7 @@ poetry run sphinx-build \
     -D default_role=samp \
     -D autodoc_member_order=bysource \
     -D autodoc_typehints=none \
+    -D autodoc_default_options.special-members=__call__,__choices__ \
     -D highlight_language=python \
     -b markdown \
     -c docs \

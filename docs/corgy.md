@@ -444,8 +444,16 @@ Whether colors are enabled.
 `argparse.Action` that displays the short help, and exits.
 
 
+#### \__call__(parser, namespace, values, option_string=None)
+Call self as a function.
+
+
 #### _class_ FullHelpAction(option_strings, dest, nargs=None, const=None, default=None, type=None, choices=None, required=False, help=None, metavar=None)
 `argparse.Action` that displays the full help, and exits.
+
+
+#### \__call__(parser, namespace, values, option_string=None)
+Call self as a function.
 
 
 #### _classmethod_ add_short_full_helps(parser, short_help_flags=('-h', '--help'), full_help_flags=('--helpfull',), short_help_msg='show help message and exit', full_help_msg='show full help messsage and exit')
