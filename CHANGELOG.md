@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.4.0](https://github.com/jayanthkoushik/corgy/compare/v4.3.0...v4.4.0) (2022-02-07)
+
+
+### Features
+
+* add handlers to close `corgy.types` file types on exit ([c29e367](https://github.com/jayanthkoushik/corgy/commit/c29e367eb50b25d383b13fce5656157c696c801e))
+* add wrappers for `sys.__std<in/out/err>__` to `corgy.types` ([d5f26f1](https://github.com/jayanthkoushik/corgy/commit/d5f26f182500fbd760e9b774b6851d5838ba9395))
+* allow creating empty `Corgy` classes ([c259117](https://github.com/jayanthkoushik/corgy/commit/c259117346c389b1d7deadf081cb0ea1dfa30761))
+* handle optional positional arguments in `Corgy` classes ([95bb1a6](https://github.com/jayanthkoushik/corgy/commit/95bb1a677196283b29190bc7c84b6be847368ef3))
+* raise `TypeError` if `Corgy` instantiated directly ([a64b094](https://github.com/jayanthkoushik/corgy/commit/a64b0947b72fca53528bb1467226d541a357c86b))
+
 ## [4.3.0](https://github.com/jayanthkoushik/corgy/compare/v4.2.0...v4.3.0) (2022-01-19)
 
 
