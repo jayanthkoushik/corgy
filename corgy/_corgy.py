@@ -8,6 +8,7 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Mapping,
     NamedTuple,
     Optional,
     Sequence,
@@ -425,6 +426,7 @@ class Corgy(metaclass=_CorgyMeta):
         name_prefix: str = "",
         make_group: bool = False,
         group_help: Optional[str] = None,
+        defaults: Optional[Mapping[str, Any]] = None,
     ):
         """Add arguments for this class to the given parser.
 
@@ -436,10 +438,48 @@ class Corgy(metaclass=_CorgyMeta):
             make_group: If `True`, the arguments will be added to a group within the
                 parser, and `name_prefix` will be used as the group name.
             group_help: Help text for the group. Ignored if `make_group` is `False`.
+            defaults: Optional mapping with default values for arguments. Any value
+                specified here will override default values specified in the class.
+                Values for groups can be specified either as `Corgy` instances, or as
+                individual values using the same syntax as for `__init__`.
+
+        Example::
+
+            class G(Corgy):
+                x: int = 0
+                y: float
+
+            class C(Corgy):
+                x: int
+                g: G
+
+            parser = ArgumentParser()
+            C.add_args_to_parser(parser)  # adds `--x`, `--g:x`, and `--g:y`
+            # Set default value for `x`.
+            C.add_args_to_parser(parser, defaults={"x": 1})
+            # Set default value for `g` using a `Corgy` instance.
+            # Note that this will override the default value for `x` specified in `G`.
+            C.add_args_to_parser(parser, defaults={"g": G(x=1, y=2.0)})
+            # Set default value for `g` using individual values.
+            C.add_args_to_parser(parser, defaults={"g:y": 2.0})
         """
         base_parser = parser
         if make_group:
             parser = parser.add_argument_group(name_prefix, group_help)  # type: ignore
+
+        base_defaults = getattr(cls, "__defaults").copy()
+        if defaults is not None:
+            base_defaults.update(defaults)
+
+        # Extract default values for group arguments specified individually using
+        # the `<group>:<var name>` syntax.
+        group_arg_defaults: Dict[str, Dict[str, Any]] = defaultdict(dict)
+        for _k, _v in base_defaults.items():
+            if ":" in _k:
+                _grp_name, _var_name = _k.split(":")
+                group_arg_defaults[_grp_name][_var_name] = _v
+            elif _k not in cls.__annotations__:
+                raise ValueError(f"default value for unknown argument: `{_k}`")
 
         for (var_name, var_type) in getattr(cls, "__annotations__").items():
             var_flags = getattr(cls, "__flags").get(
@@ -470,7 +510,23 @@ class Corgy(metaclass=_CorgyMeta):
             # Check if the variable is also `Corgy` type.
             if type(var_type) is type(cls):
                 # Create an argument group using `<var_type>`.
-                var_type.add_args_to_parser(base_parser, var_dest, True, var_help)
+                # If there is a default value, pass it using `**defaults`.
+                if var_name in base_defaults:
+                    try:
+                        grp_defaults = base_defaults[var_name].as_dict()
+                    except AttributeError:
+                        raise ValueError(
+                            f"default value for `{var_name}` is not a `Corgy` instance"
+                        ) from None
+                else:
+                    grp_defaults = {}
+
+                # Update defaults with any values specified individually.
+                grp_defaults.update(group_arg_defaults.get(var_name, {}))
+
+                var_type.add_args_to_parser(
+                    base_parser, var_dest, True, var_help, grp_defaults
+                )
                 continue
 
             # Check if the variable is optional. `<var_name>: Optional[<var_type>]` is
@@ -484,7 +540,7 @@ class Corgy(metaclass=_CorgyMeta):
                 var_required = False
             else:
                 var_base_type = var_type
-                var_required = var_name not in getattr(cls, "__defaults")
+                var_required = var_name not in base_defaults
 
             # Check if the variable is a sequence.
             var_nargs: Union[int, Literal["+", "*", "?"], None]
@@ -580,9 +636,8 @@ class Corgy(metaclass=_CorgyMeta):
                 _kwargs["action"] = var_action
             if var_choices is not None:
                 _kwargs["choices"] = var_choices
-            _defaults = getattr(cls, "__defaults")
-            if var_name in _defaults:
-                _kwargs["default"] = _defaults[var_name]
+            if var_name in base_defaults:
+                _kwargs["default"] = base_defaults[var_name]
             if var_required and not var_positional:
                 _kwargs["required"] = True
             with suppress(AttributeError):
@@ -646,13 +701,19 @@ class Corgy(metaclass=_CorgyMeta):
 
     @classmethod
     def parse_from_cmdline(
-        cls: Type[_T], parser: Optional[argparse.ArgumentParser] = None, **parser_args
+        cls: Type[_T],
+        parser: Optional[argparse.ArgumentParser] = None,
+        defaults: Optional[Mapping[str, Any]] = None,
+        **parser_args,
     ) -> _T:
         """Parse an object of the class from command line arguments.
 
         Args:
             parser: An instance of `argparse.ArgumentParser` or `None`. If `None`, a new
                 instance is created.
+            defaults: A dictionary of default values for the arguments, passed to
+                `add_args_to_parser`. Refer to the docs for `add_args_to_parser` to
+                see more details.
             parser_args: Arguments to be passed to `argparse.ArgumentParser()`. Ignored
                 if `parser` is not None.
         """
@@ -660,7 +721,7 @@ class Corgy(metaclass=_CorgyMeta):
             if "formatter_class" not in parser_args:
                 parser_args["formatter_class"] = CorgyHelpFormatter
             parser = argparse.ArgumentParser(**parser_args)
-        cls.add_args_to_parser(parser)
+        cls.add_args_to_parser(parser, defaults=defaults)
         args = vars(parser.parse_args())
         return cls(**args)
 

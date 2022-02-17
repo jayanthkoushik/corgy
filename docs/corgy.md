@@ -267,7 +267,7 @@ d.c  # C(x=2)
 ```
 
 
-#### _classmethod_ add_args_to_parser(parser, name_prefix='', make_group=False, group_help=None)
+#### _classmethod_ add_args_to_parser(parser, name_prefix='', make_group=False, group_help=None, defaults=None)
 Add arguments for this class to the given parser.
 
 
@@ -289,6 +289,34 @@ Add arguments for this class to the given parser.
     * **group_help** – Help text for the group. Ignored if `make_group` is `False`.
 
 
+    * **defaults** – Optional mapping with default values for arguments. Any value
+    specified here will override default values specified in the class.
+    Values for groups can be specified either as `Corgy` instances, or as
+    individual values using the same syntax as for `__init__`.
+
+
+Example:
+
+```python
+class G(Corgy):
+    x: int = 0
+    y: float
+
+class C(Corgy):
+    x: int
+    g: G
+
+parser = ArgumentParser()
+C.add_args_to_parser(parser)  # adds `--x`, `--g:x`, and `--g:y`
+# Set default value for `x`.
+C.add_args_to_parser(parser, defaults={"x": 1})
+# Set default value for `g` using a `Corgy` instance.
+# Note that this will override the default value for `x` specified in `G`.
+C.add_args_to_parser(parser, defaults={"g": G(x=1, y=2.0)})
+# Set default value for `g` using individual values.
+C.add_args_to_parser(parser, defaults={"g:y": 2.0})
+```
+
 
 #### as_dict()
 Return the object as a dictionary.
@@ -298,7 +326,7 @@ are omitted, unless they have default values. This method is not recursive, and
 attributes which are `Corgy` instances are returned as is.
 
 
-#### _classmethod_ parse_from_cmdline(parser=None, \*\*parser_args)
+#### _classmethod_ parse_from_cmdline(parser=None, defaults=None, \*\*parser_args)
 Parse an object of the class from command line arguments.
 
 
@@ -307,6 +335,11 @@ Parse an object of the class from command line arguments.
 
     * **parser** – An instance of `argparse.ArgumentParser` or `None`. If `None`, a new
     instance is created.
+
+
+    * **defaults** – A dictionary of default values for the arguments, passed to
+    `add_args_to_parser`. Refer to the docs for `add_args_to_parser` to
+    see more details.
 
 
     * **parser_args** – Arguments to be passed to `argparse.ArgumentParser()`. Ignored

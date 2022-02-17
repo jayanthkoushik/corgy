@@ -695,6 +695,99 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
             "--x", type=list, required=True, help="x"
         )
 
+    def test_add_args_handles_passed_defaults(self):
+        class C(Corgy):
+            x: int
+
+        C.add_args_to_parser(self.parser, defaults={"x": 42})
+        self.parser.add_argument.assert_called_once_with("--x", type=int, default=42)
+
+    def test_add_args_overrides_default_values_with_passed_defaults(self):
+        class C(Corgy):
+            x: int = 0
+
+        C.add_args_to_parser(self.parser, defaults={"x": 42})
+        self.parser.add_argument.assert_called_once_with("--x", type=int, default=42)
+
+    def test_add_args_handles_passed_defaults_for_groups(self):
+        class G(Corgy):
+            x: int = 1
+            y: str
+            z: float = 2.0
+            w: int
+
+        class C(Corgy):
+            g: G
+
+        grp_parser = MagicMock()
+        self.parser.add_argument_group.return_value = grp_parser
+
+        C.add_args_to_parser(self.parser, defaults={"g": G(x=42, y="foo")})
+        grp_parser.add_argument.assert_has_calls(
+            [
+                (("--g:x",), {"type": int, "default": 42}),
+                (("--g:y",), {"type": str, "default": "foo"}),
+                (("--g:z",), {"type": float, "default": 2.0}),
+                (("--g:w",), {"type": int, "required": True}),
+            ],
+            any_order=True,
+        )
+
+    def test_add_args_handles_individually_passed_defaults_for_groups(self):
+        class G(Corgy):
+            x: int = 1
+            y: str
+            z: float = 2.0
+            w: int
+
+        class C(Corgy):
+            g: G
+
+        grp_parser = MagicMock()
+        self.parser.add_argument_group.return_value = grp_parser
+
+        C.add_args_to_parser(
+            self.parser, defaults={"g": G(x=42, y="foo"), "g:x": 43, "g:w": 44}
+        )
+        grp_parser.add_argument.assert_has_calls(
+            [
+                (("--g:x",), {"type": int, "default": 43}),
+                (("--g:y",), {"type": str, "default": "foo"}),
+                (("--g:z",), {"type": float, "default": 2.0}),
+                (("--g:w",), {"type": int, "default": 44}),
+            ],
+            any_order=True,
+        )
+
+    def test_add_args_raises_if_passed_defaults_for_unknown_var(self):
+        class C(Corgy):
+            x: int
+
+        with self.assertRaises(ValueError):
+            C.add_args_to_parser(self.parser, defaults={"y": 42})
+
+    def test_add_args_raises_if_passed_defaults_for_unknown_group_var(self):
+        class G(Corgy):
+            x: int
+
+        class C(Corgy):
+            x: int
+            g: G
+
+        with self.assertRaises(ValueError):
+            C.add_args_to_parser(self.parser, defaults={"g:y": 42})
+
+    def test_add_args_raises_if_passed_non_corgy_as_group_default(self):
+        class G(Corgy):
+            x: int
+
+        class C(Corgy):
+            x: int
+            g: G
+
+        with self.assertRaises(ValueError):
+            C.add_args_to_parser(self.parser, defaults={"g": 42})
+
 
 class TestCorgyCmdlineParsing(unittest.TestCase):
     """Test cases to check parsing of command line arguments by Corgy."""
@@ -910,6 +1003,14 @@ class TestCorgyCmdlineParsing(unittest.TestCase):
         self.assertEqual(c.x, 1)
         with self.assertRaises(AttributeError):
             _ = c.y
+
+    def test_parse_from_cmdline_handles_passed_defaults(self):
+        class C(Corgy):
+            x: int
+
+        self.parser.parse_args = lambda: self.orig_parse_args(self.parser, [])
+        c = C.parse_from_cmdline(defaults={"x": 1}, add_help=False)
+        self.assertEqual(c.x, 1)
 
 
 class TestCorgyCustomParsers(unittest.TestCase):
