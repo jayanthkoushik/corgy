@@ -1009,7 +1009,7 @@ class TestCorgyCmdlineParsing(unittest.TestCase):
             x: int
 
         self.parser.parse_args = lambda: self.orig_parse_args(self.parser, [])
-        c = C.parse_from_cmdline(defaults={"x": 1}, add_help=False)
+        c = C.parse_from_cmdline(self.parser, defaults={"x": 1}, add_help=False)
         self.assertEqual(c.x, 1)
 
 
