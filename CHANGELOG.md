@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.5.0](https://github.com/jayanthkoushik/corgy/compare/v4.4.0...v4.5.0) (2022-03-23)
+
+
+### Features
+
+* allow specifying default values in `Corgy.add_args_to_parser` and `Corgy.parse_from_cmdline` ([06598c5](https://github.com/jayanthkoushik/corgy/commit/06598c57a4f87ccc7f564c8dd9e15f2245de4e91))
+
 ## [4.4.0](https://github.com/jayanthkoushik/corgy/compare/v4.3.0...v4.4.0) (2022-02-07)
 
 
