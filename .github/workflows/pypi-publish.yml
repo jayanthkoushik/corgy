@@ -20,6 +20,6 @@ jobs:
     - name: Build dist
       run: $HOME/.poetry/bin/poetry build
     - name: Publish to pypi
-      run: $HOME/.poetry/bin/poetry publish -u jayanth_koushik -p $PYPI_PASSWORD
+      run: $HOME/.poetry/bin/poetry publish -u __token__ -p $PYPI_TOKEN
       env:
-        PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
