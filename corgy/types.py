@@ -147,14 +147,12 @@ class OutputTextFile(TextIOWrapper, metaclass=_OutputTextFileMeta):
     def stdout_wrapper(cls) -> "OutputTextFile":
         """`sys.__stdout__` wrapped with `TextIOWrapper` (line buffered)."""
         # For Sphinx.
-        ...
 
     @classmethod
     @property
     def stderr_wrapper(cls) -> "OutputTextFile":
         """`sys.__stderr__` wrapped with `TextIOWrapper` (line buffered)."""
         # For Sphinx.
-        ...
 
 
 class LazyOutputTextFile(OutputTextFile):
@@ -268,7 +266,6 @@ class InputTextFile(TextIOWrapper, metaclass=_InputTextFileMeta):
     def stdin_wrapper(cls) -> "InputTextFile":
         """`sys.__stdin__` wrapped with `TextIOWrapper`."""
         # For Sphinx.
-        ...
 
 
 class InputBinFile(BufferedReader):
@@ -585,7 +582,6 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
         sub-class of the base-class associated with this type.
         """
         # For Sphinx.
-        ...
 
     @classmethod
     def _choices(cls) -> Tuple["SubClass[_T]", ...]:
