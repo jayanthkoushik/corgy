@@ -44,12 +44,9 @@ from typing import (
     Union,
 )
 
-from ._corgy import Corgy
+from typing_extensions import Protocol
 
-if sys.version_info < (3, 8):
-    from typing_extensions import Protocol
-else:
-    from typing import Protocol
+from ._corgy import Corgy
 
 __all__ = (
     "OutputTextFile",
