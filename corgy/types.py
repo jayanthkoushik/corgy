@@ -557,12 +557,20 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
     @classmethod
     def _generate_base_subclasses(cls) -> Iterator[Type[_T]]:
         cls._ensure_base_set()
+
+        def _iter_descendants(c):
+            for _s in c.__subclasses__():
+                yield _s
+                yield from _iter_descendants(_s)
+
         if cls.allow_base:
             yield cls._base
-        for base_subcls in cls._base.__subclasses__():
-            yield base_subcls
-            if cls.allow_indirect_subs:
-                yield from base_subcls.__subclasses__()
+
+        if cls.allow_indirect_subs:
+            yield from _iter_descendants(cls._base)
+        else:
+            for base_subcls in cls._base.__subclasses__():
+                yield base_subcls
 
     @classmethod
     def _subclass_name(cls, subcls: Type[_T]) -> str:

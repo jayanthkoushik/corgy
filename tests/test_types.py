@@ -364,12 +364,16 @@ class TestSubClass(TestCase):
         class C(B):
             ...
 
+        class D(C):
+            ...
+
         type_ = SubClass[A]
         self.assertIsInstance(type_("C")(), C)
+        self.assertIsInstance(type_("D")(), D)
 
         type_.allow_indirect_subs = False
         with self.assertRaises(ArgumentTypeError):
-            type_("C")
+            type_("D")
 
     def test_subclass_choices(self):
         class A:
