@@ -44,7 +44,10 @@ from typing import (
     Union,
 )
 
-from typing_extensions import Protocol
+if sys.version_info >= (3, 9):
+    from typing import Protocol
+else:
+    from typing_extensions import Protocol
 
 from ._corgy import Corgy
 

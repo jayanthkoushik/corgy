@@ -9,8 +9,9 @@ SequenceType = Sequence
 
 if sys.version_info >= (3, 9):
     from collections.abc import Sequence  # pylint: disable=reimported
-
-from typing_extensions import Annotated, Literal
+    from typing import Annotated, Literal
+else:
+    from typing_extensions import Annotated, Literal
 
 import corgy
 from corgy import Corgy, CorgyHelpFormatter, corgyparser

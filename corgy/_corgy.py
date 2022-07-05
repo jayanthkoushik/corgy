@@ -20,7 +20,10 @@ from typing import (
 if sys.version_info >= (3, 10):
     from types import UnionType
 
-from typing_extensions import Literal
+if sys.version_info >= (3, 9):
+    from typing import Literal
+else:
+    from typing_extensions import Literal
 
 from ._helpfmt import CorgyHelpFormatter
 
