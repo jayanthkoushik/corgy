@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import sys
 from collections import defaultdict
@@ -182,15 +184,20 @@ class _CorgyMeta(type):
     def _create_var_property(cls_name, var_name, var_type, var_doc):
         # Properties are stored in private instance variables prefixed with `__`, and
         # must be accessed as `_<cls>__<var_name>`.
-        def var_fget(self) -> var_type:
+        # def var_fget(self) -> var_type:
+        def var_fget(self):
             with suppress(AttributeError):
                 return getattr(self, f"_{cls_name.lstrip('_')}__{var_name}")
             with suppress(KeyError):
                 return getattr(self, "__defaults")[var_name]
             raise AttributeError(f"no value available for attribute `{var_name}`")
 
-        def var_fset(self, val: var_type):
+        # def var_fset(self, val: var_type):
+        def var_fset(self, val):
             setattr(self, f"_{cls_name.lstrip('_')}__{var_name}", val)
+
+        var_fget.__annotations__ = {"return": var_type}
+        var_fset.__annotations__ = {"val": var_type}
 
         return property(var_fget, var_fset, doc=var_doc)
 

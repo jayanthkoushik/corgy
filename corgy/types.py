@@ -23,6 +23,8 @@ Examples::
     parser = ArgumentParser()
     parser.add_argument("--in-dir", type=InputDirectory, help="an existing directory")
 """
+from __future__ import annotations
+
 import atexit
 import inspect
 import os
