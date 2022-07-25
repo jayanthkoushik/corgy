@@ -208,6 +208,25 @@ class TestCorgyMeta(unittest.TestCase):
         self.assertEqual(repr(c), "C()")
         self.assertDictEqual(c.as_dict(), {})
 
+    def test_corgy_cls_subclasses_inherit_annotations(self):
+        class D(self._CorgyCls):
+            x3: Annotated[str, "x3 is now a string"]
+            x4: Annotated[str, "x4 has a new default"] = "four"
+            x5: Annotated[int, "new param x5"]
+            x6: Annotated[float, "new param x6"]
+
+        for _x in ["x1", "x2", "x3", "x4", "x5", "x6"]:
+            with self.subTest(var=_x):
+                self.assertTrue(hasattr(D, _x))
+                self.assertIsInstance(getattr(D, _x), property)
+
+        _x3_prop = getattr(D, "x3")
+        self.assertEqual(_x3_prop.fget.__annotations__["return"], str)
+
+        d = D()
+        self.assertFalse(hasattr(d, "x3"))
+        self.assertEqual(d.x4, "four")
+
 
 class TestCorgyAddArgsToParser(unittest.TestCase):
     """Tests to check that Corgy properly adds arguments to ArgumentParsers."""

@@ -61,6 +61,23 @@ To allow arbitrary instance variables, add `__dict__` to `__slots__`. Names adde
 through custom `__slots__` are not processed by `Corgy`, and will not be added to
 `ArgumentParser` objects by the class methods.
 
+`Corgy` classes can be sub-classed, with sub-classes inheriting the attributes of
+the base class, and overriding any redefined attributes:
+
+```python
+class A(Corgy):
+    x: int
+    y: float = 1.0
+    z: str
+
+class B(A):
+    x: str  # new type
+    y: float = 2.0  # new default value
+    w: int  # new attribute
+
+b = B()  # `b` has attributes `x`, `y`, `z`, and `w`
+```
+
 `Corgy` recognizes a number of special annotations, which are used to control how
 the argument is parsed.
 

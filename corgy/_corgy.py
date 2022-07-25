@@ -100,8 +100,12 @@ class _CorgyMeta(type):
             namespace["__slots__"] = list(namespace["__slots__"])
         if "__annotations__" not in namespace:
             namespace["__annotations__"] = {}
+        combined_annotations = {}
+        for base in bases:
+            combined_annotations.update(getattr(base, "__annotations__", {}))
 
         if not namespace["__annotations__"]:
+            namespace["__annotations__"] = combined_annotations
             return super().__new__(cls, name, bases, namespace, **kwds)
 
         namespace["__defaults"] = {}
@@ -178,6 +182,8 @@ class _CorgyMeta(type):
                 else:
                     raise TypeError(f"invalid target for corgyparser: {var_name}")
 
+        combined_annotations.update(namespace.get("__annotations__", {}))
+        namespace["__annotations__"] = combined_annotations
         return super().__new__(cls, name, bases, namespace, **kwds)
 
     @staticmethod
@@ -249,6 +255,21 @@ class Corgy(metaclass=_CorgyMeta):
     To allow arbitrary instance variables, add `__dict__` to `__slots__`. Names added
     through custom `__slots__` are not processed by `Corgy`, and will not be added to
     `ArgumentParser` objects by the class methods.
+
+    `Corgy` classes can be sub-classed, with sub-classes inheriting the attributes of
+    the base class, and overriding any redefined attributes::
+
+        class A(Corgy):
+            x: int
+            y: float = 1.0
+            z: str
+
+        class B(A):
+            x: str  # new type
+            y: float = 2.0  # new default value
+            w: int  # new attribute
+
+        b = B()  # `b` has attributes `x`, `y`, `z`, and `w`
 
     `Corgy` recognizes a number of special annotations, which are used to control how
     the argument is parsed.
