@@ -208,10 +208,16 @@ class TestCorgyMeta(unittest.TestCase):
         self.assertEqual(repr(c), "C()")
         self.assertDictEqual(c.as_dict(), {})
 
+    def test_corgy_cls_subclasses_work_without_annotations(self):
+        class D(self._CorgyCls):
+            ...
+
+        self.assertTrue(hasattr(D, "x1"))
+        self.assertIsInstance(getattr(D, "x1"), property)
+
     def test_corgy_cls_subclasses_inherit_annotations(self):
         class D(self._CorgyCls):
             x3: Annotated[str, "x3 is now a string"]
-            x4: Annotated[str, "x4 has a new default"] = "four"
             x5: Annotated[int, "new param x5"]
             x6: Annotated[float, "new param x6"]
 
@@ -223,9 +229,21 @@ class TestCorgyMeta(unittest.TestCase):
         _x3_prop = getattr(D, "x3")
         self.assertEqual(_x3_prop.fget.__annotations__["return"], str)
 
+    def test_corgy_cls_subclasses_inherit_defaults(self):
+        class D(self._CorgyCls):
+            x5: int
+
         d = D()
-        self.assertFalse(hasattr(d, "x3"))
-        self.assertEqual(d.x4, "four")
+        self.assertTrue(hasattr(d, "x3"))
+        self.assertEqual(d.x3, 3)
+
+    def test_corgy_cls_subclasses_override_defaults(self):
+        class D(self._CorgyCls):
+            x3: Annotated[str, "x3 is now a string"] = "three"
+
+        d = D()
+        self.assertTrue(hasattr(d, "x3"))
+        self.assertEqual(d.x3, "three")
 
 
 class TestCorgyAddArgsToParser(unittest.TestCase):
@@ -323,6 +341,24 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
             the_x_arg: Annotated[int, "x help", ["-x", "--the-x", "--the-x-arg"]]
 
         C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with(
+            "-x",
+            "--the-x",
+            "--the-x-arg",
+            type=int,
+            required=True,
+            help="x help",
+            dest="the_x_arg",
+        )
+
+    def test_corgy_cls_subclasses_inherit_custom_flags(self):
+        class C(Corgy):
+            the_x_arg: Annotated[int, "x help", ["-x", "--the-x", "--the-x-arg"]]
+
+        class D(C):
+            ...
+
+        D.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
             "-x",
             "--the-x",
@@ -1184,3 +1220,22 @@ class TestCorgyCustomParsers(unittest.TestCase):
         parser.add_argument.assert_called_once_with(
             "--x", type=C.parsex.fparse, required=True, metavar="T"
         )
+
+    def test_corgy_cls_subclasses_inherit_corgyparsers(self):
+        class C(Corgy):
+            x: int
+
+            @corgyparser("x")
+            @staticmethod
+            def parsex(s):
+                return int(s) + 1
+
+        class D(C):
+            ...
+
+        parser = argparse.ArgumentParser()
+        orig_parse_args = argparse.ArgumentParser.parse_args
+        parser.parse_args = lambda: orig_parse_args(parser, ["--x", "1"])
+
+        d = D.parse_from_cmdline(parser)
+        self.assertEqual(d.x, 2)

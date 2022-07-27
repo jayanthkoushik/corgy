@@ -98,25 +98,26 @@ class _CorgyMeta(type):
             namespace["__slots__"] = []
         else:
             namespace["__slots__"] = list(namespace["__slots__"])
-        if "__annotations__" not in namespace:
-            namespace["__annotations__"] = {}
-        combined_annotations = {}
-        for base in bases:
-            combined_annotations.update(getattr(base, "__annotations__", {}))
 
-        if not namespace["__annotations__"]:
-            namespace["__annotations__"] = combined_annotations
-            return super().__new__(cls, name, bases, namespace, **kwds)
+        cls_annotations = namespace.get("__annotations__", {})
 
+        namespace["__annotations__"] = {}
         namespace["__defaults"] = {}
         namespace["__flags"] = {}
-        for var_name, var_ano in namespace["__annotations__"].items():
+        namespace["__parsers"] = {}
+        for base in bases:
+            namespace["__annotations__"].update(getattr(base, "__annotations__", {}))
+            namespace["__defaults"].update(getattr(base, "__defaults", {}))
+            namespace["__flags"].update(getattr(base, "__flags", {}))
+            namespace["__parsers"].update(getattr(base, "__parsers", {}))
+
+        if not cls_annotations:
+            return super().__new__(cls, name, bases, namespace, **kwds)
+
+        for var_name, var_ano in cls_annotations.items():
             # Check for name conflicts.
             _mangled_name = f"_{name.lstrip('_')}__{var_name}"
-            if (
-                _mangled_name in namespace
-                or _mangled_name in namespace["__annotations__"]
-            ):
+            if _mangled_name in namespace or _mangled_name in cls_annotations:
                 raise TypeError(
                     f"cannot use name `__{var_name}`: internal clash with `{var_name}`"
                 )
@@ -158,8 +159,11 @@ class _CorgyMeta(type):
                 namespace["__flags"][var_name] = var_flags
 
             # Add default value to dedicated dict.
-            with suppress(KeyError):
+            if var_name in namespace:
                 namespace["__defaults"][var_name] = namespace[var_name]
+            elif var_name in namespace["__defaults"]:
+                # Variable had a default value in a base class, but does not anymore.
+                del namespace["__defaults"][var_name]
 
             # Create `<var_name>` property.
             namespace[var_name] = cls._create_var_property(
@@ -170,7 +174,6 @@ class _CorgyMeta(type):
         namespace["__slots__"] = tuple(namespace["__slots__"])
 
         # Store custom parsers in a dict.
-        namespace["__parsers"] = {}
         for _, v in namespace.items():
             if not isinstance(v, _CorgyParser):
                 continue
@@ -182,8 +185,6 @@ class _CorgyMeta(type):
                 else:
                     raise TypeError(f"invalid target for corgyparser: {var_name}")
 
-        combined_annotations.update(namespace.get("__annotations__", {}))
-        namespace["__annotations__"] = combined_annotations
         return super().__new__(cls, name, bases, namespace, **kwds)
 
     @staticmethod
