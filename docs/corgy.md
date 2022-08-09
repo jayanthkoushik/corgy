@@ -61,21 +61,41 @@ To allow arbitrary instance variables, add `__dict__` to `__slots__`. Names adde
 through custom `__slots__` are not processed by `Corgy`, and will not be added to
 `ArgumentParser` objects by the class methods.
 
-`Corgy` classes can be sub-classed, with sub-classes inheriting the attributes of
-the base class, and overriding any redefined attributes:
+Inheritance works as expected, whether base classes are themselves `Corgy` classes
+or not, with sub-classes inheriting the attributes of the base class, and overriding
+any redefined attributes:
 
 ```python
-class A(Corgy):
+class A:
     x: int
+
+class B(Corgy, A):
     y: float = 1.0
     z: str
 
-class B(A):
-    x: str  # new type
-    y: float = 2.0  # new default value
-    w: int  # new attribute
+class C(Corgy, B):
+    y: float = 2.0
+    z: str
+    w: float
 
-b = B()  # `b` has attributes `x`, `y`, `z`, and `w`
+c = C()
+print(c)  # prints C(x=<unset>, y=2.0, z=<unset>, w=<unset>)
+```
+
+Tracking of base class annotations can be disabled by setting `corgy_track_bases` to
+`False` in the class definition. Properties will still be inherited following
+standard inheritance rules, but `Corgy` will ignore them:
+
+```python
+class A:
+    x: int
+
+class B(Corgy, A, corgy_track_bases=False):
+    y: float = 1.0
+    z: str
+
+b = B()
+print(b)  # prints B(y=1.0, z=<unset>)
 ```
 
 `Corgy` recognizes a number of special annotations, which are used to control how

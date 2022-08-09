@@ -100,21 +100,47 @@ class _CorgyMeta(type):
             namespace["__slots__"] = list(namespace["__slots__"])
 
         cls_annotations = namespace.get("__annotations__", {})
-
         namespace["__annotations__"] = {}
         namespace["__defaults"] = {}
         namespace["__flags"] = {}
         namespace["__parsers"] = {}
-        for base in bases:
-            namespace["__annotations__"].update(getattr(base, "__annotations__", {}))
-            namespace["__defaults"].update(getattr(base, "__defaults", {}))
-            namespace["__flags"].update(getattr(base, "__flags", {}))
-            namespace["__parsers"].update(getattr(base, "__parsers", {}))
+        namespace["__helps"] = {}
 
-        if not cls_annotations:
+        # See if `corgy_track_bases` is specified (default `True`).
+        try:
+            _track_bases = kwds["corgy_track_bases"]
+        except KeyError:
+            _track_bases = True
+        else:
+            del kwds["corgy_track_bases"]
+        if _track_bases:
+            for base in bases:
+                _base_annotations = getattr(base, "__annotations__", {})
+                namespace["__annotations__"].update(_base_annotations)
+                if isinstance(base, cls):
+                    # `base` is also a `Corgy` class.
+                    namespace["__defaults"].update(getattr(base, "__defaults"))
+                    namespace["__flags"].update(getattr(base, "__flags"))
+                    namespace["__parsers"].update(getattr(base, "__parsers"))
+                    namespace["__helps"].update(getattr(base, "__helps"))
+                else:
+                    # Fetch default values directly from the base.
+                    for _var_name in _base_annotations:
+                        try:
+                            namespace["__defaults"][_var_name] = getattr(
+                                base, _var_name
+                            )
+                        except AttributeError:
+                            pass
+
+        # Add current annotations last, so that they override base values.
+        namespace["__annotations__"].update(cls_annotations)
+        all_annotations = namespace["__annotations__"]
+
+        if not all_annotations:
             return super().__new__(cls, name, bases, namespace, **kwds)
 
-        for var_name, var_ano in cls_annotations.items():
+        for var_name, var_ano in all_annotations.items():
             # Check for name conflicts.
             _mangled_name = f"_{name.lstrip('_')}__{var_name}"
             if _mangled_name in namespace or _mangled_name in cls_annotations:
@@ -151,17 +177,19 @@ class _CorgyMeta(type):
             else:
                 # `<var_name>: <var_type>`.
                 var_type = var_ano
-                var_help = None
-                var_flags = None
+                var_help = namespace["__helps"].get(var_name, None)
+                var_flags = namespace["__flags"].get(var_name, None)
             namespace["__annotations__"][var_name] = var_type
 
+            if var_help is not None:
+                namespace["__helps"][var_name] = var_help
             if var_flags is not None:
                 namespace["__flags"][var_name] = var_flags
 
             # Add default value to dedicated dict.
             if var_name in namespace:
                 namespace["__defaults"][var_name] = namespace[var_name]
-            elif var_name in namespace["__defaults"]:
+            elif var_name in namespace["__defaults"] and var_name in cls_annotations:
                 # Variable had a default value in a base class, but does not anymore.
                 del namespace["__defaults"][var_name]
 
@@ -257,20 +285,38 @@ class Corgy(metaclass=_CorgyMeta):
     through custom `__slots__` are not processed by `Corgy`, and will not be added to
     `ArgumentParser` objects by the class methods.
 
-    `Corgy` classes can be sub-classed, with sub-classes inheriting the attributes of
-    the base class, and overriding any redefined attributes::
+    Inheritance works as expected, whether base classes are themselves `Corgy` classes
+    or not, with sub-classes inheriting the attributes of the base class, and overriding
+    any redefined attributes::
 
-        class A(Corgy):
+        class A:
             x: int
+
+        class B(Corgy, A):
             y: float = 1.0
             z: str
 
-        class B(A):
-            x: str  # new type
-            y: float = 2.0  # new default value
-            w: int  # new attribute
+        class C(Corgy, B):
+            y: float = 2.0
+            z: str
+            w: float
 
-        b = B()  # `b` has attributes `x`, `y`, `z`, and `w`
+        c = C()
+        print(c)  # prints C(x=<unset>, y=2.0, z=<unset>, w=<unset>)
+
+    Tracking of base class annotations can be disabled by setting `corgy_track_bases` to
+    `False` in the class definition. Properties will still be inherited following
+    standard inheritance rules, but `Corgy` will ignore them::
+
+        class A:
+            x: int
+
+        class B(Corgy, A, corgy_track_bases=False):
+            y: float = 1.0
+            z: str
+
+        b = B()
+        print(b)  # prints B(y=1.0, z=<unset>)
 
     `Corgy` recognizes a number of special annotations, which are used to control how
     the argument is parsed.
@@ -683,12 +729,8 @@ class Corgy(metaclass=_CorgyMeta):
             if ":" in arg_name:
                 grp_name, arg_name = arg_name.split(":", maxsplit=1)
                 grp_args_map[grp_name][arg_name] = arg_val
-            else:
-                try:
-                    setattr(self, arg_name, arg_val)
-                except AttributeError:
-                    # Ignore unknown arguments.
-                    pass
+            elif arg_name in getattr(self, "__annotations__"):
+                setattr(self, arg_name, arg_val)
 
         for grp_name, grp_args in grp_args_map.items():
             grp_type = getattr(self.__class__, grp_name).fget.__annotations__["return"]
