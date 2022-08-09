@@ -433,11 +433,14 @@ class Corgy(metaclass=_CorgyMeta):
     This is a sequence of length 2, where each element is either 0, 1, or 2.
 
     Choices can also be specified by adding a `__choices__` attribute to the argument
-    type, containing a sequence of choices for the type Note that this will not be type
+    type, containing a sequence of choices for the type. Note that this will not be type
     checked::
 
         class A:
-            __choices__ = ("a1", "a2")
+            def __init__(s):
+                self.s = s
+
+            __choices__ = (A("a1"), A("a2"))
 
         x: A
 
