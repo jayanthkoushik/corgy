@@ -313,14 +313,6 @@ class TestCorgyMeta(unittest.TestCase):
             self.assertIn("x1", getattr(cls, "__defaults"))
             self.assertEqual(getattr(cls, "__defaults")["x1"], 2)
 
-    def test_corgy_cls_subclasses_override_defaults(self):
-        class D(self._CorgyCls):
-            x3: Annotated[str, "x3 is now a string"] = "three"
-
-        d = D()
-        self.assertTrue(hasattr(d, "x3"))
-        self.assertEqual(d.x3, "three")
-
 
 class TestCorgyAddArgsToParser(unittest.TestCase):
     """Tests to check that Corgy properly adds arguments to ArgumentParsers."""
