@@ -731,12 +731,23 @@ class Corgy(metaclass=_CorgyMeta):
         for arg_name, arg_val in args.items():
             if ":" in arg_name:
                 grp_name, arg_name = arg_name.split(":", maxsplit=1)
+                if not hasattr(self.__class__, grp_name):
+                    raise ValueError(
+                        f"invalid argument `{arg_name}`: "
+                        f"`{self.__class__}` has no group named `{grp_name}`"
+                    )
+                if grp_name in args:
+                    raise ValueError(
+                        f"conflicting arguments: `{arg_name}` and `{grp_name}`"
+                    )
                 grp_args_map[grp_name][arg_name] = arg_val
             elif arg_name in getattr(self, "__annotations__"):
                 setattr(self, arg_name, arg_val)
 
         for grp_name, grp_args in grp_args_map.items():
             grp_type = getattr(self.__class__, grp_name).fget.__annotations__["return"]
+            if not isinstance(grp_type, _CorgyMeta):
+                raise ValueError(f"`{grp_name}` is not a `Corgy` class")
             grp_obj = grp_type(**grp_args)
             setattr(self, grp_name, grp_obj)
 

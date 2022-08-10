@@ -313,6 +313,110 @@ class TestCorgyMeta(unittest.TestCase):
             self.assertIn("x1", getattr(cls, "__defaults"))
             self.assertEqual(getattr(cls, "__defaults")["x1"], 2)
 
+    def test_corgy_cls_init_creates_correct_object(self):
+        class C(Corgy):
+            x1: int
+            x2: str
+
+        c = C(x1=1, x2="2")
+        self.assertEqual(c.x1, 1)
+        self.assertEqual(c.x2, "2")
+
+    def test_corgy_cls_init_ignores_unknown_attrs(self):
+        class C(Corgy):
+            x1: int
+            x2: str
+
+        c = C(x1=1, x2="2", x3=3)
+        self.assertFalse(hasattr(c, "x3"))
+
+    def test_corgy_cls_init_allows_missing_attrs(self):
+        class C(Corgy):
+            x1: int
+            x2: str
+
+        c = C(x1=1)
+        self.assertEqual(c.x1, 1)
+        with self.assertRaises(AttributeError):
+            _ = c.x2
+
+    def test_corgy_cls_init_handles_groups(self):
+        class G(Corgy):
+            x1: int
+            x2: str
+
+        class C(Corgy):
+            x1: int
+            g: G
+
+        c = C(x1=10, g=G(x1=1, x2="2"))
+        self.assertEqual(c.x1, 10)
+        self.assertEqual(c.g.x1, 1)
+        self.assertEqual(c.g.x2, "2")
+
+    def test_corgy_cls_init_handles_flat_group_args(self):
+        class G(Corgy):
+            x1: int
+            x2: str
+
+        class C(Corgy):
+            x1: int
+            g: G
+
+        c = C(x1=10, **{"g:x1": 1, "g:x2": "2"})
+        self.assertEqual(c.x1, 10)
+        self.assertEqual(c.g.x1, 1)
+        self.assertEqual(c.g.x2, "2")
+
+        c = C(x1=10, **{"g:x1": 1})
+        self.assertEqual(c.x1, 10)
+        self.assertEqual(c.g.x1, 1)
+        self.assertFalse(hasattr(c.g, "x2"))
+
+    def test_corgy_cls_init_handles_nested_groups(self):
+        class G(Corgy):
+            x1: int
+            x2: str
+
+        class H(Corgy):
+            x1: int
+            x2: str
+
+        class C(Corgy):
+            x1: int
+            g: G
+            h: H
+
+        c = C(x1=100, g=G(x1=10, x2="20"), **{"h:x2": "2"})
+        self.assertEqual(c.x1, 100)
+        self.assertEqual(c.g.x1, 10)
+        self.assertEqual(c.g.x2, "20")
+        self.assertEqual(c.h.x2, "2")
+
+    def test_corgy_cls_init_raises_on_unknown_group_flat_args(self):
+        class G(Corgy):
+            x1: int
+            x2: str
+
+        class C(Corgy):
+            x1: int
+            g: G
+
+        with self.assertRaises(ValueError):
+            _ = C(**{"gee:x1": 1})
+
+    def test_corgy_cls_init_raises_on_conflicting_group_args(self):
+        class G(Corgy):
+            x1: int
+            x2: str
+
+        class C(Corgy):
+            x1: int
+            g: G
+
+        with self.assertRaises(ValueError):
+            _ = C(g=G(x1=1), **{"g:x2": "2"})
+
 
 class TestCorgyAddArgsToParser(unittest.TestCase):
     """Tests to check that Corgy properly adds arguments to ArgumentParsers."""
