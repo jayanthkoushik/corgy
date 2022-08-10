@@ -358,12 +358,18 @@ C.add_args_to_parser(parser, defaults={"g:y": 2.0})
 ```
 
 
-#### as_dict()
+#### as_dict(recursive=False)
 Return the object as a dictionary.
 
 The returned dictionary maps attribute names to their values. Unset attributes
-are omitted, unless they have default values. This method is not recursive, and
-attributes which are `Corgy` instances are returned as is.
+are omitted, unless they have default values.
+
+
+* **Parameters**
+
+    **recursive** – whether to recursively call `as_dict` on attributes which are
+    `Corgy` instances. Otherwise, they are returned as is.
+
 
 
 #### _classmethod_ parse_from_cmdline(parser=None, defaults=None, \*\*parser_args)

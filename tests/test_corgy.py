@@ -196,6 +196,25 @@ class TestCorgyMeta(unittest.TestCase):
         d = D(x=1, c=c)
         self.assertDictEqual(d.as_dict(), {"x": 1, "c": c})
 
+    def test_corgy_cls_as_dict_handles_groups_when_recursive(self):
+        class C(Corgy):
+            x: int
+            y: str
+
+        class D(Corgy):
+            x: int
+            c: C
+
+        class E(Corgy):
+            x: int
+            d: D
+
+        e = E(x=1, d=D(x=10, c=C(x=100, y="100")))
+        self.assertDictEqual(
+            e.as_dict(recursive=True),
+            {"x": 1, "d": {"x": 10, "c": {"x": 100, "y": "100"}}},
+        )
+
     def test_corgy_cls_raises_if_initialized_directly(self):
         with self.assertRaises(TypeError):
             Corgy()

@@ -771,18 +771,26 @@ class Corgy(metaclass=_CorgyMeta):
     def __str__(self) -> str:
         return self._str(str)
 
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self, recursive: bool = False) -> Dict[str, Any]:
         """Return the object as a dictionary.
 
         The returned dictionary maps attribute names to their values. Unset attributes
-        are omitted, unless they have default values. This method is not recursive, and
-        attributes which are `Corgy` instances are returned as is.
+        are omitted, unless they have default values.
+
+        Args:
+            recursive: whether to recursively call `as_dict` on attributes which are
+                `Corgy` instances. Otherwise, they are returned as is.
         """
-        return {
-            arg_name: getattr(self, arg_name)
-            for arg_name in getattr(self.__class__, "__annotations__")
-            if hasattr(self, arg_name)
-        }
+        _dict = {}
+        for arg_name in getattr(self.__class__, "__annotations__"):
+            try:
+                _val = getattr(self, arg_name)
+            except AttributeError:
+                continue
+            if recursive and isinstance(_val.__class__, _CorgyMeta):
+                _val = _val.as_dict(recursive=True)
+            _dict[arg_name] = _val
+        return _dict
 
     @classmethod
     def parse_from_cmdline(
