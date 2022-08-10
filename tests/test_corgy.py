@@ -196,6 +196,23 @@ class TestCorgyMeta(unittest.TestCase):
         d = D(x=1, c=c)
         self.assertDictEqual(d.as_dict(), {"x": 1, "c": c})
 
+    def test_corgy_cls_as_dict_handles_inherited_attributes(self):
+        class C:
+            x1: int
+
+        class D(C, Corgy):
+            x2: int
+
+        class CCorgy(Corgy):
+            x1: int
+
+        class DCorgy(CCorgy):
+            x2: int
+
+        for cls in (D, DCorgy):
+            obj = cls(x1=1, x2=2)
+            self.assertDictEqual(obj.as_dict(), {"x1": 1, "x2": 2})
+
     def test_corgy_cls_as_dict_handles_groups_when_recursive(self):
         class C(Corgy):
             x: int
