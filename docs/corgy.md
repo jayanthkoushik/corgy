@@ -314,11 +314,11 @@ Add arguments for this class to the given parser.
 * **Parameters**
 
 
-    * **parser** – `argparse.ArgumentParser` instance.
+    * **parser** – Argument parser to which the class’s arguments will be added.
 
 
-    * **name_prefix** – Prefix for argument names (default: empty string). Arguments
-    will be named `--<name-prefix>:<var-name>`. If custom flags are present,
+    * **name_prefix** – Prefix for argument names. Arguments will be named
+    `--<name-prefix>:<var-name>`. If custom flags are present,
     `--<name-prefix>:<flag>` will be used instead (one for each flag).
 
 
@@ -373,7 +373,7 @@ are omitted, unless they have default values.
 
 
 #### _classmethod_ parse_from_cmdline(parser=None, defaults=None, \*\*parser_args)
-Parse an object of the class from command line arguments.
+Return an object of the class parsed from command line arguments.
 
 
 * **Parameters**
@@ -390,6 +390,12 @@ Parse an object of the class from command line arguments.
 
     * **parser_args** – Arguments to be passed to `argparse.ArgumentParser()`. Ignored
     if `parser` is not None.
+
+
+
+* **Raises**
+
+    **ArgumentError** – Error parsing command line arguments.
 
 
 

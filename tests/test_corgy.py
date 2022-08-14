@@ -19,8 +19,6 @@ from corgy._corgy import BooleanOptionalAction
 
 
 class TestCorgyMeta(unittest.TestCase):
-    """Tests to check validity of classes inheriting from Corgy."""
-
     @classmethod
     def setUpClass(cls):
         class _CorgyCls(Corgy):
@@ -455,8 +453,6 @@ class TestCorgyMeta(unittest.TestCase):
 
 
 class TestCorgyAddArgsToParser(unittest.TestCase):
-    """Tests to check that Corgy properly adds arguments to ArgumentParsers."""
-
     def setUp(self):
         self.parser = argparse.ArgumentParser()
         self.parser.add_argument = MagicMock()
@@ -1110,8 +1106,6 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
 
 
 class TestCorgyCmdlineParsing(unittest.TestCase):
-    """Test cases to check parsing of command line arguments by Corgy."""
-
     def setUp(self):
         self.parser = argparse.ArgumentParser()
         self.orig_parse_args = argparse.ArgumentParser.parse_args
@@ -1334,8 +1328,6 @@ class TestCorgyCmdlineParsing(unittest.TestCase):
 
 
 class TestCorgyCustomParsers(unittest.TestCase):
-    """Tests to check usage of the @corgyparser decorator."""
-
     def test_corgyparser_raises_if_not_passed_name(self):
         with self.assertRaises(TypeError):
 

@@ -216,7 +216,7 @@ class _CorgyMeta(type):
         return super().__new__(cls, name, bases, namespace, **kwds)
 
     @staticmethod
-    def _create_var_property(cls_name, var_name, var_type, var_doc):
+    def _create_var_property(cls_name, var_name, var_type, var_doc) -> property:
         # Properties are stored in private instance variables prefixed with `__`, and
         # must be accessed as `_<cls>__<var_name>`.
         # def var_fget(self) -> var_type:
@@ -509,9 +509,9 @@ class Corgy(metaclass=_CorgyMeta):
         """Add arguments for this class to the given parser.
 
         Args:
-            parser: `argparse.ArgumentParser` instance.
-            name_prefix: Prefix for argument names (default: empty string). Arguments
-                will be named `--<name-prefix>:<var-name>`. If custom flags are present,
+            parser: Argument parser to which the class's arguments will be added.
+            name_prefix: Prefix for argument names. Arguments will be named
+                `--<name-prefix>:<var-name>`. If custom flags are present,
                 `--<name-prefix>:<flag>` will be used instead (one for each flag).
             make_group: If `True`, the arguments will be added to a group within the
                 parser, and `name_prefix` will be used as the group name.
@@ -799,7 +799,7 @@ class Corgy(metaclass=_CorgyMeta):
         defaults: Optional[Mapping[str, Any]] = None,
         **parser_args,
     ) -> _T:
-        """Parse an object of the class from command line arguments.
+        """Return an object of the class parsed from command line arguments.
 
         Args:
             parser: An instance of `argparse.ArgumentParser` or `None`. If `None`, a new
@@ -809,6 +809,9 @@ class Corgy(metaclass=_CorgyMeta):
                 see more details.
             parser_args: Arguments to be passed to `argparse.ArgumentParser()`. Ignored
                 if `parser` is not None.
+
+        Raises:
+            ArgumentError: Error parsing command line arguments.
         """
         if parser is None:
             if "formatter_class" not in parser_args:
@@ -829,7 +832,7 @@ class _CorgyParser(NamedTuple):
     var_names: Sequence[str]
     fparse: Callable[[str], Any]
 
-    def __call__(self, s: str) -> Any:
+    def __call__(self, s):
         return self.fparse(s)
 
 

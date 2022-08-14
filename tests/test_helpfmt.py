@@ -27,8 +27,6 @@ CorgyHelpFormatter.marker_choices_end = "]"
 
 
 class TestCorgyHelpFormatterAPI(TestCase):
-    """Tests to check behavior of the `CorgyHelpFormatter` API."""
-
     def test_corgy_help_formatter_raises_if_enabling_colors_without_crayons(self):
         CorgyHelpFormatter.use_colors = True
         with patch(
@@ -205,8 +203,6 @@ class TestCorgyHelpFormatterAPI(TestCase):
 
 
 class TestCorgyHelpFormatterHelpActions(TestCase):
-    """Tests to check the help actions in `CorgyHelpFormatter`."""
-
     def setUp(self):
         CorgyHelpFormatter.use_colors = False
         self.parser = ArgumentParser(
@@ -263,8 +259,6 @@ class TestCorgyHelpFormatterHelpActions(TestCase):
 
 @skipIf(_CRAYONS is None, "`crayons` package not found")
 class TestCorgyHelpFormatterSingleArgs(TestCase):
-    """Tests to check formatting of single arguments."""
-
     def setUp(self):
         _COLOR_HELPER.crayons = _CRAYONS
         CorgyHelpFormatter.use_colors = True
@@ -644,8 +638,6 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
 
 @skipIf(_CRAYONS is None, "`crayons` package not found")
 class TestCorgyHelpFormatterMultiArgs(TestCase):
-    """Tests to check formatting of multiple arguments together."""
-
     def setUp(self):
         _COLOR_HELPER.crayons = _CRAYONS
         CorgyHelpFormatter.use_colors = True
@@ -777,8 +769,6 @@ class TestCorgyHelpFormatterMultiArgs(TestCase):
 
 
 class TestCorgyHelpFormatterUsage(TestCase):
-    """Tests to check formatting of usage string."""
-
     def setUp(self):
         self.parser = ArgumentParser(
             formatter_class=CorgyHelpFormatter, add_help=False, prog=""
@@ -860,8 +850,6 @@ class _NoColorTestMeta(type):
 class TestCorgyHelpFormatterSingleArgsNoColor(
     TestCorgyHelpFormatterSingleArgs, metaclass=_NoColorTestMeta
 ):
-    """Tests to check formatting of single arguments without colors."""
-
     # The metaclass removes the base class from the inheritance chain, so we need to
     # manually inherit needed base class methods.
     _get_arg_help = TestCorgyHelpFormatterSingleArgs._get_arg_help
@@ -877,8 +865,6 @@ class TestCorgyHelpFormatterSingleArgsNoColor(
 class TestCorgyHelpFormatterMultiArgsNoColor(
     TestCorgyHelpFormatterMultiArgs, metaclass=_NoColorTestMeta
 ):
-    """Tests to check formatting of multiple arguments together without colors."""
-
     def setUp(self):
         _COLOR_HELPER.crayons = None
         CorgyHelpFormatter.use_colors = False

@@ -146,13 +146,13 @@ class OutputTextFile(TextIOWrapper, metaclass=_OutputTextFileMeta):
 
     @classmethod
     @property
-    def stdout_wrapper(cls) -> "OutputTextFile":
+    def stdout_wrapper(cls) -> OutputTextFile:
         """`sys.__stdout__` wrapped with `TextIOWrapper` (line buffered)."""
         # For Sphinx.
 
     @classmethod
     @property
-    def stderr_wrapper(cls) -> "OutputTextFile":
+    def stderr_wrapper(cls) -> OutputTextFile:
         """`sys.__stderr__` wrapped with `TextIOWrapper` (line buffered)."""
         # For Sphinx.
 
@@ -197,7 +197,7 @@ class OutputBinFile(BufferedWriter):
         super().__init__(stream)
         atexit.register(self.__class__.close, self)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name!r})"
 
     def __str__(self) -> str:
@@ -265,7 +265,7 @@ class InputTextFile(TextIOWrapper, metaclass=_InputTextFileMeta):
 
     @classmethod
     @property
-    def stdin_wrapper(cls) -> "InputTextFile":
+    def stdin_wrapper(cls) -> InputTextFile:
         """`sys.__stdin__` wrapped with `TextIOWrapper`."""
         # For Sphinx.
 
@@ -293,7 +293,7 @@ class InputBinFile(BufferedReader):
         super().__init__(stream)
         atexit.register(self.__class__.close, self)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name!r})"
 
     def __str__(self) -> str:
@@ -514,7 +514,7 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
     _default_use_full_names = False
     _default_allow_indirect_subs = True
 
-    _type_cache: Dict[Type[_T], Type["SubClass[_T]"]] = {}
+    _type_cache: Dict[Type[_T], Type[SubClass[_T]]] = {}
 
     _base: Type[_T]
 
@@ -522,7 +522,7 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
     __metavar__ = "cls"
     __slots__ = ("_subcls",)
 
-    def __class_getitem__(cls, item: Type[_T]) -> Type["SubClass[_T]"]:
+    def __class_getitem__(cls, item: Type[_T]) -> Type[SubClass[_T]]:
         if hasattr(cls, "_base"):
             raise TypeError(
                 f"cannot further sub-script "
@@ -585,7 +585,7 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
 
     @classmethod
     @property
-    def __choices__(cls) -> Tuple["SubClass[_T]", ...]:
+    def __choices__(cls) -> Tuple[SubClass[_T], ...]:
         """Return a tuple of `SubClass` instances for valid sub-classes of the base.
 
         Each item in the tuple is an instance of `SubClass`, and corresponds to a valid
@@ -594,7 +594,7 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
         # For Sphinx.
 
     @classmethod
-    def _choices(cls) -> Tuple["SubClass[_T]", ...]:
+    def _choices(cls) -> Tuple[SubClass[_T], ...]:
         cls._ensure_base_set()
         choices: List["SubClass[_T]"] = []
         for subcls in cls._generate_base_subclasses():
@@ -603,7 +603,7 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
             choices.append(obj)
         return tuple(choices)
 
-    def __new__(cls, name: str) -> "SubClass[_T]":  # pylint: disable=arguments-differ
+    def __new__(cls, name: str) -> SubClass[_T]:  # pylint: disable=arguments-differ
         cls._ensure_base_set()
 
         cache_key = (name, cls.allow_base, cls.allow_indirect_subs, cls.use_full_names)
@@ -726,13 +726,13 @@ class KeyValuePairs(dict, Generic[_KT, _VT], metaclass=_KeyValuePairsMeta):
 
     _kt: Type[_KT]
     _vt: Type[_VT]
-    _type_cache: Dict[Tuple[Type[_KT], Type[_VT]], Type["KeyValuePairs[_KT, _VT]"]] = {}
+    _type_cache: Dict[Tuple[Type[_KT], Type[_VT]], Type[KeyValuePairs[_KT, _VT]]] = {}
 
     __slots__ = ("_src",)
 
     def __class_getitem__(  # type: ignore
         cls, item: Tuple[Type[_KT], Type[_VT]]
-    ) -> "Type[KeyValuePairs[_KT, _VT]]":
+    ) -> Type[KeyValuePairs[_KT, _VT]]:
         if hasattr(cls, "_kt"):
             raise TypeError(
                 f"cannot further sub-script "
@@ -856,7 +856,7 @@ class InitArgs(Corgy, Generic[_T]):
 
     __slots__ = ()
 
-    def __class_getitem__(cls, item: Type[_T]) -> Type["InitArgs[_T]"]:
+    def __class_getitem__(cls, item: Type[_T]) -> Type[InitArgs[_T]]:
         item_sig = inspect.signature(item)
         item_annotations, item_defaults = {}, {}
         for param_name, param in item_sig.parameters.items():
