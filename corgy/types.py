@@ -885,6 +885,7 @@ class InitArgs(Corgy, Generic[_T]):
             (cls,),
             {
                 "__annotations__": item_annotations,
+                "__module__": item.__module__,
                 "__class_getitem__": new_cls_getitem,
                 **item_defaults,
             },

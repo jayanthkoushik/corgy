@@ -519,6 +519,42 @@ class TestCorgyMeta(unittest.TestCase):
         self.assertTrue(hasattr(d, "x2"))
         self.assertEqual(d.x2, "two")
 
+    def test_corgy_cls_works_with_string_annotations(self):
+        class C(Corgy):
+            x1: "int"
+            x2: "Annotated[str, 'x2 help']"
+            x3: SequenceType["str"]
+
+        for _x, _type in zip(["x1", "x2", "x3"], [int, str, SequenceType[str]]):
+            with self.subTest(var=_x):
+                self.assertIn(_x, C.__annotations__)
+                self.assertEqual(C.__annotations__[_x], _type)
+
+        self.assertEqual(getattr(C, "__helps")["x2"], "x2 help")
+
+    def test_corgy_cls_handles_inherited_group_annotations(self):
+        class C(Corgy):
+            x1: "int"
+
+        class D(C):
+            x2: "str"
+
+        class E1(D):
+            x3: "float"
+
+        class E2(D, corgy_track_bases=False):
+            x3: "float"
+
+        for _x, _type in zip(["x1", "x2", "x3"], [int, str, float]):
+            with self.subTest(var=_x):
+                self.assertIn(_x, E1.__annotations__)
+                self.assertEqual(E1.__annotations__[_x], _type)
+
+        self.assertNotIn("x1", E2.__annotations__)
+        self.assertNotIn("x2", E2.__annotations__)
+        self.assertIn("x3", E2.__annotations__)
+        self.assertEqual(E2.__annotations__["x3"], float)
+
 
 class TestCorgyAddArgsToParser(unittest.TestCase):
     def setUp(self):

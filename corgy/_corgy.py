@@ -10,6 +10,7 @@ from typing import (
     Any,
     Callable,
     Dict,
+    get_type_hints,
     Mapping,
     NamedTuple,
     Optional,
@@ -135,12 +136,16 @@ class _CorgyMeta(type):
 
         # Add current annotations last, so that they override base values.
         namespace["__annotations__"].update(cls_annotations)
-        all_annotations = namespace["__annotations__"]
 
-        if not all_annotations:
-            return super().__new__(cls, name, bases, namespace, **kwds)
+        tempnew = super().__new__(cls, name, bases, namespace)
+        type_hints = get_type_hints(tempnew, include_extras=True)
 
-        for var_name, var_ano in all_annotations.items():
+        if not type_hints:
+            return tempnew
+
+        del tempnew  # YUCK
+        for var_name in namespace["__annotations__"]:
+            var_ano = type_hints[var_name]
             # Check for name conflicts.
             _mangled_name = f"_{name.lstrip('_')}__{var_name}"
             if _mangled_name in namespace or _mangled_name in cls_annotations:
