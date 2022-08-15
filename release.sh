@@ -25,7 +25,7 @@ echo "======="
 echo ""
 
 while true; do
-	read -p "Publish this release? " yn
+	read -p "Create release? " yn
     case $yn in
         [Yy][Ee][Ss] ) break;;
         [Nn][Oo] ) exit;;
@@ -34,4 +34,14 @@ while true; do
 done
 
 eval ${cmd} -a ${@:1}
+
+while true; do
+	read -p "Publish release? " yn
+    case $yn in
+        [Yy][Ee][Ss] ) break;;
+        [Nn][Oo] ) exit;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
+
 git push --follow-tags
