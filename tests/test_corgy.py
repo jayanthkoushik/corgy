@@ -333,19 +333,23 @@ class TestCorgyMeta(unittest.TestCase):
     def test_corgy_cls_overrides_inherited_defaults(self):
         class C:
             x1: int = 1
+            x2: int = 2
 
         class D(Corgy, C):
             x1: int = 2
+            x2: int
 
         class CCorgy(Corgy):
             x1: int = 1
 
         class DCorgy(CCorgy):
             x1: int = 2
+            x2: int
 
         for cls in (D, DCorgy):
             self.assertIn("x1", getattr(cls, "__defaults"))
             self.assertEqual(getattr(cls, "__defaults")["x1"], 2)
+            self.assertNotIn("x2", getattr(cls, "__defaults"))
 
     def test_corgy_cls_init_creates_correct_object(self):
         class C(Corgy):
@@ -451,6 +455,17 @@ class TestCorgyMeta(unittest.TestCase):
         with self.assertRaises(ValueError):
             _ = C(g=G(x1=1), **{"g:x2": "2"})
 
+    def test_corgy_cls_init_raises_on_non_corgy_group(self):
+        class C(Corgy):
+            x: int
+
+        with self.assertRaises(ValueError):
+            C(**{"x:": 1})
+        with self.assertRaises(ValueError):
+            C(**{"x:x": 1})
+        with self.assertRaises(ValueError):
+            C(**{"y:x": 1})
+
     def test_corgy_cls_from_dict(self):
         c = self._CorgyCls.from_dict({"x1": [0, 1], "x4": "four"})
         self.assertTrue(hasattr(c, "x1"))
@@ -505,6 +520,15 @@ class TestCorgyMeta(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             D.from_dict({"x2": "two", "c": self._CorgyCls(x2=2), "c:x4": "four"})
+
+    def test_corgy_cls_from_dict_raises_on_unknown_group_dict_argument(self):
+        class D(Corgy):
+            x: int
+
+        with self.assertRaises(ValueError):
+            D.from_dict({"x": {"x": 1}})
+        with self.assertRaises(ValueError):
+            D.from_dict({"y": {"x": 1}})
 
     def test_corgy_cls_from_dict_handles_inherited_attributes(self):
         class C(Corgy):
@@ -1207,6 +1231,13 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
             help="x help",
             dest="the_x_arg",
         )
+
+    def test_add_args_raises_on_inconsistent_flags(self):
+        class C(Corgy):
+            x: Annotated[int, "x help", ["-x", "the-x"]]
+
+        with self.assertRaises(TypeError):
+            C.add_args_to_parser(self.parser)
 
 
 class TestCorgyCmdlineParsing(unittest.TestCase):

@@ -343,6 +343,10 @@ class TestSubClass(TestCase):
         with self.assertRaises(ArgumentTypeError):
             type_("A")
 
+    def test_subclass_raises_if_not_a_class(self):
+        with self.assertRaises(TypeError):
+            _ = SubClass[0]
+
     def test_subclass_accepts_base_iff_allow_base_set(self):
         class A:
             ...
