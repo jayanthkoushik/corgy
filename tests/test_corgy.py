@@ -451,6 +451,74 @@ class TestCorgyMeta(unittest.TestCase):
         with self.assertRaises(ValueError):
             _ = C(g=G(x1=1), **{"g:x2": "2"})
 
+    def test_corgy_cls_from_dict(self):
+        c = self._CorgyCls.from_dict({"x1": [0, 1], "x4": "four"})
+        self.assertTrue(hasattr(c, "x1"))
+        self.assertListEqual(c.x1, [0, 1])
+        self.assertFalse(hasattr(c, "x2"))
+        self.assertTrue(hasattr(c, "x3"))
+        self.assertEqual(c.x3, 3)
+        self.assertTrue(hasattr(c, "x4"))
+        self.assertEqual(c.x4, "four")
+
+    def test_corgy_cls_from_dict_handles_groups_as_dicts(self):
+        class D(Corgy):
+            x2: str = "two"
+            c: self._CorgyCls
+            x5: int
+
+        d = D.from_dict({"x5": 5, "c": {"x2": 2, "x4": "four"}})
+        self.assertTrue(hasattr(d, "x2"))
+        self.assertEqual(d.x2, "two")
+        self.assertTrue(hasattr(d, "x5"))
+        self.assertEqual(d.x5, 5)
+        self.assertTrue(hasattr(d, "c"))
+        self.assertTrue(hasattr(d.c, "x2"))
+        self.assertEqual(d.c.x2, 2)
+        self.assertTrue(hasattr(d.c, "x4"))
+        self.assertEqual(d.c.x4, "four")
+
+    def test_corgy_cls_from_dict_handles_groups_as_objects(self):
+        class D(Corgy):
+            x2: str
+            c: self._CorgyCls
+
+        d = D.from_dict({"x2": "two", "c": self._CorgyCls(x2=2, x4="four")})
+        self.assertTrue(hasattr(d, "c"))
+        self.assertEqual(d.c.x2, 2)
+        self.assertEqual(d.c.x4, "four")
+
+    def test_corgy_cls_from_dict_handles_flattened_group_arguments(self):
+        class D(Corgy):
+            x2: str
+            c: self._CorgyCls
+
+        d = D.from_dict({"x2": "two", "c:x2": 2, "c:x4": "four"})
+        self.assertTrue(hasattr(d, "c"))
+        self.assertEqual(d.c.x2, 2)
+        self.assertEqual(d.c.x4, "four")
+
+    def test_corgy_cls_from_dict_raises_on_conflicting_group_arguments(self):
+        class D(Corgy):
+            x2: str
+            c: self._CorgyCls
+
+        with self.assertRaises(ValueError):
+            D.from_dict({"x2": "two", "c": self._CorgyCls(x2=2), "c:x4": "four"})
+
+    def test_corgy_cls_from_dict_handles_inherited_attributes(self):
+        class C(Corgy):
+            x1: int
+
+        class D(C):
+            x2: str
+
+        d = D.from_dict({"x1": 1, "x2": "two"})
+        self.assertTrue(hasattr(d, "x1"))
+        self.assertEqual(d.x1, 1)
+        self.assertTrue(hasattr(d, "x2"))
+        self.assertEqual(d.x2, "two")
+
 
 class TestCorgyAddArgsToParser(unittest.TestCase):
     def setUp(self):

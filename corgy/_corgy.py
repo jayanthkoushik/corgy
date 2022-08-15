@@ -793,6 +793,46 @@ class Corgy(metaclass=_CorgyMeta):
         return _dict
 
     @classmethod
+    def from_dict(cls: Type[_T], d: Dict[str, Any]) -> _T:
+        """Return a new instance of the class using a dictionary.
+
+        This is roughly equivalent to `cls(**d)`, with the main exception being that
+        groups can be specified as dictionaries themselves, and will be processed
+        recursively.
+
+        Args:
+            d: Dictionary to create the instance from.
+
+        Example::
+
+            class A(Corgy):
+                x: int
+                y: str
+
+            class B(Corgy):
+                a: A
+                x: str
+
+            # These are all equivalent.
+            b = B.from_dict({"x": "three", "a": {"x": 1, "y": "two"}})
+            b = B.from_dict({"x": "three", "a:x": 1, "a:y": "two"})
+            b = B.from_dict({"x": "three", "a": A(x=1, y="two")})
+            b = B(x="three", a=A(x=1, y="two"))
+        """
+        args = {}
+        for k, v in d.items():
+            if isinstance(v, dict):
+                if not hasattr(cls, k):
+                    raise ValueError(f"`{cls}` has no group named `{k}`")
+                kcls = getattr(cls, k).fget.__annotations__["return"]
+                if not isinstance(kcls, _CorgyMeta):
+                    raise ValueError(f"`{k}` is not a `Corgy` class")
+                args[k] = kcls.from_dict(v)  # type: ignore
+            else:
+                args[k] = v
+        return cls(**args)
+
+    @classmethod
     def parse_from_cmdline(
         cls: Type[_T],
         parser: Optional[argparse.ArgumentParser] = None,

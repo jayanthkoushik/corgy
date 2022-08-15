@@ -372,6 +372,38 @@ are omitted, unless they have default values.
 
 
 
+#### _classmethod_ from_dict(d)
+Return a new instance of the class using a dictionary.
+
+This is roughly equivalent to `cls(\*\*d)`, with the main exception being that
+groups can be specified as dictionaries themselves, and will be processed
+recursively.
+
+
+* **Parameters**
+
+    **d** – Dictionary to create the instance from.
+
+
+Example:
+
+```python
+class A(Corgy):
+    x: int
+    y: str
+
+class B(Corgy):
+    a: A
+    x: str
+
+# These are all equivalent.
+b = B.from_dict({"x": "three", "a": {"x": 1, "y": "two"}})
+b = B.from_dict({"x": "three", "a:x": 1, "a:y": "two"})
+b = B.from_dict({"x": "three", "a": A(x=1, y="two")})
+b = B(x="three", a=A(x=1, y="two"))
+```
+
+
 #### _classmethod_ parse_from_cmdline(parser=None, defaults=None, \*\*parser_args)
 Return an object of the class parsed from command line arguments.
 
