@@ -10,7 +10,6 @@ from typing import (
     Any,
     Callable,
     Dict,
-    get_type_hints,
     Mapping,
     NamedTuple,
     Optional,
@@ -24,9 +23,9 @@ if sys.version_info >= (3, 10):
     from types import UnionType
 
 if sys.version_info >= (3, 9):
-    from typing import Literal
+    from typing import get_type_hints, Literal
 else:
-    from typing_extensions import Literal
+    from typing_extensions import get_type_hints, Literal
 
 from ._helpfmt import CorgyHelpFormatter
 
