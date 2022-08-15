@@ -680,10 +680,8 @@ class KeyValuePairs(dict, Generic[_KT, _VT], metaclass=_KeyValuePairsMeta):
 
     Example::
 
-        >>> MapType = KeyValuePairs[str, int]
-        >>> map = MapType("a=1,b=2")
-        >>> print(map)
-        {'a': 1, 'b': 2}
+        MapType = KeyValuePairs[str, int]
+        map = MapType("a=1,b=2")  # {'a': 1, 'b': 2}
 
     This class supports the class indexing syntax to specify the types for keys and
     values. `KeyValuePairs[KT, VT]` returns a new `KeyValuePairs` type where the key
@@ -707,18 +705,16 @@ class KeyValuePairs(dict, Generic[_KT, _VT], metaclass=_KeyValuePairsMeta):
     Note that types returned by the `KeyValuePairs[...]` syntax are cached using the
     key and value types::
 
-        >>> MapType = KeyValuePairs[str, int]
-        >>> MapType.sequence_separator = ";"
-        >>> MapType2 = KeyValuePairs[str, int]  # same as `MapType`
-        >>> MapType2.sequence_separator
-        ';'
+        MapType = KeyValuePairs[str, int]
+        MapType.sequence_separator = ";"
+        MapType2 = KeyValuePairs[str, int]  # same as `MapType`
+        MapType2.sequence_separator  # ';'
 
     `KeyValuePairs` instances can also be initialized with a dictionary. However, note
     that the dictionary is not type-checked and is used as-is::
 
-        >>> dic = KeyValuePairs[str, int]({"a": 1, "b": 2})
-        >>> repr(dic)
-        >>> KeyValuePairs[str, int]({'a': 1, 'b': 2})
+        dic = KeyValuePairs[str, int]({"a": 1, "b": 2})
+        print(repr(dic))  # KeyValuePairs[str, int]({'a': 1, 'b': 2})
     """
 
     sequence_separator: str = ","
@@ -820,7 +816,6 @@ class InitArgs(Corgy, Generic[_T]):
 
     Example::
 
-        $ cat test.py
         class Foo:
             def __init__(
                 self,
@@ -832,15 +827,6 @@ class InitArgs(Corgy, Generic[_T]):
         FooInitArgs = InitArgs[Foo]
         foo_init_args = FooInitArgs.parse_from_cmdline()
         foo = Foo(**foo_init_args.as_dict())
-
-        $ python test.py --help
-        usage: test.py [-h] --a int --b [str ...] [--c float]
-
-        options:
-          -h/--help      show this help message and exit
-          --a int        a help (required)
-          --b [str ...]  b help (required)
-          --c float      c help (default: 0.0)
 
     This is a generic class, and on using the `InitArgs[Cls]` syntax, a concrete
     `Corgy` class is created, which has attributes corresponding to the arguments of

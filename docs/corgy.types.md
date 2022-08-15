@@ -298,10 +298,8 @@ Dictionary sub-class that is initialized from a string of key-value pairs.
 Example:
 
 ```python
->>> MapType = KeyValuePairs[str, int]
->>> map = MapType("a=1,b=2")
->>> print(map)
-{'a': 1, 'b': 2}
+MapType = KeyValuePairs[str, int]
+map = MapType("a=1,b=2")  # {'a': 1, 'b': 2}
 ```
 
 This class supports the class indexing syntax to specify the types for keys and
@@ -330,20 +328,18 @@ Note that types returned by the `KeyValuePairs[...]` syntax are cached using the
 key and value types:
 
 ```python
->>> MapType = KeyValuePairs[str, int]
->>> MapType.sequence_separator = ";"
->>> MapType2 = KeyValuePairs[str, int]  # same as `MapType`
->>> MapType2.sequence_separator
-';'
+MapType = KeyValuePairs[str, int]
+MapType.sequence_separator = ";"
+MapType2 = KeyValuePairs[str, int]  # same as `MapType`
+MapType2.sequence_separator  # ';'
 ```
 
 `KeyValuePairs` instances can also be initialized with a dictionary. However, note
 that the dictionary is not type-checked and is used as-is:
 
 ```python
->>> dic = KeyValuePairs[str, int]({"a": 1, "b": 2})
->>> repr(dic)
->>> KeyValuePairs[str, int]({'a': 1, 'b': 2})
+dic = KeyValuePairs[str, int]({"a": 1, "b": 2})
+print(repr(dic))  # KeyValuePairs[str, int]({'a': 1, 'b': 2})
 ```
 
 
@@ -353,7 +349,6 @@ Corgy wrapper around arguments of a class’s `__init__`.
 Example:
 
 ```python
-$ cat test.py
 class Foo:
     def __init__(
         self,
@@ -365,15 +360,6 @@ class Foo:
 FooInitArgs = InitArgs[Foo]
 foo_init_args = FooInitArgs.parse_from_cmdline()
 foo = Foo(**foo_init_args.as_dict())
-
-$ python test.py --help
-usage: test.py [-h] --a int --b [str ...] [--c float]
-
-options:
-  -h/--help      show this help message and exit
-  --a int        a help (required)
-  --b [str ...]  b help (required)
-  --c float      c help (default: 0.0)
 ```
 
 This is a generic class, and on using the `InitArgs[Cls]` syntax, a concrete
