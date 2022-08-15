@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.6.0](https://github.com/jayanthkoushik/corgy/compare/v4.5.0...v4.6.0) (2022-08-15)
+
+
+### Features
+
+* add `Corgy.from_dict` method ([cb53aee](https://github.com/jayanthkoushik/corgy/commit/cb53aeefb11dd74230cd8c774ce5746673b53b1b))
+* add `Corgy.parse_from_toml` method ([bdb31b5](https://github.com/jayanthkoushik/corgy/commit/bdb31b5cbbd952d1c8c924ab673e2c4519bf4eb8))
+* add argument to allow `Corgy.as_dict` to be recursive ([fede1bb](https://github.com/jayanthkoushik/corgy/commit/fede1bbf527c5242ccc292ee5c397bef91d418cc))
+* allow `Corgy` classes to be sub-classed ([a0a9568](https://github.com/jayanthkoushik/corgy/commit/a0a9568ffca5feb533ac0f70abd4ff3949e16f88))
+* allow `Corgy` classes to have string annotations ([f71a148](https://github.com/jayanthkoushik/corgy/commit/f71a14872af6763b953148f0e291dd4fc1a73232))
+
+
+### Bug Fixes
+
+* handle arbitrary depth descendants in `types.SubClass` ([106361a](https://github.com/jayanthkoushik/corgy/commit/106361a13bfc41d8038e9364396452858bb82923))
+* handle imports from `typing_extensions` in Python>=3.9 ([3d017f9](https://github.com/jayanthkoushik/corgy/commit/3d017f9e6b295e4ec8acab492c389ae8145ffa93))
+* handle unknown group arguments in `Corgy.__init__` ([d02ff89](https://github.com/jayanthkoushik/corgy/commit/d02ff897ac6893590ce587928d2af406ff865c84))
+* use correct argument name for exception message in `Corgy.__init__` ([a5fa326](https://github.com/jayanthkoushik/corgy/commit/a5fa3262d59e37b92497833447af45377c479bce))
+
 ## [4.5.0](https://github.com/jayanthkoushik/corgy/compare/v4.4.0...v4.5.0) (2022-03-23)
 
 
