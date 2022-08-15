@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib
 import sys
 from collections import defaultdict
 from collections.abc import Sequence as AbstractSequence
@@ -10,6 +11,7 @@ from typing import (
     Any,
     Callable,
     Dict,
+    IO,
     Mapping,
     NamedTuple,
     Optional,
@@ -864,6 +866,42 @@ class Corgy(metaclass=_CorgyMeta):
         cls.add_args_to_parser(parser, defaults=defaults)
         args = vars(parser.parse_args())
         return cls(**args)
+
+    @classmethod
+    def parse_from_toml(
+        cls: Type[_T],
+        toml_file: IO[bytes],
+        defaults: Optional[Mapping[str, Any]] = None,
+    ) -> _T:
+        """Parse an object of the class from a toml file.
+
+        Args:
+            toml_file: A file-like object containing the class arguments in toml.
+            defaults: A dictionary of default values, overriding the any values
+                specified in the class.
+
+        Raises:
+            TOMLDecodeError: Error parsing the toml file.
+        """
+        if sys.version_info >= (3, 11):
+            tomli = importlib.import_module("tomllib")
+        else:
+            try:
+                tomli = importlib.import_module("tomli")
+            except ImportError:
+                raise ImportError(
+                    "`tomli` library is required to parse toml files"
+                ) from None
+        toml_data = tomli.load(toml_file)
+        if defaults is not None:
+            for _k, _v in defaults.items():
+                if _k not in toml_data:
+                    toml_data[_k] = _v
+        _parsers = getattr(cls, "__parsers")
+        for _k, _v in toml_data.items():
+            if _k in _parsers:
+                toml_data[_k] = _parsers[_k](_v)
+        return cls.from_dict(toml_data)
 
 
 class _CorgyParser(NamedTuple):

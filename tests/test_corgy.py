@@ -1,6 +1,7 @@
 import argparse
 import sys
 import unittest
+from io import BytesIO
 from typing import Optional, Sequence
 from unittest import skipIf
 from unittest.mock import MagicMock, patch
@@ -16,6 +17,14 @@ else:
 import corgy
 from corgy import Corgy, CorgyHelpFormatter, corgyparser
 from corgy._corgy import BooleanOptionalAction
+
+if sys.version_info >= (3, 11):
+    import tomllib as tomli
+else:
+    try:
+        import tomli
+    except ImportError:
+        tomli = None  # type: ignore
 
 
 class TestCorgyMeta(unittest.TestCase):
@@ -1636,3 +1645,100 @@ class TestCorgyCustomParsers(unittest.TestCase):
 
         d = D.parse_from_cmdline(parser)
         self.assertEqual(d.x, 2)
+
+
+@skipIf(tomli is None, "`tomli` package not found")
+class TestCorgyTomlParsing(unittest.TestCase):
+    def test_toml_file_parsed_to_corgy_object(self):
+        class C(Corgy):
+            x: int
+
+        f = BytesIO(b"x = 1\n")
+        c = C.parse_from_toml(f)
+        self.assertEqual(c.x, 1)
+
+    def test_toml_file_parsing_handles_defaults(self):
+        class C(Corgy):
+            x: int = 1
+            y: str
+
+        f = BytesIO(b"y = 'test'\n")
+        c = C.parse_from_toml(f)
+        self.assertEqual(c.x, 1)
+        self.assertEqual(c.y, "test")
+
+    def test_toml_file_parsing_handles_default_override(self):
+        class C(Corgy):
+            x: int = 1
+
+        f = BytesIO(b"\n")
+        c = C.parse_from_toml(f, defaults={"x": 2})
+        self.assertEqual(c.x, 2)
+
+    def test_toml_file_parsing_handles_groups(self):
+        class G(Corgy):
+            x: int
+            y: str = "test"
+
+        class C(Corgy):
+            x: str
+            g: G
+
+        f = BytesIO(b"x = 'one'\n[g]\nx = 1\n")
+        c = C.parse_from_toml(f)
+        self.assertEqual(c.x, "one")
+        self.assertTrue(hasattr(c, "g"))
+        self.assertEqual(c.g.x, 1)
+        self.assertEqual(c.g.y, "test")
+
+    def test_toml_file_parsing_handles_subgroups(self):
+        class C(Corgy):
+            x: int
+
+        class D(Corgy):
+            x: str
+            c: C
+
+        class E(Corgy):
+            x: int
+            c: D
+            d: D
+
+        f = BytesIO(b"x = 1\n[c]\nx = 10\n[d]\nx = 'one'\n[d.c]\nx = 100\n")
+        e = E.parse_from_toml(f)
+        self.assertEqual(e.x, 1)
+        self.assertEqual(e.c.x, 10)
+        self.assertEqual(e.d.x, "one")
+        self.assertEqual(e.d.c.x, 100)
+
+    def test_toml_file_parsing_handles_inherited_attributes(self):
+        class G:
+            x: int
+
+        class C(Corgy, G):
+            y: str
+
+        class GCorgy(Corgy):
+            x: int
+
+        class CCorgy(GCorgy):
+            y: str
+
+        for cls in (C, CCorgy):
+            f = BytesIO(b"x = 1\ny = 'test'\n")
+            c = cls.parse_from_toml(f)
+            self.assertEqual(c.x, 1)
+            self.assertEqual(c.y, "test")
+
+    def test_toml_file_parsing_handles_custom_parsers(self):
+        class C(Corgy):
+            x: int
+
+            @corgyparser("x")
+            @staticmethod
+            def parsex(s: str):
+                return int(s) + 1
+
+        f = BytesIO(b"x = 1\n")
+        c = C.parse_from_toml(f)
+        self.assertEqual(c.x, 2)

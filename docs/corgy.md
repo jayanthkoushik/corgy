@@ -431,6 +431,27 @@ Return an object of the class parsed from command line arguments.
 
 
 
+#### _classmethod_ parse_from_toml(toml_file, defaults=None)
+Parse an object of the class from a toml file.
+
+
+* **Parameters**
+
+
+    * **toml_file** – A file-like object containing the class arguments in toml.
+
+
+    * **defaults** – A dictionary of default values, overriding the any values
+    specified in the class.
+
+
+
+* **Raises**
+
+    **TOMLDecodeError** – Error parsing the toml file.
+
+
+
 ### corgy.corgyparser(var_name)
 Decorate a function as a custom parser for a variable.
 
