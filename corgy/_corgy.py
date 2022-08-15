@@ -730,7 +730,7 @@ class Corgy(metaclass=_CorgyMeta):
 
         for arg_name, arg_val in args.items():
             if ":" in arg_name:
-                grp_name, arg_name = arg_name.split(":", maxsplit=1)
+                grp_name, arg_name_base = arg_name.split(":", maxsplit=1)
                 if not hasattr(self.__class__, grp_name):
                     raise ValueError(
                         f"invalid argument `{arg_name}`: "
@@ -740,7 +740,7 @@ class Corgy(metaclass=_CorgyMeta):
                     raise ValueError(
                         f"conflicting arguments: `{arg_name}` and `{grp_name}`"
                     )
-                grp_args_map[grp_name][arg_name] = arg_val
+                grp_args_map[grp_name][arg_name_base] = arg_val
             elif arg_name in getattr(self, "__annotations__"):
                 setattr(self, arg_name, arg_val)
 
