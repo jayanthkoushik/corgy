@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.7.0](https://github.com/jayanthkoushik/corgy/compare/v4.6.0...v4.7.0) (2022-08-16)
+
+
+### Features
+
+* allow `Tuple` to be used instead of `Sequence` in `Corgy` classes ([55fe0b6](https://github.com/jayanthkoushik/corgy/commit/55fe0b61b37d679b3663b6eeb45f634c99276ecf))
+
 ## [4.6.0](https://github.com/jayanthkoushik/corgy/compare/v4.5.0...v4.6.0) (2022-08-15)
 
 
