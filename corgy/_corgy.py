@@ -16,6 +16,7 @@ from typing import (
     NamedTuple,
     Optional,
     Sequence,
+    Tuple,
     Type,
     TypeVar,
     Union,
@@ -75,10 +76,13 @@ def _is_union_type(t) -> bool:
 
 def _is_sequence_type(t) -> bool:
     """Check if the argument is a sequence type."""
-    if t is Sequence or t is AbstractSequence:
+    if t is Sequence or t is AbstractSequence or t is Tuple or t is tuple:
         return True
     if hasattr(t, "__origin__") and (
-        t.__origin__ is Sequence or t.__origin__ is AbstractSequence
+        t.__origin__ is Sequence
+        or t.__origin__ is AbstractSequence
+        or t.__origin__ is Tuple
+        or t.__origin__ is tuple
     ):
         return True
     return False
@@ -414,6 +418,12 @@ class Corgy(metaclass=_CorgyMeta):
     This amounts to `nargs=3`. All types in the sequence must be the same. So,
     `Sequence[int, str, int]` will result in a `TypeError`.
 
+    **Tuple**
+    `typing.Tuple` (or `tuple` in Python 3.9+) can be used instead of `Sequence`. The
+    interface is the same. This is useful in Python versions below 3.9, since
+    `typing.Tuple` accepts multiple arguments, unlike `typing.Sequence`. Note that
+    adding arguments to a parser will require the tuple to have a single type.
+
     **Literal**
     `typing.Literal` can be used to specify that an argument takes one of a fixed set of
     values::
@@ -629,8 +639,10 @@ class Corgy(metaclass=_CorgyMeta):
             # Check if the variable is a sequence.
             var_nargs: Union[int, Literal["+", "*", "?"], None]
             if _is_sequence_type(var_base_type):
-                if not hasattr(var_base_type, "__args__") or isinstance(
-                    var_base_type.__args__[0], TypeVar
+                if (
+                    not hasattr(var_base_type, "__args__")
+                    or not var_base_type.__args__
+                    or isinstance(var_base_type.__args__[0], TypeVar)
                 ):
                     raise TypeError(
                         f"`{var_name}` is a sequence, but has no type arguments: "
@@ -648,12 +660,12 @@ class Corgy(metaclass=_CorgyMeta):
                 else:
                     # Ensure single type.
                     if any(
-                        _a is not var_base_type.__args__[0]
+                        _a != var_base_type.__args__[0]
                         for _a in var_base_type.__args__[1:]
                     ):
                         raise TypeError(
                             f"`{var_name}` has unsupported type `{var_base_type}`: only"
-                            f"single-type sequences are supported"
+                            f" single-type sequences are supported"
                         )
                     var_nargs = len(var_base_type.__args__)
                 var_base_type = var_base_type.__args__[0]

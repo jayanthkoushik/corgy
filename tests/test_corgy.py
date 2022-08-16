@@ -2,15 +2,18 @@ import argparse
 import sys
 import unittest
 from io import BytesIO
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Tuple
 from unittest import skipIf
 from unittest.mock import MagicMock, patch
 
 SequenceType = Sequence
+TupleType = Tuple
 
 if sys.version_info >= (3, 9):
     from collections.abc import Sequence  # pylint: disable=reimported
     from typing import Annotated, Literal
+
+    Tuple = tuple  # type: ignore
 else:
     from typing_extensions import Annotated, Literal
 
@@ -843,9 +846,31 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
         with self.assertRaises(TypeError):
             D.add_args_to_parser(self.parser)
 
+    def test_add_args_raises_if_tuple_has_no_types(self):
+        class C(Corgy):
+            x: Tuple
+
+        class D(Corgy):
+            x: TupleType
+
+        with self.assertRaises(TypeError):
+            C.add_args_to_parser(self.parser)
+
+        with self.assertRaises(TypeError):
+            D.add_args_to_parser(self.parser)
+
     def test_add_args_sets_nargs_to_asterisk_for_sequence_type(self):
         class C(Corgy):
             x: Sequence[int]
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with(
+            "--x", type=int, nargs="*", required=True
+        )
+
+    def test_add_args_sets_nargs_to_asterisk_for_tuple_type(self):
+        class C(Corgy):
+            x: Tuple[int]
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
@@ -861,9 +886,25 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
             "--x", type=int, nargs="*", required=True
         )
 
+    def test_add_args_handles_tuple_type_as_well_as_abstract_tuple(self):
+        class C(Corgy):
+            x: TupleType[int]
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with(
+            "--x", type=int, nargs="*", required=True
+        )
+
     def test_add_args_handles_optional_sequence_type(self):
         class C(Corgy):
             x: Optional[Sequence[int]]
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with("--x", type=int, nargs="*")
+
+    def test_add_args_handles_optional_tuple_type(self):
+        class C(Corgy):
+            x: Optional[Tuple[int]]
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with("--x", type=int, nargs="*")
@@ -872,6 +913,15 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
     def test_add_args_sets_nargs_to_plus_for_non_empty_sequence_type(self):
         class C(Corgy):
             x: Sequence[int, ...]  # type: ignore
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with(
+            "--x", type=int, nargs="+", required=True
+        )
+
+    def test_add_args_sets_nargs_to_plus_for_non_empty_tuple_type(self):
+        class C(Corgy):
+            x: Tuple[int, ...]
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
@@ -887,9 +937,27 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
             "--x", type=int, nargs="*", default=[1, 2, 3]
         )
 
+    def test_add_args_handles_tuple_with_default(self):
+        class C(Corgy):
+            x: Tuple[int] = [1, 2, 3]
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with(
+            "--x", type=int, nargs="*", default=[1, 2, 3]
+        )
+
     def test_add_args_converts_literal_sequence_to_choices_with_nargs(self):
         class C(Corgy):
             x: Sequence[Literal[1, 2, 3]]
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with(
+            "--x", type=int, nargs="*", required=True, choices=(1, 2, 3)
+        )
+
+    def test_add_args_converts_literal_tuple_to_choices_with_nargs(self):
+        class C(Corgy):
+            x: Tuple[Literal[1, 2, 3]]
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
@@ -906,6 +974,15 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
             "--x", type=int, nargs=2, required=True, choices=(1, 2, 3)
         )
 
+    def test_add_args_handles_fixed_length_tuple_with_chocies(self):
+        class C(Corgy):
+            x: Tuple[Literal[1, 2, 3], Literal[1, 2, 3]]
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with(
+            "--x", type=int, nargs=2, required=True, choices=(1, 2, 3)
+        )
+
     @skipIf(sys.version_info < (3, 9), "`typing.Sequence` doesn't accept multiple args")
     def test_add_args_raises_if_fixed_length_sequence_choices_not_all_same(self):
         class C(Corgy):
@@ -914,10 +991,26 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
         with self.assertRaises(TypeError):
             C.add_args_to_parser(self.parser)
 
+    def test_add_args_raises_if_fixed_length_tuple_choices_not_all_same(self):
+        class C(Corgy):
+            x: Tuple[Literal[1, 2, 3], Literal[1, 2]]
+
+        with self.assertRaises(TypeError):
+            C.add_args_to_parser(self.parser)
+
     @skipIf(sys.version_info < (3, 9), "`typing.Sequence` doesn't accept multiple args")
     def test_add_args_handles_fixed_length_typed_sequence(self):
         class C(Corgy):
             x: Sequence[int, int, int]
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with(
+            "--x", type=int, nargs=3, required=True
+        )
+
+    def test_add_args_handles_fixed_length_typed_tuple(self):
+        class C(Corgy):
+            x: Tuple[int, int, int]
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
@@ -934,10 +1027,26 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
             "--x", type=int, nargs=2, required=True
         )
 
+    def test_add_args_handles_length_2_typed_tuple(self):
+        class C(Corgy):
+            x: Tuple[int, int]
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with(
+            "--x", type=int, nargs=2, required=True
+        )
+
     @skipIf(sys.version_info < (3, 9), "`typing.Sequence` doesn't accept multiple args")
     def test_add_args_raises_if_fixed_length_sequence_types_not_all_same(self):
         class C(Corgy):
             x: Sequence[int, str, int]
+
+        with self.assertRaises(TypeError):
+            C.add_args_to_parser(self.parser)
+
+    def test_add_args_raises_if_fixed_length_tuple_types_not_all_same(self):
+        class C(Corgy):
+            x: Tuple[int, str, int]
 
         with self.assertRaises(TypeError):
             C.add_args_to_parser(self.parser)
@@ -1656,6 +1765,16 @@ class TestCorgyTomlParsing(unittest.TestCase):
         f = BytesIO(b"x = 1\n")
         c = C.parse_from_toml(f)
         self.assertEqual(c.x, 1)
+
+    def test_toml_file_parsing_handles_sequences(self):
+        class C(Corgy):
+            x: Sequence[int]
+            y: Sequence[str]
+
+        f = BytesIO(b"x = [1, 2, 3]\ny = ['1', '2', '3']\n")
+        c = C.parse_from_toml(f)
+        self.assertEqual(c.x, [1, 2, 3])
+        self.assertEqual(c.y, ["1", "2", "3"])
 
     def test_toml_file_parsing_handles_defaults(self):
         class C(Corgy):

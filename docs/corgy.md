@@ -204,6 +204,12 @@ x: Sequence[int, int, int]
 This amounts to `nargs=3`. All types in the sequence must be the same. So,
 `Sequence[int, str, int]` will result in a `TypeError`.
 
+**Tuple**
+`typing.Tuple` (or `tuple` in Python 3.9+) can be used instead of `Sequence`. The
+interface is the same. This is useful in Python versions below 3.9, since
+`typing.Tuple` accepts multiple arguments, unlike `typing.Sequence`. Note that
+adding arguments to a parser will require the tuple to have a single type.
+
 **Literal**
 `typing.Literal` can be used to specify that an argument takes one of a fixed set of
 values:
