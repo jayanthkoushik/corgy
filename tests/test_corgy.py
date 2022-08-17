@@ -165,6 +165,36 @@ class TestCorgyMeta(unittest.TestCase):
         c.y = 1
         self.assertEqual(c.y, 1)
 
+    def test_corgy_cls_allows_disabling_slots_modification(self):
+        class C(Corgy, corgy_make_slots=False):
+            x: int
+
+        c = C()
+        c.x = 1
+        c.y = 2
+        self.assertEqual(c.x, 1)
+        self.assertEqual(c.y, 2)
+
+    def test_corgy_cls_raises_if_slots_modification_disabled_with_custom_slots(self):
+        with self.assertRaises(TypeError):
+
+            class _(Corgy, corgy_make_slots=False):
+                __slots__ = ("y",)
+                x: int
+
+    def test_corgy_cls_modifies_slots_if_explicitly_enabled(self):
+        class C(Corgy, corgy_make_slots=True):
+            __slots__ = ("y",)
+            x: int
+
+        c = C()
+        c.x = 1
+        c.y = 2
+        self.assertEqual(c.x, 1)
+        self.assertEqual(c.y, 2)
+        with self.assertRaises(AttributeError):
+            c.z = 3
+
     def test_corgy_cls_has_correct_repr_str(self):
         c = self._CorgyCls()
         c.x1 = [0, 1]

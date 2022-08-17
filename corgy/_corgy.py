@@ -100,10 +100,20 @@ class _CorgyMeta(type):
     __slots__ = ()
 
     def __new__(cls, name, bases, namespace, **kwds):
-        if "__slots__" not in namespace:
-            namespace["__slots__"] = []
-        else:
-            namespace["__slots__"] = list(namespace["__slots__"])
+        try:
+            _make_slots = kwds.pop("corgy_make_slots")
+        except KeyError:
+            _make_slots = True
+
+        if _make_slots:
+            if "__slots__" not in namespace:
+                namespace["__slots__"] = []
+            else:
+                namespace["__slots__"] = list(namespace["__slots__"])
+        elif "__slots__" in namespace:
+            raise TypeError(
+                "`__slots__` cannot be defined if `corgy_make_slots` is `False`"
+            )
 
         cls_annotations = namespace.get("__annotations__", {})
         namespace["__annotations__"] = {}
@@ -207,9 +217,11 @@ class _CorgyMeta(type):
             namespace[var_name] = cls._create_var_property(
                 name, var_name, var_type, var_help
             )
-            namespace["__slots__"].append(f"__{var_name}")
+            if _make_slots:
+                namespace["__slots__"].append(f"__{var_name}")
 
-        namespace["__slots__"] = tuple(namespace["__slots__"])
+        if _make_slots:
+            namespace["__slots__"] = tuple(namespace["__slots__"])
 
         # Store custom parsers in a dict.
         for _, v in namespace.items():
@@ -293,7 +305,15 @@ class Corgy(metaclass=_CorgyMeta):
 
     To allow arbitrary instance variables, add `__dict__` to `__slots__`. Names added
     through custom `__slots__` are not processed by `Corgy`, and will not be added to
-    `ArgumentParser` objects by the class methods.
+    `ArgumentParser` objects by the class methods. Alternatively, to disable setting
+    `__slots__` completely, set `corgy_make_slots` to `False` in the class definition::
+
+        class A(Corgy, corgy_make_slots=False):
+            y: int
+
+        a = A()
+        a.y = 1  # `Corgy` variable
+        a.x = 2  # custom variable
 
     Inheritance works as expected, whether base classes are themselves `Corgy` classes
     or not, with sub-classes inheriting the attributes of the base class, and overriding

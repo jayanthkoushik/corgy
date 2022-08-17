@@ -59,7 +59,17 @@ a.x = 2  # custom variable
 
 To allow arbitrary instance variables, add `__dict__` to `__slots__`. Names added
 through custom `__slots__` are not processed by `Corgy`, and will not be added to
-`ArgumentParser` objects by the class methods.
+`ArgumentParser` objects by the class methods. Alternatively, to disable setting
+`__slots__` completely, set `corgy_make_slots` to `False` in the class definition:
+
+```python
+class A(Corgy, corgy_make_slots=False):
+    y: int
+
+a = A()
+a.y = 1  # `Corgy` variable
+a.x = 2  # custom variable
+```
 
 Inheritance works as expected, whether base classes are themselves `Corgy` classes
 or not, with sub-classes inheriting the attributes of the base class, and overriding
