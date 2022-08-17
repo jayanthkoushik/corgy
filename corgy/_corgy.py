@@ -218,6 +218,11 @@ class _CorgyMeta(type):
                 name, var_name, var_type, var_help
             )
             if _make_slots:
+                if f"__{var_name}" in namespace["__slots__"]:
+                    raise TypeError(
+                        f"cannot have slot `__{var_name}`: internal clash with "
+                        f"`{var_name}`"
+                    )
                 namespace["__slots__"].append(f"__{var_name}")
 
         if _make_slots:

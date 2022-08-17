@@ -165,6 +165,13 @@ class TestCorgyMeta(unittest.TestCase):
         c.y = 1
         self.assertEqual(c.y, 1)
 
+    def test_corgy_cls_raises_on_slot_clash_with_var(self):
+        with self.assertRaises(TypeError):
+
+            class _(Corgy):
+                x: int
+                __slots__ = ("__x",)
+
     def test_corgy_cls_allows_disabling_slots_modification(self):
         class C(Corgy, corgy_make_slots=False):
             x: int
