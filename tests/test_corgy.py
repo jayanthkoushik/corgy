@@ -195,6 +195,28 @@ class TestCorgyMeta(unittest.TestCase):
         with self.assertRaises(AttributeError):
             c.z = 3
 
+    def test_corgy_cls_disabling_slots_does_not_interfere_with_inheritance(self):
+        class C1(Corgy):
+            x: int
+
+        class C2(Corgy, corgy_make_slots=False):
+            x: int
+
+        class D1(C1, corgy_make_slots=False):
+            y: int
+
+        class D2(C2):
+            y: int
+
+        for cls in (D1, D2):
+            d = cls()
+            d.x = 1
+            d.y = 2
+            d.z = 3
+            self.assertEqual(d.x, 1)
+            self.assertEqual(d.y, 2)
+            self.assertEqual(d.z, 3)
+
     def test_corgy_cls_has_correct_repr_str(self):
         c = self._CorgyCls()
         c.x1 = [0, 1]
