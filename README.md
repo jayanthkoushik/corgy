@@ -66,5 +66,11 @@ Support for colorized output requires the `crayons` package, also available on P
 pip install corgy[colors]
 ```
 
+Parsing `Corgy` objects from `toml` files requires the `tomli` package on Python versions below 3.11. This can be installed automatically with the `toml` extra:
+
+```bash
+pip install corgy[toml]
+```
+
 # Usage
 For documentation on usage, refer to docs/index.md.
