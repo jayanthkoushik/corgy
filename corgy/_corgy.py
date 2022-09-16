@@ -864,13 +864,12 @@ class Corgy(metaclass=_CorgyMeta):
         """
         args = {}
         for k, v in d.items():
-            if isinstance(v, dict):
-                if not hasattr(cls, k):
-                    raise ValueError(f"`{cls}` has no group named `{k}`")
+            if isinstance(v, dict) and hasattr(cls, k):
                 kcls = getattr(cls, k).fget.__annotations__["return"]
-                if not isinstance(kcls, _CorgyMeta):
-                    raise ValueError(f"`{k}` is not a `Corgy` class")
-                args[k] = kcls.from_dict(v)  # type: ignore
+                if isinstance(kcls, _CorgyMeta):
+                    args[k] = kcls.from_dict(v)  # type: ignore
+                else:
+                    args[k] = v
             else:
                 args[k] = v
         return cls(**args)

@@ -592,14 +592,15 @@ class TestCorgyMeta(unittest.TestCase):
         with self.assertRaises(ValueError):
             D.from_dict({"x2": "two", "c": self._CorgyCls(x2=2), "c:x4": "four"})
 
-    def test_corgy_cls_from_dict_raises_on_unknown_group_dict_argument(self):
+    def test_corgy_cls_from_dict_allows_dict_as_value(self):
         class D(Corgy):
-            x: int
+            x: dict
 
-        with self.assertRaises(ValueError):
-            D.from_dict({"x": {"x": 1}})
-        with self.assertRaises(ValueError):
-            D.from_dict({"y": {"x": 1}})
+        d = D.from_dict({"x": {"x": 1}})
+        self.assertDictEqual(d.x, {"x": 1})
+
+    def test_corgy_cls_from_dict_ignores_unknown_arguments(self):
+        self._CorgyCls.from_dict({"y1": 1, "y2": {"x1": 1}})
 
     def test_corgy_cls_from_dict_handles_inherited_attributes(self):
         class C(Corgy):
