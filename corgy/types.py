@@ -144,13 +144,13 @@ class OutputTextFile(TextIOWrapper, metaclass=_OutputTextFileMeta):
     def init(self):
         """No-op for compatibility with `LazyOutputTextFile`."""
 
-    @classmethod
+    @classmethod  # type: ignore
     @property
     def stdout_wrapper(cls) -> OutputTextFile:
         """`sys.__stdout__` wrapped with `TextIOWrapper` (line buffered)."""
         # For Sphinx.
 
-    @classmethod
+    @classmethod  # type: ignore
     @property
     def stderr_wrapper(cls) -> OutputTextFile:
         """`sys.__stderr__` wrapped with `TextIOWrapper` (line buffered)."""
@@ -263,7 +263,7 @@ class InputTextFile(TextIOWrapper, metaclass=_InputTextFileMeta):
     def __str__(self) -> str:
         return str(self.buffer.name)
 
-    @classmethod
+    @classmethod  # type: ignore
     @property
     def stdin_wrapper(cls) -> InputTextFile:
         """`sys.__stdin__` wrapped with `TextIOWrapper`."""
@@ -583,7 +583,7 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
             return subcls.__module__ + "." + subcls.__qualname__
         return subcls.__name__
 
-    @classmethod
+    @classmethod  # type: ignore
     @property
     def __choices__(cls) -> Tuple[SubClass[_T], ...]:
         """Return a tuple of `SubClass` instances for valid sub-classes of the base.
@@ -755,7 +755,7 @@ class KeyValuePairs(dict, Generic[_KT, _VT], metaclass=_KeyValuePairsMeta):
                 cls._type_cache[item] = ret_type
         return ret_type
 
-    @classmethod
+    @classmethod  # type: ignore
     @property
     def __metavar__(cls) -> str:
         # For Sphinx.

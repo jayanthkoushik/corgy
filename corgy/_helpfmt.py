@@ -595,7 +595,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 break
             current_frame = current_frame.f_back
 
-    def _format_usage(self, usage: str, *args, **kwargs) -> str:
+    def _format_usage(self, usage: Optional[str], *args, **kwargs) -> str:
         with patch.object(self._color_helper, "crayons", None):
             # Disable colors for usage string.
             fmt = super()._format_usage(usage, *args, **kwargs)
