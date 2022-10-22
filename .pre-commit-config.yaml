@@ -41,7 +41,7 @@ repos:
   - id: commitlint
     name: lint commit message
     language: system
-    entry: "npx commitlint -x=@commitlint/config-conventional -e"
+    entry: "npx commitlint -e"
     always_run: true
     stages: [commit-msg]
   - id: test
