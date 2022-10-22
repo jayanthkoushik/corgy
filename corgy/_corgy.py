@@ -10,6 +10,7 @@ from functools import partial
 from typing import (
     Any,
     Callable,
+    ClassVar,
     Dict,
     IO,
     Mapping,
@@ -159,7 +160,7 @@ class _CorgyMeta(type):
             return tempnew
 
         del tempnew  # YUCK
-        for var_name in namespace["__annotations__"]:
+        for var_name in set(namespace["__annotations__"].keys()):
             var_ano = type_hints[var_name]
             # Check for name conflicts.
             _mangled_name = f"_{name.lstrip('_')}__{var_name}"
@@ -194,6 +195,16 @@ class _CorgyMeta(type):
                         )
                 else:
                     var_flags = None
+            elif hasattr(var_ano, "__origin__") and var_ano.__origin__ is ClassVar:
+                # `<var_name>: ClassVar[<var_type>]`
+                # Make sure the class variable has an associated value.
+                if var_name not in namespace:
+                    if var_name in namespace["__defaults"]:
+                        del namespace["__defaults"][var_name]
+                    else:
+                        raise TypeError(f"class variable `{var_name}` has no value set")
+                del namespace["__annotations__"][var_name]
+                continue
             else:
                 # `<var_name>: <var_type>`.
                 var_type = var_ano
@@ -319,6 +330,21 @@ class Corgy(metaclass=_CorgyMeta):
         a = A()
         a.y = 1  # `Corgy` variable
         a.x = 2  # custom variable
+
+    Names marked with the `ClassVar` type will be added as class variables, and will
+    not be available as `Corgy` variables::
+
+        class A(Corgy):
+            x: ClassVar[int] = 3
+
+        A.x         # OK (returns `3`)
+        A.x = 4     # OK
+        a = A()
+        a.x         # OK (returns `3`)
+        a.x = 4     # ERROR!
+
+    Also note that class variables need to be assigned to a value during
+    definition, and this value will not be type checked by `Corgy`.
 
     Inheritance works as expected, whether base classes are themselves `Corgy` classes
     or not, with sub-classes inheriting the attributes of the base class, and overriding

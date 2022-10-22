@@ -2,7 +2,7 @@ import argparse
 import sys
 import unittest
 from io import BytesIO
-from typing import Optional, Sequence, Tuple
+from typing import ClassVar, Optional, Sequence, Tuple
 from unittest import skipIf
 from unittest.mock import MagicMock, patch
 
@@ -223,6 +223,81 @@ class TestCorgyMeta(unittest.TestCase):
             self.assertEqual(d.x, 1)
             self.assertEqual(d.y, 2)
             self.assertEqual(d.z, 3)
+
+    def test_corgy_cls_does_not_add_classvar(self):
+        class C(Corgy):
+            x: ClassVar[int] = 0
+
+        self.assertEqual(C.x, 0)
+        c = C()
+        self.assertEqual(c.x, 0)
+        with self.assertRaises(AttributeError):
+            c.x = 1
+        C.x = 1
+        self.assertEqual(C.x, 1)
+        self.assertEqual(c.x, 1)
+
+    def test_corgy_cls_raises_if_classvar_has_no_value(self):
+        with self.assertRaises(TypeError):
+
+            class _(Corgy):
+                x: ClassVar[int]
+
+    def test_corgy_cls_inherits_classvar(self):
+        class C:
+            x: ClassVar[int] = 0
+            y = 1
+            __slots__ = ()
+
+        class D(C, Corgy):
+            z: ClassVar[str] = "0"
+
+        class CCorgy(Corgy):
+            x: ClassVar[int] = 0
+            y = 1
+
+        class DCorgy(CCorgy):
+            z: ClassVar[str] = "0"
+
+        for cls in (D, DCorgy):
+            obj = cls()
+            for _attr, _val in zip(("x", "y", "z"), (0, 1, "0")):
+                with self.subTest(cls=cls.__name__, attr=_attr):
+                    self.assertEqual(getattr(cls, _attr), _val)
+                    self.assertEqual(getattr(obj, _attr), _val)
+                    with self.assertRaises(AttributeError):
+                        setattr(obj, _attr, "no")
+
+    def test_corgy_cls_can_override_inherited_classvar(self):
+        class C:
+            x: ClassVar[int] = 0
+            y = 1
+            z: ClassVar[str] = "1"
+
+        class D(C, Corgy):
+            x: int  # type: ignore
+            y: str = "1"
+            z: ClassVar[str] = "2"
+
+        class CCorgy(Corgy):
+            x: ClassVar[int] = 0
+            y = 1
+            z: ClassVar[str] = "1"
+
+        class DCorgy(CCorgy):
+            x: int  # type: ignore
+            y: str = "1"
+            z: ClassVar[str] = "2"
+
+        for ccls, dcls in zip((C, CCorgy), (D, DCorgy)):
+            self.assertEqual(ccls.z, "1")
+            self.assertEqual(dcls.z, "2")
+            self.assertIsInstance(dcls.x, property)
+            self.assertIsInstance(dcls.y, property)
+            dobj = dcls()
+            with self.assertRaises(AttributeError):
+                _ = dobj.x
+            self.assertEqual(dobj.y, "1")
 
     def test_corgy_cls_has_correct_repr_str(self):
         c = self._CorgyCls()

@@ -71,6 +71,23 @@ a.y = 1  # `Corgy` variable
 a.x = 2  # custom variable
 ```
 
+Names marked with the `ClassVar` type will be added as class variables, and will
+not be available as `Corgy` variables:
+
+```python
+class A(Corgy):
+    x: ClassVar[int] = 3
+
+A.x         # OK (returns `3`)
+A.x = 4     # OK
+a = A()
+a.x         # OK (returns `3`)
+a.x = 4     # ERROR!
+```
+
+Also note that class variables need to be assigned to a value during
+definition, and this value will not be type checked by `Corgy`.
+
 Inheritance works as expected, whether base classes are themselves `Corgy` classes
 or not, with sub-classes inheriting the attributes of the base class, and overriding
 any redefined attributes:
