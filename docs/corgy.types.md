@@ -269,6 +269,10 @@ base class type. So all instances of `SubClass[Base]` will return the same type,
 and any attributes set on the type will be shared between all instances.
 
 
+#### _property_ which()
+Return the class represented by the `SubClass` instance.
+
+
 #### _class property_ \__choices__()
 Return a tuple of `SubClass` instances for valid sub-classes of the base.
 

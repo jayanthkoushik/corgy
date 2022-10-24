@@ -508,6 +508,23 @@ class TestSubClass(TestCase):
         self.assertEqual(repr(init_b), f"SubClass[A]('{b_full_name}')")
         self.assertEqual(str(init_b), b_full_name)
 
+    def test_subclass_which_property(self):
+        class A:
+            ...
+
+        class B(A):
+            ...
+
+        class C(B):
+            ...
+
+        type_ = SubClass[A]
+        init_b = type_("B")
+        init_c = type_("C")
+
+        self.assertEqual(init_b.which, B)
+        self.assertEqual(init_c.which, C)
+
 
 class TestKeyValuePairs(TestCase):
     def test_key_value_pairs_init_returns_unique_class(self):

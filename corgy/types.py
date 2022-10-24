@@ -583,6 +583,11 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
             return subcls.__module__ + "." + subcls.__qualname__
         return subcls.__name__
 
+    @property
+    def which(self) -> Type[_T]:
+        """Return the class represented by the `SubClass` instance."""
+        return self._subcls
+
     @classmethod  # type: ignore
     @property
     def __choices__(cls) -> Tuple[SubClass[_T], ...]:
