@@ -1,4 +1,5 @@
 .git*                       export-ignore
 .pre-commit-config.yaml     export-ignore
+.commitlintrc.yaml          export-ignore
 .editorconfig               export-ignore
 release.sh                  export-ignore
