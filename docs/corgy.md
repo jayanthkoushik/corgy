@@ -340,14 +340,14 @@ d.c  # C(x=2)
 ```
 
 
-#### _classmethod_ add_args_to_parser(parser, name_prefix='', make_group=False, group_help=None, defaults=None)
+#### _classmethod_ add_args_to_parser(parser, name_prefix='', flatten_subgrps=False, defaults=None)
 Add arguments for this class to the given parser.
 
 
 * **Parameters**
 
 
-    * **parser** – Argument parser to which the class’s arguments will be added.
+    * **parser** – Argument parser/group to which the class’s arguments will be added.
 
 
     * **name_prefix** – Prefix for argument names. Arguments will be named
@@ -355,11 +355,8 @@ Add arguments for this class to the given parser.
     `--<name-prefix>:<flag>` will be used instead (one for each flag).
 
 
-    * **make_group** – If `True`, the arguments will be added to a group within the
-    parser, and `name_prefix` will be used as the group name.
-
-
-    * **group_help** – Help text for the group. Ignored if `make_group` is `False`.
+    * **flatten_subgrps** – Whether to add sub-groups to the main parser instead of
+    creating argument groups.
 
 
     * **defaults** – Optional mapping with default values for arguments. Any value

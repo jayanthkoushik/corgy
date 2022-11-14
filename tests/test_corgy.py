@@ -1279,10 +1279,34 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
             x: int
             g1: G1
 
+        grp_parser = MagicMock()
+        self.parser.add_argument_group.return_value = grp_parser
+
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with("--x", type=int, required=True)
         self.parser.add_argument_group.assert_any_call("g1", None)
-        self.parser.add_argument_group.assert_any_call("g1:g2", None)
+        grp_parser.add_argument.assert_has_calls(
+            [
+                (("--g1:x",), {"type": int, "required": True}),
+                (("--g1:g2:x",), {"type": int, "required": True}),
+            ]
+        )
+
+    def test_add_args_handles_flatten_subgrps_arg(self):
+        class G(Corgy):
+            x: int
+
+        class C(Corgy):
+            x: int
+            g: G
+
+        C.add_args_to_parser(self.parser, flatten_subgrps=True)
+        self.parser.add_argument.assert_has_calls(
+            [
+                (("--x",), {"type": int, "required": True}),
+                (("--g:x",), {"type": int, "required": True}),
+            ]
+        )
 
     def test_add_args_infers_correct_base_type_from_complex_type_hint(self):
         class C(Corgy):

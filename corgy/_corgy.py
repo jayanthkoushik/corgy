@@ -567,22 +567,20 @@ class Corgy(metaclass=_CorgyMeta):
     @classmethod
     def add_args_to_parser(
         cls,
-        parser: argparse.ArgumentParser,
+        parser: argparse._ActionsContainer,
         name_prefix: str = "",
-        make_group: bool = False,
-        group_help: Optional[str] = None,
+        flatten_subgrps: bool = False,
         defaults: Optional[Mapping[str, Any]] = None,
     ):
         """Add arguments for this class to the given parser.
 
         Args:
-            parser: Argument parser to which the class's arguments will be added.
+            parser: Argument parser/group to which the class's arguments will be added.
             name_prefix: Prefix for argument names. Arguments will be named
                 `--<name-prefix>:<var-name>`. If custom flags are present,
                 `--<name-prefix>:<flag>` will be used instead (one for each flag).
-            make_group: If `True`, the arguments will be added to a group within the
-                parser, and `name_prefix` will be used as the group name.
-            group_help: Help text for the group. Ignored if `make_group` is `False`.
+            flatten_subgrps: Whether to add sub-groups to the main parser instead of
+                creating argument groups.
             defaults: Optional mapping with default values for arguments. Any value
                 specified here will override default values specified in the class.
                 Values for groups can be specified either as `Corgy` instances, or as
@@ -609,9 +607,6 @@ class Corgy(metaclass=_CorgyMeta):
             C.add_args_to_parser(parser, defaults={"g:y": 2.0})
         """
         base_parser = parser
-        if make_group:
-            parser = parser.add_argument_group(name_prefix, group_help)  # type: ignore
-
         base_defaults = getattr(cls, "__defaults").copy()
         if defaults is not None:
             base_defaults.update(defaults)
@@ -669,9 +664,12 @@ class Corgy(metaclass=_CorgyMeta):
                 # Update defaults with any values specified individually.
                 grp_defaults.update(group_arg_defaults.get(var_name, {}))
 
-                var_type.add_args_to_parser(
-                    base_parser, var_dest, True, var_help, grp_defaults
-                )
+                grp_parser: argparse._ActionsContainer
+                if flatten_subgrps:
+                    grp_parser = base_parser
+                else:
+                    grp_parser = base_parser.add_argument_group(var_dest, var_help)
+                var_type.add_args_to_parser(grp_parser, var_dest, True, grp_defaults)
                 continue
 
             # Check if the variable is optional. `<var_name>: Optional[<var_type>]` is
