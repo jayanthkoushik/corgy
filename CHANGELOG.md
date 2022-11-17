@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [5.0.0](https://github.com/jayanthkoushik/corgy/compare/v4.7.0...v5.0.0) (2022-11-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* function signature for `Corgy.add_args_to_parser` has
+been changed. `make_group` and `group_help` arguments have been removed,
+and `flatten_subgrps` argument has been added.
+
+### Features
+
+* add `SubClass.which` property ([ed37ea4](https://github.com/jayanthkoushik/corgy/commit/ed37ea4a7388b714f34ac54d5c476782681e8871))
+* allow disabling `__slots__` in `Corgy` classes ([c3ac08b](https://github.com/jayanthkoushik/corgy/commit/c3ac08bce8a5ac0541e134553c7aabbc69fea3d3))
+* handle `ClassVar` annotations in `Corgy` classes ([6d83ab4](https://github.com/jayanthkoushik/corgy/commit/6d83ab4e71fbd4f6c08f9cc485a1ac0d83d9fff7))
+* re-write `Corgy.add_args_to_parser` to accept both parsers/groups ([492020b](https://github.com/jayanthkoushik/corgy/commit/492020bb4620f7b5f007b436ff8aeed75cc169be))
+
+
+### Bug Fixes
+
+* make `Corgy.from_dict` ignore unknown arguments ([49c94e4](https://github.com/jayanthkoushik/corgy/commit/49c94e4b5490cd15c82870d7cc1cf409da1f9219))
+* raise `TypeError` if a `Corgy` class defines a conflicting slot variable ([90278b2](https://github.com/jayanthkoushik/corgy/commit/90278b2a6b0c7a91f8ff47be3b6df3387dc6c9d6))
+
 ## [4.7.0](https://github.com/jayanthkoushik/corgy/compare/v4.6.0...v4.7.0) (2022-08-16)
 
 
