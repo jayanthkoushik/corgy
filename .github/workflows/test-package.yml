@@ -26,8 +26,8 @@ jobs:
     - name: Install Poetry
       run: curl -sSL https://install.python-poetry.org | python3 -
     - name: Install dependencies
-      run: $HOME/.poetry/bin/poetry install --no-dev -E colors
+      run: $HOME/.local/bin/poetry install --no-dev -E colors
     - name: Run tests
-      run: $HOME/.poetry/bin/poetry run python -m unittest
+      run: $HOME/.local/bin/poetry run python -m unittest
       env:
         PYTHONDEVMODE: 1

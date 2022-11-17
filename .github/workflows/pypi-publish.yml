@@ -18,8 +18,8 @@ jobs:
     - name: Install poetry-dynamic-versioning
       run: python -m pip install poetry-dynamic-versioning
     - name: Build dist
-      run: $HOME/.poetry/bin/poetry build
+      run: $HOME/.local/bin/poetry build
     - name: Publish to pypi
-      run: $HOME/.poetry/bin/poetry publish -u __token__ -p $PYPI_TOKEN
+      run: $HOME/.local/bin/poetry publish -u __token__ -p $PYPI_TOKEN
       env:
         PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
