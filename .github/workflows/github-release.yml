@@ -12,20 +12,21 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
+    - name: Install poetry
+      run: pipx install poetry
+    - name: Install poetry-dynamic-versioning
+      run: pipx install poetry-dynamic-versioning
     - uses: actions/setup-python@v4
       with:
         python-version: '3.9'
+        cache: poetry
     - uses: actions/setup-node@v2
     - name: Run conventional-github-releaser
       run: npx conventional-github-releaser -p angular
       env:
         CONVENTIONAL_GITHUB_RELEASER_TOKEN: ${{ secrets.CONVENTIONAL_GITHUB_RELEASER_TOKEN }}
-    - name: Install poetry
-      run: python -m pip install poetry
-    - name: Install poetry-dynamic-versioning
-      run: python -m pip install poetry-dynamic-versioning
     - name: Build dist
-      run: python -m poetry build
+      run: poetry build
     - name: Add wheel to release
       uses: svenstaro/upload-release-action@v2
       with:
