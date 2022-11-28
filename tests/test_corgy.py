@@ -1862,6 +1862,18 @@ class TestCorgyCustomParsers(unittest.TestCase):
         self.assertEqual(C.parsex("x"), 0)
         self.assertEqual(C.parsey("y"), 1)
 
+    def test_corgyparser_accepts_multiple_arguments(self):
+        class C(Corgy):
+            x: int
+            y: int
+
+            @corgyparser("x", "y")
+            @staticmethod
+            def parsexy(s: str):
+                return int(s)
+
+        self.assertIs(getattr(C, "__parsers")["x"], getattr(C, "__parsers")["y"])
+
     def test_corgyparser_decorators_can_be_chained(self):
         class C(Corgy):
             x: int
@@ -1873,8 +1885,7 @@ class TestCorgyCustomParsers(unittest.TestCase):
             def parsexy(s: str):
                 return int(s)
 
-        self.assertEqual(C.parsexy("1"), 1)
-        self.assertEqual(C.parsexy("2"), 2)
+        self.assertIs(getattr(C, "__parsers")["x"], getattr(C, "__parsers")["y"])
 
     def test_add_args_with_custom_parser_uses_custom_metavar(self):
         class T:

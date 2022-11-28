@@ -482,8 +482,8 @@ Parse an object of the class from a toml file.
 
 
 
-### corgy.corgyparser(var_name)
-Decorate a function as a custom parser for a variable.
+### corgy.corgyparser(\*var_names)
+Decorate a function as a custom parser for one or more variables.
 
 To use a custom function for parsing an argument with `Corgy`, use this decorator.
 Parsing functions must be static, and should only accept a single string argument.
@@ -493,7 +493,7 @@ Decorating the function with `@staticmethod` is optional, but prevents type erro
 
 * **Parameters**
 
-    **var_name** – The argument associated with the decorated parser.
+    **var_names** – The arguments associated with the decorated parser.
 
 
 Example:
@@ -507,7 +507,20 @@ class A(Corgy):
         return tuple(map(int, s.split(":")))
 ```
 
-The `@corgyparser` decorator can be chained to use the same parser for multiple
+Multiple arguments can be passed to the decorator, and will all be associated with
+the same parser:
+
+```python
+class A(Corgy):
+    x: int
+    y: int
+    @corgyparser("x", "y")
+    @staticmethod
+    def parse_x_y(s):
+        return int(s)
+```
+
+The `@corgyparser` decorator can also be chained to use the same parser for multiple
 arguments:
 
 ```python

@@ -979,9 +979,9 @@ class _CorgyParser(NamedTuple):
 
 
 def corgyparser(
-    var_name: str,
+    *var_names: str,
 ) -> Callable[[Union[Callable[[str], Any], _CorgyParser]], _CorgyParser]:
-    """Decorate a function as a custom parser for a variable.
+    """Decorate a function as a custom parser for one or more variables.
 
     To use a custom function for parsing an argument with `Corgy`, use this decorator.
     Parsing functions must be static, and should only accept a single string argument.
@@ -989,7 +989,7 @@ def corgyparser(
     `@corgyparser` must be the final decorator in the decorator chain.
 
     Args:
-        var_name: The argument associated with the decorated parser.
+        var_names: The arguments associated with the decorated parser.
 
     Example::
 
@@ -1000,7 +1000,18 @@ def corgyparser(
             def parse_time(s):
                 return tuple(map(int, s.split(":")))
 
-    The `@corgyparser` decorator can be chained to use the same parser for multiple
+    Multiple arguments can be passed to the decorator, and will all be associated with
+    the same parser::
+
+        class A(Corgy):
+            x: int
+            y: int
+            @corgyparser("x", "y")
+            @staticmethod
+            def parse_x_y(s):
+                return int(s)
+
+    The `@corgyparser` decorator can also be chained to use the same parser for multiple
     arguments::
 
         class A(Corgy):
@@ -1012,21 +1023,21 @@ def corgyparser(
             def parse_x_y(s):
                 return int(s)
     """
-    if not isinstance(var_name, str):
+    if not all(isinstance(_var_name, str) for _var_name in var_names):
         raise TypeError(
-            "corgyparser should be passed the name of an argument: decorate using"
-            "@corgyparser(<argument>)"
+            "corgyparser should be passed the name of arguments: decorate using"
+            "@corgyparser(<argument(s)>)"
         )
 
-    def wrapper(var_name, fparse):
+    def wrapper(var_names, fparse):
         if isinstance(fparse, _CorgyParser):
-            fparse.var_names.append(var_name)
+            fparse.var_names.extend(var_names)
             return fparse
 
         if isinstance(fparse, staticmethod):
             fparse = fparse.__func__
         if not callable(fparse):
             raise TypeError("corgyparser can only decorate static functions")
-        return _CorgyParser([var_name], fparse)
+        return _CorgyParser(list(var_names), fparse)
 
-    return partial(wrapper, var_name)
+    return partial(wrapper, var_names)
