@@ -1,8 +1,8 @@
 """Types for use with `corgy` (or standalone with `argparse`).
 
 An object of the types defined in this module can be created by calling the respective
-type class with a single string argument. `ArgumentTypeError` is raised if the argument
-can not be converted to the desired type.
+type class with a single string argument. `ValueError` is raised if the argument can not
+be converted to the desired type.
 
 Examples::
 
@@ -30,7 +30,6 @@ import inspect
 import os
 import sys
 import typing
-from argparse import ArgumentTypeError
 from io import BufferedReader, BufferedWriter, FileIO, TextIOWrapper
 from pathlib import Path, PosixPath, WindowsPath
 from typing import (
@@ -78,13 +77,13 @@ def _get_output_stream(name: StrOrPath) -> FileIO:
         try:
             os.makedirs(filedir)
         except OSError as e:
-            raise ArgumentTypeError(
+            raise ValueError(
                 f"could not create parent directory for `{name}`: {e}"
             ) from None
     try:
         return FileIO(str(name), "w")
     except OSError as e:
-        raise ArgumentTypeError(f"could not open `{name}`: {e}") from None
+        raise ValueError(f"could not open `{name}`: {e}") from None
 
 
 def _get_wrapped_buf(cls, buffer):
@@ -121,7 +120,7 @@ class OutputTextFile(TextIOWrapper, metaclass=_OutputTextFileMeta):
         kwargs: Keyword only arguments that are passed to `TextIOWrapper`.
 
     The file will be created if it does not exist (including any parent directories),
-    and opened in text mode (`w`). Existing files will be truncated. `ArgumentTypeError`
+    and opened in text mode (`w`). Existing files will be truncated. `ValueError`
     is raised if any of the operations fail. An `atexit` handler will be registered to
     close the file on program termination.
     """
@@ -185,7 +184,7 @@ class OutputBinFile(BufferedWriter):
     This class is a thin wrapper around `BufferedWriter` that accepts a path, instead
     of a file stream. The file will be created if it does not exist (including any
     parent directories), and opened in binary mode. Existing files will be truncated.
-    `ArgumentTypeError` is raised if any of the operations fail. An `atexit` handler
+    `ValueError` is raised if any of the operations fail. An `atexit` handler
     will be registered to close the file on program termination.
     """
 
@@ -240,7 +239,7 @@ class InputTextFile(TextIOWrapper, metaclass=_InputTextFileMeta):
         path: Path to a file.
         kwargs: Keyword only arguments that are passed to `TextIOWrapper`.
 
-    The file must exist, and will be opened in text mode (`r`). `ArgumentTypeError` is
+    The file must exist, and will be opened in text mode (`r`). `ValueError` is
     raised if this fails. An `atexit` handler will be registered to close the file on
     program termination.
     """
@@ -252,7 +251,7 @@ class InputTextFile(TextIOWrapper, metaclass=_InputTextFileMeta):
         try:
             stream = FileIO(str(path), "r")
         except OSError as e:
-            raise ArgumentTypeError(f"could not open `{path}`: {e}") from None
+            raise ValueError(f"could not open `{path}`: {e}") from None
         buffer = BufferedReader(stream)
         super().__init__(buffer)
         atexit.register(self.__class__.close, self)
@@ -278,7 +277,7 @@ class InputBinFile(BufferedReader):
 
     This class is a thin wrapper around `BufferedReader` that accepts a path, instead
     of a file stream. The file must exist, and will be opened in binary mode.
-    `ArgumentTypeError` is raised if this fails. An `atexit` handler will be registered
+    `ValueError` is raised if this fails. An `atexit` handler will be registered
     to close the file on program termination.
     """
 
@@ -289,7 +288,7 @@ class InputBinFile(BufferedReader):
         try:
             stream = FileIO(str(path), "r")
         except OSError as e:
-            raise ArgumentTypeError(f"could not open `{path}`: {e}") from None
+            raise ValueError(f"could not open `{path}`: {e}") from None
         super().__init__(stream)
         atexit.register(self.__class__.close, self)
 
@@ -307,7 +306,7 @@ class OutputDirectory(Path):
         path: Path to a directory.
 
     If the path does not exist, a directory with the path name will be created
-    (including any parent directories). `ArgumentTypeError` is raised if this fails, or
+    (including any parent directories). `ValueError` is raised if this fails, or
     if the path is not a directory, or if the directory is not writable.
     """
 
@@ -318,13 +317,11 @@ class OutputDirectory(Path):
         try:
             os.makedirs(path, exist_ok=True)
         except OSError as e:
-            raise ArgumentTypeError(
-                f"could not create directory `{path}`: {e}"
-            ) from None
+            raise ValueError(f"could not create directory `{path}`: {e}") from None
         if not os.path.isdir(path):
-            raise ArgumentTypeError(f"`{path}` is not a directory")
+            raise ValueError(f"`{path}` is not a directory")
         if not os.access(path, os.W_OK):
-            raise ArgumentTypeError(f"`{path}` is not writable")
+            raise ValueError(f"`{path}` is not writable")
 
         # `super().__new__` needs to be called with the os-dependent concrete class.
         cls_ = _WindowsOutputDirectory if os.name == "nt" else _PosixOutputDirectory
@@ -387,7 +384,7 @@ class InputDirectory(Path):
         path: Path to a directory.
 
     The directory must exist, and will be checked to ensure it is readable.
-    `ArgumentTypeError` is raised if this is not the case.
+    `ValueError` is raised if this is not the case.
     """
 
     __metavar__ = "dir"
@@ -395,11 +392,11 @@ class InputDirectory(Path):
 
     def __new__(cls, path: StrOrPath):  # pylint: disable=arguments-differ
         if not os.path.exists(path):
-            raise ArgumentTypeError(f"`{path}` does not exist")
+            raise ValueError(f"`{path}` does not exist")
         if not os.path.isdir(path):
-            raise ArgumentTypeError(f"`{path}` is not a directory")
+            raise ValueError(f"`{path}` is not a directory")
         if not os.access(path, os.R_OK):
-            raise ArgumentTypeError(f"`{path}` is not readable")
+            raise ValueError(f"`{path}` is not readable")
 
         # `super().__new__` needs to be called with the os-dependent concrete class.
         cls_ = _WindowsInputDirectory if os.name == "nt" else _PosixInputDirectory
@@ -622,9 +619,9 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
             if cls._subclass_name(subcls) == name:
                 break
         else:
-            raise ArgumentTypeError(f"invalid sub-class name: `{name}`")
+            raise ValueError(f"invalid sub-class name: `{name}`")
         if subcls is None:
-            raise ArgumentTypeError(f"`{cls._base}` has no valid sub-classes")
+            raise ValueError(f"`{cls._base}` has no valid sub-classes")
 
         obj = super().__new__(cls)
         obj._subcls = subcls
@@ -696,7 +693,7 @@ class KeyValuePairs(dict, Generic[_KT, _VT], metaclass=_KeyValuePairsMeta):
     When called, the class expects a single string argument, with comma-separated
     `key=value` pairs (see below for how to change the separators). The string is
     parsed, and a dictionary is created with the keys and values cast to their
-    respective types. `ArgumentTypeError` is raised if this fails. This class is
+    respective types. `ValueError` is raised if this fails. This class is
     useful for parsing dictionaries from command-line arguments.
 
     By default, the class expects a string of the form `key1=value1,key2=value2,...`.
@@ -789,19 +786,19 @@ class KeyValuePairs(dict, Generic[_KT, _VT], metaclass=_KeyValuePairsMeta):
             try:
                 kstr, vstr = value.split(self.item_separator, maxsplit=1)
             except:
-                raise ArgumentTypeError(
+                raise ValueError(
                     f"`{value}` is not a valid `{self.item_separator}` separated pair"
                 ) from None
             try:
                 k = kt(kstr)
             except Exception as e:
-                raise ArgumentTypeError(
+                raise ValueError(
                     f"`{kstr}` is not a valid `{kt.__name__}`: {e}"
                 ) from None
             try:
                 v = vt(vstr)
             except Exception as e:
-                raise ArgumentTypeError(
+                raise ValueError(
                     f"`{vstr}` is not a valid `{vt.__name__}`: {e}"
                 ) from None
             dic[k] = v

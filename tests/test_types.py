@@ -1,7 +1,6 @@
 import os
 import stat
 import sys
-from argparse import ArgumentTypeError
 from io import BufferedReader, BufferedWriter, TextIOWrapper
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -49,7 +48,7 @@ class _TestOutputFile(_TestFile):
 
     def test_output_file_raises_if_dir_create_fails(self):
         with patch("corgy.types.os.makedirs", MagicMock(side_effect=OSError)):
-            with self.assertRaises(ArgumentTypeError):
+            with self.assertRaises(ValueError):
                 self.type(os.path.join(self.tmp_dir.name, "foo", "bar", "baz.file"))
 
     @skipIf(os.name == "nt", "`chmod` does not seem to work on Windows")
@@ -59,7 +58,7 @@ class _TestOutputFile(_TestFile):
             fname, "x"
         ).close()
         os.chmod(fname, stat.S_IREAD)
-        with self.assertRaises(ArgumentTypeError):
+        with self.assertRaises(ValueError):
             self.type(fname)
         os.chmod(fname, stat.S_IREAD | stat.S_IWRITE)
 
@@ -138,13 +137,13 @@ class _TestInputFile(_TestFile):
         ).close()
 
     def test_input_file_raises_if_file_not_exists(self):
-        with self.assertRaises(ArgumentTypeError):
+        with self.assertRaises(ValueError):
             self.type(os.path.join(self.tmp_dir.name, "nota.file"))
 
     @skipIf(os.name == "nt", "`chmod` does not seem to work on Windows")
     def test_input_file_raises_if_file_not_readable(self):
         os.chmod(self.tmp_file_name, 0)
-        with self.assertRaises(ArgumentTypeError):
+        with self.assertRaises(ValueError):
             self.type(self.tmp_file_name)
         os.chmod(self.tmp_file_name, stat.S_IREAD | stat.S_IWRITE)
 
@@ -200,7 +199,7 @@ class _TestDirectory(TestCase):
         open(  # pylint: disable=unspecified-encoding,consider-using-with
             fname, "x"
         ).close()
-        with self.assertRaises(ArgumentTypeError):
+        with self.assertRaises(ValueError):
             self.type(fname)
 
     def test_directory_repr(self):
@@ -223,7 +222,7 @@ class TestOutputDirectory(_TestDirectory):
 
     def test_output_directory_raises_if_dir_create_fails(self):
         with patch("corgy.types.os.makedirs", MagicMock(side_effect=OSError)):
-            with self.assertRaises(ArgumentTypeError):
+            with self.assertRaises(ValueError):
                 self.type(os.path.join(self.tmp_dir.name, "foo", "bar", "baz"))
 
     @skipIf(os.name == "nt", "`chmod` does not seem to work on Windows")
@@ -231,7 +230,7 @@ class TestOutputDirectory(_TestDirectory):
         dname = os.path.join(self.tmp_dir.name, "foo", "bar", "baz")
         os.makedirs(dname)
         os.chmod(dname, stat.S_IREAD | stat.S_IEXEC)
-        with self.assertRaises(ArgumentTypeError):
+        with self.assertRaises(ValueError):
             self.type(dname)
         os.chmod(dname, stat.S_IREAD | stat.S_IWRITE | stat.S_IEXEC)
 
@@ -260,7 +259,7 @@ class TestInputDirectory(_TestDirectory):
     type = InputDirectory
 
     def test_input_directory_raises_if_dir_not_exists(self):
-        with self.assertRaises(ArgumentTypeError):
+        with self.assertRaises(ValueError):
             self.type(os.path.join(self.tmp_dir.name, "nota.dir"))
 
     @skipIf(os.name == "nt", "`chmod` does not seem to work on Windows")
@@ -268,7 +267,7 @@ class TestInputDirectory(_TestDirectory):
         dname = os.path.join(self.tmp_dir.name, "foo", "bar", "baz")
         os.makedirs(dname)
         os.chmod(dname, 0)
-        with self.assertRaises(ArgumentTypeError):
+        with self.assertRaises(ValueError):
             self.type(dname)
         os.chmod(dname, stat.S_IREAD | stat.S_IWRITE | stat.S_IEXEC)
 
@@ -332,7 +331,7 @@ class TestSubClass(TestCase):
             ...
 
         type_ = SubClass[A]
-        with self.assertRaises(ArgumentTypeError):
+        with self.assertRaises(ValueError):
             type_("C")
 
     def test_subclass_raises_if_no_subclasses(self):
@@ -340,7 +339,7 @@ class TestSubClass(TestCase):
             ...
 
         type_ = SubClass[A]
-        with self.assertRaises(ArgumentTypeError):
+        with self.assertRaises(ValueError):
             type_("A")
 
     def test_subclass_raises_if_not_a_class(self):
@@ -352,7 +351,7 @@ class TestSubClass(TestCase):
             ...
 
         type_ = SubClass[A]
-        with self.assertRaises(ArgumentTypeError):
+        with self.assertRaises(ValueError):
             type_("A")
 
         type_.allow_base = True
@@ -376,7 +375,7 @@ class TestSubClass(TestCase):
         self.assertIsInstance(type_("D")(), D)
 
         type_.allow_indirect_subs = False
-        with self.assertRaises(ArgumentTypeError):
+        with self.assertRaises(ValueError):
             type_("D")
 
     def test_subclass_choices(self):
@@ -443,7 +442,7 @@ class TestSubClass(TestCase):
 
         type_ = SubClass[A]
         type_.use_full_names = True
-        with self.assertRaises(ArgumentTypeError):
+        with self.assertRaises(ValueError):
             type_("B")
         self.assertIsInstance(type_(B.__module__ + "." + B.__qualname__)(), B)
 
@@ -473,7 +472,7 @@ class TestSubClass(TestCase):
         self.assertIs(type_("B"), init_b)
 
         type_.use_full_names = True
-        with self.assertRaises(ArgumentTypeError):
+        with self.assertRaises(ValueError):
             type_("B")
 
         new_b = type_(B.__module__ + "." + B.__qualname__)
@@ -566,7 +565,7 @@ class TestKeyValuePairs(TestCase):
         self.assertDictEqual(KeyValuePairs(""), {})
 
     def test_key_value_pairs_raises_if_any_item_not_correct_format(self):
-        with self.assertRaises(ArgumentTypeError):
+        with self.assertRaises(ValueError):
             KeyValuePairs("foo=1,bar2")
 
     def test_key_value_pairs_handles_multiple_separators_in_item(self):
@@ -580,9 +579,9 @@ class TestKeyValuePairs(TestCase):
 
     def test_key_value_pairs_raises_if_type_casting_fails(self):
         type_ = KeyValuePairs[int, int]
-        with self.assertRaises(ArgumentTypeError):
+        with self.assertRaises(ValueError):
             type_("foo=1")
-        with self.assertRaises(ArgumentTypeError):
+        with self.assertRaises(ValueError):
             type_("1=foo")
 
     def test_key_value_pairs_handles_type_casting_with_custom_type(self):

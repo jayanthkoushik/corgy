@@ -3,8 +3,8 @@
 Types for use with `corgy` (or standalone with `argparse`).
 
 An object of the types defined in this module can be created by calling the respective
-type class with a single string argument. `ArgumentTypeError` is raised if the argument
-can not be converted to the desired type.
+type class with a single string argument. `ValueError` is raised if the argument can not
+be converted to the desired type.
 
 Examples:
 
@@ -42,7 +42,7 @@ parser.add_argument("--in-dir", type=InputDirectory, help="an existing directory
 
 
 The file will be created if it does not exist (including any parent directories),
-and opened in text mode (`w`). Existing files will be truncated. `ArgumentTypeError`
+and opened in text mode (`w`). Existing files will be truncated. `ValueError`
 is raised if any of the operations fail. An `atexit` handler will be registered to
 close the file on program termination.
 
@@ -71,7 +71,7 @@ Type for an output binary file.
 This class is a thin wrapper around `BufferedWriter` that accepts a path, instead
 of a file stream. The file will be created if it does not exist (including any
 parent directories), and opened in binary mode. Existing files will be truncated.
-`ArgumentTypeError` is raised if any of the operations fail. An `atexit` handler
+`ValueError` is raised if any of the operations fail. An `atexit` handler
 will be registered to close the file on program termination.
 
 
@@ -114,7 +114,7 @@ Initialize the file.
     * **kwargs** – Keyword only arguments that are passed to `TextIOWrapper`.
 
 
-The file must exist, and will be opened in text mode (`r`). `ArgumentTypeError` is
+The file must exist, and will be opened in text mode (`r`). `ValueError` is
 raised if this fails. An `atexit` handler will be registered to close the file on
 program termination.
 
@@ -134,7 +134,7 @@ Type for an input binary file.
 
 This class is a thin wrapper around `BufferedReader` that accepts a path, instead
 of a file stream. The file must exist, and will be opened in binary mode.
-`ArgumentTypeError` is raised if this fails. An `atexit` handler will be registered
+`ValueError` is raised if this fails. An `atexit` handler will be registered
 to close the file on program termination.
 
 
@@ -148,7 +148,7 @@ to close the file on program termination.
 
 
 If the path does not exist, a directory with the path name will be created
-(including any parent directories). `ArgumentTypeError` is raised if this fails, or
+(including any parent directories). `ValueError` is raised if this fails, or
 if the path is not a directory, or if the directory is not writable.
 
 
@@ -177,7 +177,7 @@ Initialize the directory.
 
 
 The directory must exist, and will be checked to ensure it is readable.
-`ArgumentTypeError` is raised if this is not the case.
+`ValueError` is raised if this is not the case.
 
 
 ### _class_ corgy.types.SubClass(name)
@@ -314,7 +314,7 @@ equivalent to using `KeyValuePairs[str, str]`.
 When called, the class expects a single string argument, with comma-separated
 `key=value` pairs (see below for how to change the separators). The string is
 parsed, and a dictionary is created with the keys and values cast to their
-respective types. `ArgumentTypeError` is raised if this fails. This class is
+respective types. `ValueError` is raised if this fails. This class is
 useful for parsing dictionaries from command-line arguments.
 
 By default, the class expects a string of the form `key1=value1,key2=value2,...`.
