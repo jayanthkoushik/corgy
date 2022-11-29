@@ -1887,6 +1887,39 @@ class TestCorgyCustomParsers(unittest.TestCase):
 
         self.assertIs(getattr(C, "__parsers")["x"], getattr(C, "__parsers")["y"])
 
+    def test_corgyparser_allows_setting_metavar(self):
+        class C(Corgy):
+            x: int
+
+            @corgyparser("x", metavar="custom")
+            @staticmethod
+            def parsex(s: str):
+                return 0
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument = MagicMock()
+        C.add_args_to_parser(parser)
+        parser.add_argument.assert_called_once_with(
+            "--x", type=C.parsex.fparse, required=True, metavar="custom"
+        )
+
+    def test_corgyparser_handles_setting_metavar_with_chaining(self):
+        class C(Corgy):
+            x: int
+            y: int
+            z: int
+            w: int
+
+            @corgyparser("x")
+            @corgyparser("y", metavar="custom y")
+            @corgyparser("z")
+            @corgyparser("w", metavar="custom w")
+            @staticmethod
+            def parsexyzw(s: str):
+                return 0
+
+        self.assertEqual(C.parsexyzw.fparse.__metavar__, "custom y")
+
     def test_add_args_with_custom_parser_uses_custom_metavar(self):
         class T:
             __metavar__ = "T"
@@ -1904,6 +1937,25 @@ class TestCorgyCustomParsers(unittest.TestCase):
         C.add_args_to_parser(parser)
         parser.add_argument.assert_called_once_with(
             "--x", type=C.parsex.fparse, required=True, metavar="T"
+        )
+
+    def test_corgyparser_metavar_overrides_type_metavar(self):
+        class T:
+            __metavar__ = "T"
+
+        class C(Corgy):
+            x: T
+
+            @corgyparser("x", metavar="custom")
+            @staticmethod
+            def parsex(s: str):
+                return 0
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument = MagicMock()
+        C.add_args_to_parser(parser)
+        parser.add_argument.assert_called_once_with(
+            "--x", type=C.parsex.fparse, required=True, metavar="custom"
         )
 
     def test_corgy_cls_inherits_custom_parser(self):

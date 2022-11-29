@@ -762,10 +762,17 @@ class Corgy(metaclass=_CorgyMeta):
             else:
                 var_action = None
 
+            var_type_metavar: Optional[str] = getattr(
+                var_base_type, "__metavar__", None
+            )
+
             # Check if the variable has a custom parser.
             _parsers = getattr(cls, "__parsers")
             if var_name in _parsers:
                 var_add_type = _parsers[var_name]
+                _parser_metavar = getattr(var_add_type, "__metavar__", None)
+                if _parser_metavar is not None:
+                    var_type_metavar = _parser_metavar
             else:
                 var_add_type = var_base_type
 
@@ -785,8 +792,8 @@ class Corgy(metaclass=_CorgyMeta):
                 _kwargs["default"] = base_defaults[var_name]
             if var_required and not var_positional:
                 _kwargs["required"] = True
-            with suppress(AttributeError):
-                _kwargs["metavar"] = var_base_type.__metavar__
+            if var_type_metavar is not None:
+                _kwargs["metavar"] = var_type_metavar
             parser.add_argument(*var_flags, type=var_add_type, **_kwargs)
 
     def __init__(self, **args):
@@ -979,7 +986,7 @@ class _CorgyParser(NamedTuple):
 
 
 def corgyparser(
-    *var_names: str,
+    *var_names: str, metavar: Optional[str] = None
 ) -> Callable[[Union[Callable[[str], Any], _CorgyParser]], _CorgyParser]:
     """Decorate a function as a custom parser for one or more variables.
 
@@ -990,12 +997,14 @@ def corgyparser(
 
     Args:
         var_names: The arguments associated with the decorated parser.
+        metavar: Keyword only argument to set the metavar when adding the associated
+            argument(s) to an `ArgumentParser` instance.
 
     Example::
 
         class A(Corgy):
             time: tuple[int, int, int]
-            @corgyparser("time")
+            @corgyparser("time", metavar="int int int")
             @staticmethod
             def parse_time(s):
                 return tuple(map(int, s.split(":")))
@@ -1022,6 +1031,8 @@ def corgyparser(
             @staticmethod
             def parse_x_y(s):
                 return int(s)
+
+    Note: when chaining, the outer-most non-`None` value of `metavar` will be used.
     """
     if not all(isinstance(_var_name, str) for _var_name in var_names):
         raise TypeError(
@@ -1029,15 +1040,22 @@ def corgyparser(
             "@corgyparser(<argument(s)>)"
         )
 
-    def wrapper(var_names, fparse):
+    def wrapper(var_names, metavar, fparse):
         if isinstance(fparse, _CorgyParser):
-            fparse.var_names.extend(var_names)
-            return fparse
+            corgy_parser = fparse
+            corgy_parser.var_names.extend(var_names)
+        else:
+            if isinstance(fparse, staticmethod):
+                fparse = fparse.__func__
+            if not callable(fparse):
+                raise TypeError("corgyparser can only decorate static functions")
+            corgy_parser = _CorgyParser(list(var_names), fparse)
 
-        if isinstance(fparse, staticmethod):
-            fparse = fparse.__func__
-        if not callable(fparse):
-            raise TypeError("corgyparser can only decorate static functions")
-        return _CorgyParser(list(var_names), fparse)
+        if metavar is not None:
+            try:
+                corgy_parser.fparse.__metavar__ = metavar
+            except Exception as e:
+                raise TypeError(f"failed to set `__metavar__` on parser: {e}") from None
+        return corgy_parser
 
-    return partial(wrapper, var_names)
+    return partial(wrapper, var_names, metavar)

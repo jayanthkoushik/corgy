@@ -482,7 +482,7 @@ Parse an object of the class from a toml file.
 
 
 
-### corgy.corgyparser(\*var_names)
+### corgy.corgyparser(\*var_names, metavar=None)
 Decorate a function as a custom parser for one or more variables.
 
 To use a custom function for parsing an argument with `Corgy`, use this decorator.
@@ -493,7 +493,12 @@ Decorating the function with `@staticmethod` is optional, but prevents type erro
 
 * **Parameters**
 
-    **var_names** – The arguments associated with the decorated parser.
+
+    * **var_names** – The arguments associated with the decorated parser.
+
+
+    * **metavar** – Keyword only argument to set the metavar when adding the associated
+    argument(s) to an `ArgumentParser` instance.
 
 
 Example:
@@ -501,7 +506,7 @@ Example:
 ```python
 class A(Corgy):
     time: tuple[int, int, int]
-    @corgyparser("time")
+    @corgyparser("time", metavar="int int int")
     @staticmethod
     def parse_time(s):
         return tuple(map(int, s.split(":")))
@@ -533,6 +538,8 @@ class A(Corgy):
     def parse_x_y(s):
         return int(s)
 ```
+
+Note: when chaining, the outer-most non-`None` value of `metavar` will be used.
 
 
 ### _class_ corgy.CorgyHelpFormatter(prog)
