@@ -356,7 +356,9 @@ Add arguments for this class to the given parser.
 
 
     * **flatten_subgrps** – Whether to add sub-groups to the main parser instead of
-    creating argument groups.
+    creating argument groups. Note: sub-sub-groups are always added with
+    this argument set to `True`, since `argparse` in unable to properly
+    display nested group arguments.
 
 
     * **defaults** – Optional mapping with default values for arguments. Any value

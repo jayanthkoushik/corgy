@@ -580,7 +580,9 @@ class Corgy(metaclass=_CorgyMeta):
                 `--<name-prefix>:<var-name>`. If custom flags are present,
                 `--<name-prefix>:<flag>` will be used instead (one for each flag).
             flatten_subgrps: Whether to add sub-groups to the main parser instead of
-                creating argument groups.
+                creating argument groups. Note: sub-sub-groups are always added with
+                this argument set to `True`, since `argparse` in unable to properly
+                display nested group arguments.
             defaults: Optional mapping with default values for arguments. Any value
                 specified here will override default values specified in the class.
                 Values for groups can be specified either as `Corgy` instances, or as
