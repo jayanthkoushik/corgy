@@ -597,22 +597,22 @@ class TestKeyValuePairs(TestCase):
         self.assertDictEqual(dic, {"foo": A("1"), "bar": A("2")})
 
     def test_key_value_pairs_metavar(self):
-        self.assertEqual(KeyValuePairs.__metavar__, "[key=val,...]")
-        self.assertEqual(KeyValuePairs[str, int].__metavar__, "[key=val,...]")
+        self.assertEqual(KeyValuePairs.__metavar__, "key=val,...")
+        self.assertEqual(KeyValuePairs[str, int].__metavar__, "key=val,...")
 
     def test_key_value_pairs_handles_custom_sequence_separator(self):
         type_ = KeyValuePairs[str, str]
         with patch.object(type_, "sequence_separator", ";"):
             dic = type_("foo=1;bar=2")
             self.assertDictEqual(dic, {"foo": "1", "bar": "2"})
-            self.assertEqual(type_.__metavar__, "[key=val;...]")
+            self.assertEqual(type_.__metavar__, "key=val;...")
 
     def test_key_value_pairs_handles_custom_item_separator(self):
         type_ = KeyValuePairs[str, str]
         with patch.object(type_, "item_separator", ":"):
             dic = type_("foo:1,bar:2")
             self.assertDictEqual(dic, {"foo": "1", "bar": "2"})
-            self.assertEqual(type_.__metavar__, "[key:val,...]")
+            self.assertEqual(type_.__metavar__, "key:val,...")
 
     def test_key_value_pairs_subtype_not_affected_by_changes_to_base_type(self):
         type_ = KeyValuePairs[str, int]

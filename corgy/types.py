@@ -765,7 +765,7 @@ class KeyValuePairs(dict, Generic[_KT, _VT], metaclass=_KeyValuePairsMeta):
 
     @classmethod
     def _metavar(cls) -> str:
-        return f"[key{cls.item_separator}val{cls.sequence_separator}...]"
+        return f"key{cls.item_separator}val{cls.sequence_separator}..."
 
     def __init__(self, values: Union[str, Mapping[_KT, _VT]]):
         self._src = values
