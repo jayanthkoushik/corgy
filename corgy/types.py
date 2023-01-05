@@ -49,9 +49,9 @@ if typing.TYPE_CHECKING:
     from _typeshed import StrPath
 
 if sys.version_info >= (3, 9):
-    from typing import Protocol
+    from typing import Literal, Protocol
 else:
-    from typing_extensions import Protocol
+    from typing_extensions import Literal, Protocol
 
 from ._corgy import Corgy
 
@@ -71,7 +71,7 @@ __all__ = (
 )
 
 
-def _get_output_stream(name: StrPath) -> FileIO:
+def _get_output_stream(name: StrPath, mode: Literal["w", "wb"]) -> FileIO:
     """Open a file for writing (creating folders if necessary)."""
     filedir = os.path.dirname(name)
     if filedir and not os.path.exists(filedir):
@@ -82,7 +82,7 @@ def _get_output_stream(name: StrPath) -> FileIO:
                 f"could not create parent directory for `{name}`: {e}"
             ) from None
     try:
-        return FileIO(str(name), "w")
+        return FileIO(str(name), mode)
     except OSError as e:
         raise ValueError(f"could not open `{name}`: {e}") from None
 
@@ -130,7 +130,7 @@ class OutputTextFile(TextIOWrapper, metaclass=_OutputTextFileMeta):
     __slots__ = ()
 
     def __init__(self, path: StrPath, **kwargs):
-        stream = _get_output_stream(path)
+        stream = _get_output_stream(path, "w")
         buffer = BufferedWriter(stream)
         super().__init__(buffer, **kwargs)
         atexit.register(self.__class__.close, self)
@@ -193,7 +193,7 @@ class OutputBinFile(BufferedWriter):
     __slots__ = ()
 
     def __init__(self, path: StrPath):
-        stream = _get_output_stream(path)
+        stream = _get_output_stream(path, "wb")
         super().__init__(stream)
         atexit.register(self.__class__.close, self)
 
@@ -287,7 +287,7 @@ class InputBinFile(BufferedReader):
 
     def __init__(self, path: StrPath):
         try:
-            stream = FileIO(str(path), "r")
+            stream = FileIO(str(path), "rb")
         except OSError as e:
             raise ValueError(f"could not open `{path}`: {e}") from None
         super().__init__(stream)
