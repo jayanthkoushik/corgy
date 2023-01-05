@@ -77,11 +77,10 @@ def _is_union_type(t) -> bool:
 
 def _is_optional_type(t) -> bool:
     """Check if the argument is an optional type (i.e. union with None)."""
-    return (
-        _is_union_type(t)
-        and len(_t_args := getattr(t, "__args__", [])) == 2
-        and _t_args[1] is type(None)
-    )
+    if _is_union_type(t):
+        _t_args = getattr(t, "__args__", [])
+        return len(_t_args) == 2 and _t_args[1] is type(None)
+    return False
 
 
 def _is_sequence_type(t) -> bool:
