@@ -9,10 +9,8 @@ from corgy._corgy import BooleanOptionalAction
 from corgy._helpfmt import _ColorHelper
 
 if sys.version_info < (3, 9):
-    from typing import Sequence, Tuple
+    from typing import Tuple
 else:
-    from collections.abc import Sequence  # pylint: disable=reimported
-
     Tuple = tuple  # type: ignore
 
 _COLOR_HELPER = _ColorHelper(skip_tty_check=True)
@@ -795,15 +793,6 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
 
     def test_corgy_help_formatter_handles_sequence_of_optionals(self):
         class C(Corgy):
-            x: Sequence[Optional[int]]
-
-        self.assertEqual(
-            self._get_help_for_corgy_cls(C),
-            f"  {_O('--x')} [[{_M('int')}] ...]  ({_K('required')})",
-        )
-
-    def test_corgy_help_formatter_handles_tuple_of_optionals(self):
-        class C(Corgy):
             x: Tuple[Optional[int], ...]
 
         self.assertEqual(
@@ -813,23 +802,15 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
 
     def test_corgy_help_formatter_handles_sequence_of_sequences(self):
         class C(Corgy):
-            x: Sequence[Sequence[int]]
+            x: Tuple[Tuple[int, ...], ...]
 
         self.assertEqual(
             self._get_help_for_corgy_cls(C),
-            f"  {_O('--x')} [[{_M('int')} ...] ...]  ({_K('required')})",
+            f"  {_O('--x')} {_M('int')} [{_M('int')} ...] "
+            f"[{_M('int')} [{_M('int')} ...] ...]  ({_K('required')})",
         )
 
-    def test_corgy_help_formatter_handles_sequence_of_tuples(self):
-        class C(Corgy):
-            x: Sequence[Tuple[int, ...]]
-
-        self.assertEqual(
-            self._get_help_for_corgy_cls(C),
-            f"  {_O('--x')} [{_M('int')} [{_M('int')} ...] ...]  ({_K('required')})",
-        )
-
-    def test_corgy_help_formatter_handles_fixed_tuple_of_tuples(self):
+    def test_corgy_help_formatter_handles_fixed_sequence_of_sequences(self):
         class C(Corgy):
             x: Tuple[
                 Tuple[Optional[int], ...],
@@ -844,7 +825,7 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
             f"({_K('required')})",
         )
 
-    def test_corgy_help_formatter_handles_nested_tuple_of_custom_types(self):
+    def test_corgy_help_formatter_handles_nested_sequence_of_custom_types(self):
         class T:
             __metavar__ = "custom type"
 
@@ -857,7 +838,7 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
             f"[{_M('custom')} {_M('type')} ...]  ({_K('required')})",
         )
 
-    def test_corgy_help_formatter_handles_custom_type_tuple_default_value(self):
+    def test_corgy_help_formatter_handles_custom_type_sequence_default_value(self):
         class T:
             def __init__(self, s):
                 self.s = s
@@ -869,11 +850,12 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
                 return "T" + self.s
 
         class C(Corgy):
-            x: Tuple[T] = (T("1"), T("2"), T("3"))
+            x: Tuple[T, ...] = (T("1"), T("2"), T("3"))
 
         self.assertEqual(
             self._get_help_for_corgy_cls(C),
-            f"  {_O('--x')} [{_M('T')} ...]  ({_K('default')}: {_D('[T1, T2, T3]')})",
+            f"  {_O('--x')} {_M('T')} [{_M('T')} ...]  ({_K('default')}: "
+            f"{_D('[T1, T2, T3]')})",
         )
 
     def test_corgy_help_formatter_handles_default_of_optional_sequence(self):
@@ -888,11 +870,11 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
                 return "T" + self.s
 
         class C(Corgy):
-            x: Sequence[Optional[T]] = [T("1"), None, T("2")]
+            x: Tuple[Optional[T], ...] = [T("1"), None, T("2")]
 
         self.assertEqual(
             self._get_help_for_corgy_cls(C),
-            f"  {_O('--x')} [[{_M('T')}] ...]  ({_K('default')}: "
+            f"  {_O('--x')} [{_M('T')}] [[{_M('T')}] ...]  ({_K('default')}: "
             f"{_D('[T1, None, T2]')})",
         )
 
@@ -908,16 +890,13 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
                 return "T" + self.s
 
         class C(Corgy):
-            x: Sequence[Sequence[Optional[T]]] = [
-                [T("1"), None, T("2")],
-                [T("3")],
-                [None, T("4")],
-            ]
+            x: Tuple[Tuple[Optional[T], ...], ...] = [[T("1"), None], [None, T("2")]]
 
         self.assertEqual(
             self._get_help_for_corgy_cls(C),
-            f"  {_O('--x')} [[[{_M('T')}] ...] ...]  ({_K('default')}: "
-            f"{_D('[[T1, None, T2], [T3], [None, T4]]')})",
+            f"  {_O('--x')} [{_M('T')}] [[{_M('T')}] ...] "
+            f"[[{_M('T')}] [[{_M('T')}] ...] ...]  ({_K('default')}: "
+            f"{_D('[[T1, None], [None, T2]]')})",
         )
 
 
