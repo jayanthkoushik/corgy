@@ -14,6 +14,7 @@ from corgy.types import (
     InputBinFile,
     InputDirectory,
     InputTextFile,
+    IODirectory,
     KeyValuePairs,
     LazyOutputBinFile,
     LazyOutputDirectory,
@@ -181,7 +182,7 @@ class TestInputBinFile(_TestInputFile):
 
 
 class _TestDirectory(TestCase):
-    type: Union[Type[OutputDirectory], Type[InputDirectory]]
+    type: Union[Type[OutputDirectory], Type[InputDirectory], Type[IODirectory]]
 
     def setUp(self):
         self.tmp_dir = TemporaryDirectory()  # pylint: disable=consider-using-with
@@ -270,6 +271,20 @@ class TestInputDirectory(_TestDirectory):
         with self.assertRaises(ValueError):
             self.type(dname)
         os.chmod(dname, stat.S_IREAD | stat.S_IWRITE | stat.S_IEXEC)
+
+
+class TestIODirectory(_TestDirectory):
+    type = IODirectory
+
+    test_io_directory_raises_if_dir_not_exists = (
+        TestInputDirectory.test_input_directory_raises_if_dir_not_exists
+    )
+    test_io_directory_raises_if_dir_not_readable = (
+        TestInputDirectory.test_input_directory_raises_if_dir_not_readable
+    )
+    test_io_directory_raises_if_dir_not_writeable = (
+        TestOutputDirectory.test_output_directory_raises_if_dir_not_writeable
+    )
 
 
 class TestSubClass(TestCase):

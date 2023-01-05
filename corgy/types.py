@@ -65,6 +65,7 @@ __all__ = (
     "OutputDirectory",
     "LazyOutputDirectory",
     "InputDirectory",
+    "IODirectory",
     "SubClass",
     "KeyValuePairs",
     "InitArgs",
@@ -413,6 +414,47 @@ class _WindowsInputDirectory(InputDirectory, WindowsPath):
 
 
 class _PosixInputDirectory(InputDirectory, PosixPath):
+    # pylint: disable=abstract-method
+    __slots__ = ()
+
+
+class IODirectory(Path):
+    """`Path` sub-class representing an existing directory to be read from/written to.
+
+    Args:
+        path: Path to a directory.
+
+    The directory must exist, and will be checked to ensure it is readable and
+    writeable. `ValueError` is raised if this is not the case.
+    """
+
+    __metavar__ = "dir"
+    __slots__ = ()
+
+    def __new__(cls, path: StrPath):  # pylint: disable=arguments-differ
+        if not os.path.exists(path):
+            raise ValueError(f"`{path}` does not exist")
+        if not os.path.isdir(path):
+            raise ValueError(f"`{path}` is not a directory")
+        if not os.access(path, os.R_OK):
+            raise ValueError(f"`{path}` is not readable")
+        if not os.access(path, os.W_OK):
+            raise ValueError(f"`{path}` is not writable")
+
+        # `super().__new__` needs to be called with the os-dependent concrete class.
+        cls_ = _IOWindowsDirectory if os.name == "nt" else _IOPosixDirectory
+        return super().__new__(cls_, path)
+
+    def __repr__(self) -> str:
+        return f"IODirectory({super().__str__()!r})"
+
+
+class _IOWindowsDirectory(IODirectory, WindowsPath):
+    # pylint: disable=abstract-method
+    __slots__ = ()
+
+
+class _IOPosixDirectory(IODirectory, PosixPath):
     # pylint: disable=abstract-method
     __slots__ = ()
 

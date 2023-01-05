@@ -180,6 +180,19 @@ The directory must exist, and will be checked to ensure it is readable.
 `ValueError` is raised if this is not the case.
 
 
+### _class_ corgy.types.IODirectory(path)
+`Path` sub-class representing an existing directory to be read from/written to.
+
+
+* **Parameters**
+
+    **path** – Path to a directory.
+
+
+The directory must exist, and will be checked to ensure it is readable and
+writeable. `ValueError` is raised if this is not the case.
+
+
 ### _class_ corgy.types.SubClass(name)
 Type representing a sub-class of a given class.
 
