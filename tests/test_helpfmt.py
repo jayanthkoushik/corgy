@@ -9,8 +9,10 @@ from corgy._corgy import BooleanOptionalAction
 from corgy._helpfmt import _ColorHelper
 
 if sys.version_info < (3, 9):
-    from typing import Tuple
+    from typing import Sequence, Tuple
 else:
+    from collections.abc import Sequence  # pylint: disable=reimported
+
     Tuple = tuple  # type: ignore
 
 _COLOR_HELPER = _ColorHelper(skip_tty_check=True)
@@ -392,6 +394,12 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
             self._get_arg_help("--x", nargs="+", type=str),
             #   --x str [str ...]  (optional)
             f"  {_O('--x')} {_M('str')} [{_M('str')} ...]  ({_K('optional')})",
+        )
+
+    def test_corgy_help_formatter_handles_nargs_star(self):
+        self.assertEqual(
+            self._get_arg_help("--x", nargs="*", type=str),
+            f"  {_O('--x')} [{_M('str')} ...]  ({_K('optional')})",
         )
 
     def test_corgy_help_formatter_handles_nargs_const(self):
@@ -808,6 +816,15 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
             self._get_help_for_corgy_cls(C),
             f"  {_O('--x')} {_M('int')} [{_M('int')} ...] "
             f"[{_M('int')} [{_M('int')} ...] ...]  ({_K('required')})",
+        )
+
+    def test_corgy_help_formatter_handles_zero_or_more_sequences(self):
+        class C(Corgy):
+            x: Sequence[Sequence[int]]
+
+        self.assertEqual(
+            self._get_help_for_corgy_cls(C),
+            f"  {_O('--x')} [[{_M('int')} ...] ...]  ({_K('required')})",
         )
 
     def test_corgy_help_formatter_handles_fixed_sequence_of_sequences(self):

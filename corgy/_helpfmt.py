@@ -6,7 +6,14 @@ import re
 import shutil
 import sys
 import textwrap
-from argparse import Action, ArgumentParser, HelpFormatter, PARSER, SUPPRESS
+from argparse import (
+    Action,
+    ArgumentParser,
+    HelpFormatter,
+    PARSER,
+    SUPPRESS,
+    ZERO_OR_MORE,
+)
 from collections.abc import Sequence as AbstractSequence
 from functools import lru_cache, partial
 from itertools import cycle
@@ -453,6 +460,14 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             placeholder_metavar = metavar
 
         with patch.object(action, "metavar", placeholder_metavar):
+            if action.nargs == ZERO_OR_MORE:
+                # Python 3.9+ shows '*' argumets of a single type as `[<base_type> ...]`
+                # instead of `[<base_type> [<base_type> ...]]`. This code backports that
+                # functionality.
+                _mv = self._metavar_formatter(action, "")(1)
+                if len(_mv) == 2:
+                    return f"[{_mv[0]} [{_mv[1]} ...]]"
+                return f"[{_mv[0]} ...]"
             return super()._format_args(action, "")
 
     def _format_action(self, action: Action) -> str:
