@@ -7,11 +7,14 @@ import shutil
 import sys
 import textwrap
 from argparse import Action, ArgumentParser, HelpFormatter, PARSER, SUPPRESS
+from collections.abc import Sequence as AbstractSequence
 from functools import lru_cache, partial
 from itertools import cycle
 from types import ModuleType
 from typing import Optional, Sequence, Tuple, Union
 from unittest.mock import patch
+
+import corgy._corgy  # pylint: disable=cyclic-import
 
 __all__ = ("CorgyHelpFormatter",)
 
@@ -30,6 +33,15 @@ _PLACEHOLDER_CHOICES_SEP = "\ufdd7"
 _PLACEHOLDER_KWD_DEFAULT = "\ufdd8"
 _PLACEHOLDER_KWD_OPTIONAL = "\ufdd9"
 _PLACEHOLDER_KWD_REQUIRED = "\ufdda"
+_PLACEHOLDER_METAVARS_BEGIN = "\ufddb"
+_PLACEHOLDER_METAVARS_END = "\ufddc"
+_PLACEHOLDER_METAVARS_REPEAT = "\ufddd"
+
+# These markers are used by `argparse` to indicate metavar sequences, e.g.,
+# `[int ...]`, `int [int ...]`.
+_MARKER_METAVARS_BEGIN = "["
+_MARKER_METAVARS_END = "]"
+_MARKER_METAVARS_REPEAT = "..."
 
 
 class _ColorHelper:
@@ -215,6 +227,12 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         re.DOTALL,
     )
 
+    # Regex to match any character which is not a metavar extra.
+    _pattern_not_metavar_extra = re.compile(
+        f"[^{_PLACEHOLDER_METAVARS_BEGIN}{_PLACEHOLDER_METAVARS_END}"
+        f"{_PLACEHOLDER_METAVARS_REPEAT}]"
+    )
+
     @staticmethod
     @lru_cache(maxsize=None)
     def _pattern_placeholder_text(placeholder: str) -> re.Pattern:
@@ -225,8 +243,32 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
 
     @staticmethod
     def _stringify(obj, type_) -> str:
+        if isinstance(obj, AbstractSequence) and not isinstance(obj, str):
+            # `obj` is a sequence: recursively apply `_stringify` on its elements.
+            if corgy._corgy._is_sequence_type(type_):
+                # `type_` is also a sequence, so unwrap it to get the base type. This
+                # happens in case of nested types like `Sequence[Sequence[int]]`.
+                try:
+                    _base_type = type_.__args__[0]
+                except (AttributeError, TypeError, IndexError):
+                    _base_type = type_
+            else:
+                _base_type = type_
+            _part_strs = [
+                CorgyHelpFormatter._stringify(_part, _base_type) for _part in obj
+            ]
+            return "[" + ", ".join(_part_strs) + "]"
+
+        if corgy._corgy._is_optional_type(type_):
+            # type_ is `Optional`; so unwrap to get the base type. This case happens
+            # in cases like `Sequence[Optional[int]]`, where `Optional` is not the
+            # outermost type.
+            if obj is None:
+                return "None"
+            return CorgyHelpFormatter._stringify(obj, type_.__args__[0])
+
         try:
-            return obj.__name__
+            return obj.__name__  # type: ignore
         except AttributeError:
             try:
                 return type_.__str__(obj)
@@ -278,6 +320,60 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             custom_metavar = getattr(action.type, "__metavar__", None)
             if custom_metavar is not None:
                 return custom_metavar
+
+            if self.using_colors:
+                marker_metavars_begin = _PLACEHOLDER_METAVARS_BEGIN
+                marker_metavars_end = _PLACEHOLDER_METAVARS_END
+                marker_metavars_repeat = _PLACEHOLDER_METAVARS_REPEAT
+            else:
+                marker_metavars_begin = _MARKER_METAVARS_BEGIN
+                marker_metavars_end = _MARKER_METAVARS_END
+                marker_metavars_repeat = _MARKER_METAVARS_REPEAT
+
+            if corgy._corgy._is_sequence_type(action.type) and isinstance(
+                getattr(action.type, "__args__"), AbstractSequence
+            ):
+                # `action.type` is a sequence. So, create a metavar list based on the
+                # base type(s).
+                _type_args = getattr(action.type, "__args__")
+                if len(_type_args) == 1 or (
+                    len(_type_args) == 2 and _type_args[1] is Ellipsis
+                ):
+                    with patch.object(action, "type", _type_args[0]):
+                        _base_metavar = self._get_default_metavar_for_optional(action)
+                    # '[<base_type> ...]'.
+                    _metavar_repeat = (
+                        marker_metavars_begin
+                        + _base_metavar
+                        + " "
+                        + marker_metavars_repeat
+                        + marker_metavars_end
+                    )
+                    if len(_type_args) == 1:
+                        return _metavar_repeat
+                    # '<base_type> [<base_type> ...]'.
+                    return _base_metavar + " " + _metavar_repeat
+
+                _part_metavars = []
+                for _part_type in _type_args:
+                    with patch.object(action, "type", _part_type):
+                        _part_metavars.append(
+                            self._get_default_metavar_for_optional(action)
+                        )
+                # '<base_type_1> <base_type_2> <...> <base_type_n>'.
+                return " ".join(_part_metavars)
+
+            if corgy._corgy._is_optional_type(action.type):
+                # `action.type` is optional. So, return '[<base metavar>]'.
+                _base_type = getattr(action.type, "__args__")[0]
+                with patch.object(action, "type", _base_type):
+                    _s = (
+                        marker_metavars_begin
+                        + self._get_default_metavar_for_optional(action)
+                        + marker_metavars_end
+                    )
+                    return _s
+
             try:
                 return getattr(action.type, "__name__")
             except AttributeError:
@@ -324,12 +420,34 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         if self.using_colors:
             # Create a placeholder for the metavar, and store it in the action.
             placeholder_metavar: Union[str, Tuple[str, ...]]
+
+            def _placeholderize_metavar(_m):
+                # Colors should not be applied to metavar extras, e.g., in
+                # `[int ...]`, only `int` must be colored. So, this function
+                # replaces non-extra characters with `_PLACEHOLDER_METAVAR`, and
+                # returns the modified metavar and the replaced characters.
+                _modded, _repl = [], []
+                for _char in _m:
+                    if _char in [
+                        _PLACEHOLDER_METAVARS_BEGIN,
+                        _PLACEHOLDER_METAVARS_END,
+                        _PLACEHOLDER_METAVARS_REPEAT,
+                        " ",
+                    ]:
+                        _modded.append(_char)
+                    else:
+                        _modded.append(_PLACEHOLDER_METAVAR)
+                        _repl.append(_char)
+                return "".join(_modded), "".join(_repl)
+
             if isinstance(metavar, tuple):
-                placeholder_metavar = tuple(
-                    _PLACEHOLDER_METAVAR * len(metavar_i) for metavar_i in metavar
+                placeholder_metavar, metavar = zip(
+                    *tuple(_placeholderize_metavar(metavar_i) for metavar_i in metavar)
                 )
             else:
-                placeholder_metavar = _PLACEHOLDER_METAVAR * len(metavar)
+                placeholder_metavar, metavar = _placeholderize_metavar(metavar)
+            # Store the non-extra characters in the action, so they can be colorized
+            # and substituted into the placeholder later.
             setattr(action, "_corgy_metavar", metavar)
         else:
             placeholder_metavar = metavar
@@ -567,6 +685,9 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 ord(_PLACEHOLDER_CHOICES_SEP): self.marker_choices_sep,
                 ord(_PLACEHOLDER_EXTRAS_BEGIN): self.marker_extras_begin,
                 ord(_PLACEHOLDER_EXTRAS_END): self.marker_extras_end,
+                ord(_PLACEHOLDER_METAVARS_BEGIN): _MARKER_METAVARS_BEGIN,
+                ord(_PLACEHOLDER_METAVARS_END): _MARKER_METAVARS_END,
+                ord(_PLACEHOLDER_METAVARS_REPEAT): _MARKER_METAVARS_REPEAT,
             }
         )
 

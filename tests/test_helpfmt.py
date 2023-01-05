@@ -1,10 +1,19 @@
+import sys
 from argparse import ArgumentParser, SUPPRESS
+from typing import Optional
 from unittest import skipIf, TestCase
 from unittest.mock import Mock, patch
 
-from corgy import CorgyHelpFormatter
+from corgy import Corgy, CorgyHelpFormatter
 from corgy._corgy import BooleanOptionalAction
 from corgy._helpfmt import _ColorHelper
+
+if sys.version_info < (3, 9):
+    from typing import Sequence, Tuple
+else:
+    from collections.abc import Sequence  # pylint: disable=reimported
+
+    Tuple = tuple  # type: ignore
 
 _COLOR_HELPER = _ColorHelper(skip_tty_check=True)
 _CRAYONS = _COLOR_HELPER.crayons
@@ -768,6 +777,150 @@ class TestCorgyHelpFormatterMultiArgs(TestCase):
         )
 
 
+@skipIf(_CRAYONS is None, "`crayons` package not found")
+class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
+    def setUp(self):
+        _COLOR_HELPER.crayons = _CRAYONS
+        CorgyHelpFormatter.use_colors = True
+
+    def _get_help_for_corgy_cls(self, corgy_cls):
+        _parser = ArgumentParser(
+            formatter_class=CorgyHelpFormatter, add_help=False, usage=SUPPRESS
+        )
+        corgy_cls.add_args_to_parser(_parser)
+        _help = _parser.format_help()
+        if _help:
+            return _help.split("\n", maxsplit=1)[1].rstrip()
+        return ""
+
+    def test_corgy_help_formatter_handles_sequence_of_optionals(self):
+        class C(Corgy):
+            x: Sequence[Optional[int]]
+
+        self.assertEqual(
+            self._get_help_for_corgy_cls(C),
+            f"  {_O('--x')} [[{_M('int')}] ...]  ({_K('required')})",
+        )
+
+    def test_corgy_help_formatter_handles_tuple_of_optionals(self):
+        class C(Corgy):
+            x: Tuple[Optional[int], ...]
+
+        self.assertEqual(
+            self._get_help_for_corgy_cls(C),
+            f"  {_O('--x')} [{_M('int')}] [[{_M('int')}] ...]  ({_K('required')})",
+        )
+
+    def test_corgy_help_formatter_handles_sequence_of_sequences(self):
+        class C(Corgy):
+            x: Sequence[Sequence[int]]
+
+        self.assertEqual(
+            self._get_help_for_corgy_cls(C),
+            f"  {_O('--x')} [[{_M('int')} ...] ...]  ({_K('required')})",
+        )
+
+    def test_corgy_help_formatter_handles_sequence_of_tuples(self):
+        class C(Corgy):
+            x: Sequence[Tuple[int, ...]]
+
+        self.assertEqual(
+            self._get_help_for_corgy_cls(C),
+            f"  {_O('--x')} [{_M('int')} [{_M('int')} ...] ...]  ({_K('required')})",
+        )
+
+    def test_corgy_help_formatter_handles_fixed_tuple_of_tuples(self):
+        class C(Corgy):
+            x: Tuple[
+                Tuple[Optional[int], ...],
+                Tuple[Optional[int], ...],
+                Tuple[Optional[int], ...],
+            ]
+
+        self.assertEqual(
+            self._get_help_for_corgy_cls(C),
+            f"  {_O('--x')} [{_M('int')}] [[{_M('int')}] ...] "
+            f"[{_M('int')}] [[{_M('int')}] ...] [{_M('int')}] [[{_M('int')}] ...]  "
+            f"({_K('required')})",
+        )
+
+    def test_corgy_help_formatter_handles_nested_tuple_of_custom_types(self):
+        class T:
+            __metavar__ = "custom type"
+
+        class C(Corgy):
+            x: Tuple[T, ...]
+
+        self.assertEqual(
+            self._get_help_for_corgy_cls(C),
+            f"  {_O('--x')} {_M('custom')} {_M('type')} "
+            f"[{_M('custom')} {_M('type')} ...]  ({_K('required')})",
+        )
+
+    def test_corgy_help_formatter_handles_custom_type_tuple_default_value(self):
+        class T:
+            def __init__(self, s):
+                self.s = s
+
+            def __repr__(self):
+                return f"T('{self.s}')"
+
+            def __str__(self):
+                return "T" + self.s
+
+        class C(Corgy):
+            x: Tuple[T] = (T("1"), T("2"), T("3"))
+
+        self.assertEqual(
+            self._get_help_for_corgy_cls(C),
+            f"  {_O('--x')} [{_M('T')} ...]  ({_K('default')}: {_D('[T1, T2, T3]')})",
+        )
+
+    def test_corgy_help_formatter_handles_default_of_optional_sequence(self):
+        class T:
+            def __init__(self, s):
+                self.s = s
+
+            def __repr__(self):
+                return f"T('{self.s}')"
+
+            def __str__(self):
+                return "T" + self.s
+
+        class C(Corgy):
+            x: Sequence[Optional[T]] = [T("1"), None, T("2")]
+
+        self.assertEqual(
+            self._get_help_for_corgy_cls(C),
+            f"  {_O('--x')} [[{_M('T')}] ...]  ({_K('default')}: "
+            f"{_D('[T1, None, T2]')})",
+        )
+
+    def test_corgy_help_formatter_handles_default_of_nested_sequences(self):
+        class T:
+            def __init__(self, s):
+                self.s = s
+
+            def __repr__(self):
+                return f"T('{self.s}')"
+
+            def __str__(self):
+                return "T" + self.s
+
+        class C(Corgy):
+            x: Sequence[Sequence[Optional[T]]] = [
+                [T("1"), None, T("2")],
+                [T("3")],
+                [None, T("4")],
+            ]
+
+        self.assertEqual(
+            self._get_help_for_corgy_cls(C),
+            f"  {_O('--x')} [[[{_M('T')}] ...] ...]  ({_K('default')}: "
+            f"{_D('[[T1, None, T2], [T3], [None, T4]]')})",
+        )
+
+
 class TestCorgyHelpFormatterUsage(TestCase):
     def setUp(self):
         self.parser = ArgumentParser(
@@ -869,3 +1022,15 @@ class TestCorgyHelpFormatterMultiArgsNoColor(
         _COLOR_HELPER.crayons = None
         CorgyHelpFormatter.use_colors = False
         self.parser = ArgumentParser(formatter_class=CorgyHelpFormatter, usage=SUPPRESS)
+
+
+class TestCorgyHelpFormatterWithCorgyAnnotationsNoColor(
+    TestCorgyHelpFormatterWithCorgyAnnotations, metaclass=_NoColorTestMeta
+):
+    _get_help_for_corgy_cls = (
+        TestCorgyHelpFormatterWithCorgyAnnotations._get_help_for_corgy_cls
+    )
+
+    def setUp(self):
+        _COLOR_HELPER.crayons = None
+        CorgyHelpFormatter.use_colors = False

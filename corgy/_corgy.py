@@ -75,6 +75,15 @@ def _is_union_type(t) -> bool:
     return p310_check or (hasattr(t, "__origin__") and t.__origin__ is Union)
 
 
+def _is_optional_type(t) -> bool:
+    """Check if the argument is an optional type (i.e. union with None)."""
+    return (
+        _is_union_type(t)
+        and len(_t_args := getattr(t, "__args__", [])) == 2
+        and _t_args[1] is type(None)
+    )
+
+
 def _is_sequence_type(t) -> bool:
     """Check if the argument is a sequence type."""
     if t is Sequence or t is AbstractSequence or t is Tuple or t is tuple:
@@ -676,11 +685,7 @@ class Corgy(metaclass=_CorgyMeta):
 
             # Check if the variable is optional. `<var_name>: Optional[<var_type>]` is
             # equivalent to `<var_name>: Union[<var_type>, None]`.
-            if (
-                _is_union_type(var_type)
-                and len(var_type.__args__) == 2
-                and var_type.__args__[1] is type(None)
-            ):
+            if _is_optional_type(var_type):
                 var_base_type = var_type.__args__[0]
                 var_required = False
             else:
