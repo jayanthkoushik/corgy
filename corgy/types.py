@@ -45,6 +45,9 @@ from typing import (
     Union,
 )
 
+if typing.TYPE_CHECKING:
+    from _typeshed import StrPath
+
 if sys.version_info >= (3, 9):
     from typing import Protocol
 else:
@@ -67,10 +70,8 @@ __all__ = (
     "InitArgs",
 )
 
-StrOrPath = Union[str, Path]
 
-
-def _get_output_stream(name: StrOrPath) -> FileIO:
+def _get_output_stream(name: StrPath) -> FileIO:
     """Open a file for writing (creating folders if necessary)."""
     filedir = os.path.dirname(name)
     if filedir and not os.path.exists(filedir):
@@ -128,7 +129,7 @@ class OutputTextFile(TextIOWrapper, metaclass=_OutputTextFileMeta):
     __metavar__ = "file"
     __slots__ = ()
 
-    def __init__(self, path: StrOrPath, **kwargs):
+    def __init__(self, path: StrPath, **kwargs):
         stream = _get_output_stream(path)
         buffer = BufferedWriter(stream)
         super().__init__(buffer, **kwargs)
@@ -165,7 +166,7 @@ class LazyOutputTextFile(OutputTextFile):
 
     __slots__ = ("_path", "_kwargs")
 
-    def __init__(self, path: StrOrPath, **kwargs):
+    def __init__(self, path: StrPath, **kwargs):
         # pylint: disable=super-init-not-called
         self._path = path
         self._kwargs = kwargs
@@ -191,7 +192,7 @@ class OutputBinFile(BufferedWriter):
     __metavar__ = "file"
     __slots__ = ()
 
-    def __init__(self, path: StrOrPath):
+    def __init__(self, path: StrPath):
         stream = _get_output_stream(path)
         super().__init__(stream)
         atexit.register(self.__class__.close, self)
@@ -215,7 +216,7 @@ class LazyOutputBinFile(OutputBinFile):
 
     __slots__ = ("_path",)
 
-    def __init__(self, path: StrOrPath):
+    def __init__(self, path: StrPath):
         # pylint: disable=super-init-not-called
         self._path = path
 
@@ -247,7 +248,7 @@ class InputTextFile(TextIOWrapper, metaclass=_InputTextFileMeta):
     __metavar__ = "file"
     __slots__ = ()
 
-    def __init__(self, path: StrOrPath, **kwargs):
+    def __init__(self, path: StrPath, **kwargs):
         try:
             stream = FileIO(str(path), "r")
         except OSError as e:
@@ -284,7 +285,7 @@ class InputBinFile(BufferedReader):
     __metavar__ = "file"
     __slots__ = ()
 
-    def __init__(self, path: StrOrPath):
+    def __init__(self, path: StrPath):
         try:
             stream = FileIO(str(path), "r")
         except OSError as e:
@@ -313,7 +314,7 @@ class OutputDirectory(Path):
     __metavar__ = "dir"
     __slots__ = ()
 
-    def __new__(cls, path: StrOrPath):  # pylint: disable=arguments-differ
+    def __new__(cls, path: StrPath):  # pylint: disable=arguments-differ
         try:
             os.makedirs(path, exist_ok=True)
         except OSError as e:
@@ -353,7 +354,7 @@ class LazyOutputDirectory(OutputDirectory):
 
     __slots__ = ()
 
-    def __new__(cls, path: StrOrPath):
+    def __new__(cls, path: StrPath):
         cls_ = (
             _WindowsLazyOutputDirectory
             if os.name == "nt"
@@ -390,7 +391,7 @@ class InputDirectory(Path):
     __metavar__ = "dir"
     __slots__ = ()
 
-    def __new__(cls, path: StrOrPath):  # pylint: disable=arguments-differ
+    def __new__(cls, path: StrPath):  # pylint: disable=arguments-differ
         if not os.path.exists(path):
             raise ValueError(f"`{path}` does not exist")
         if not os.path.isdir(path):
