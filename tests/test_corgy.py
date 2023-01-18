@@ -1757,6 +1757,29 @@ class TestCorgyCustomParsers(unittest.TestCase):
                 def parsex(s: str):  # type: ignore # pylint: disable=no-self-argument
                     return 0
 
+    def test_corgy_raises_if_corgyparser_target_not_annotated(self):
+        with self.assertRaises(TypeError):
+
+            class _(Corgy):
+                x: int
+                y = 1
+
+                @corgyparser("y")
+                @staticmethod
+                def parsex(s: str):
+                    return 0
+
+    def test_corgy_raises_if_corgyparser_target_classvar(self):
+        with self.assertRaises(TypeError):
+
+            class _(Corgy):
+                x: ClassVar[int]
+
+                @corgyparser("x")
+                @staticmethod
+                def parsex(s: str):
+                    return 0
+
     def test_add_args_handles_corgyparser(self):
         class C(Corgy):
             x: Annotated[int, "x"]

@@ -252,7 +252,7 @@ class _CorgyMeta(type):
             if not isinstance(v, _CorgyParser):
                 continue
             for var_name in v.var_names:
-                if (var_name in namespace) and isinstance(
+                if (var_name in namespace["__annotations__"]) and isinstance(
                     namespace[var_name], property
                 ):
                     namespace["__parsers"][var_name] = v.fparse
