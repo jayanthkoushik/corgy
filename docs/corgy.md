@@ -430,9 +430,20 @@ class B(Corgy):
 
 # These are all equivalent.
 b = B.from_dict({"x": "three", "a": {"x": 1, "y": "two"}})
-b = B.from_dict({"x": "three", "a:x": 1, "a:y": "two"})
 b = B.from_dict({"x": "three", "a": A(x=1, y="two")})
 b = B(x="three", a=A(x=1, y="two"))
+```
+
+Arguments for groups can also be passed directly in the dictionary by prefixing
+their names with the group name and a colon:
+
+```python
+b = B.from_dict({"x": "three", "a:x": 1, "a:y": "two"})
+
+class C(Corgy):
+    b: B
+
+c = C.from_dict({"b:x": "three", "b:a:x": 1, "b:a:x": "two"})
 ```
 
 

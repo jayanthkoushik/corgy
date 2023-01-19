@@ -806,30 +806,9 @@ class Corgy(metaclass=_CorgyMeta):
         if self.__class__ is Corgy:
             raise TypeError("`Corgy` is an abstract class and cannot be instantiated")
 
-        grp_args_map: Dict[str, Any] = defaultdict(dict)
-
         for arg_name, arg_val in args.items():
-            if ":" in arg_name:
-                grp_name, arg_name_base = arg_name.split(":", maxsplit=1)
-                if not hasattr(self.__class__, grp_name):
-                    raise ValueError(
-                        f"invalid argument `{arg_name}`: "
-                        f"`{self.__class__}` has no group named `{grp_name}`"
-                    )
-                if grp_name in args:
-                    raise ValueError(
-                        f"conflicting arguments: `{arg_name}` and `{grp_name}`"
-                    )
-                grp_args_map[grp_name][arg_name_base] = arg_val
-            elif arg_name in getattr(self, "__annotations__"):
+            if arg_name in getattr(self, "__annotations__"):
                 setattr(self, arg_name, arg_val)
-
-        for grp_name, grp_args in grp_args_map.items():
-            grp_type = getattr(self.__class__, grp_name).fget.__annotations__["return"]
-            if not isinstance(grp_type, _CorgyMeta):
-                raise ValueError(f"`{grp_name}` is not a `Corgy` class")
-            grp_obj = grp_type(**grp_args)
-            setattr(self, grp_name, grp_obj)
 
     def _str(self, f_str: Callable[..., str]) -> str:
         s = f"{self.__class__.__name__}("
@@ -895,21 +874,51 @@ class Corgy(metaclass=_CorgyMeta):
 
             # These are all equivalent.
             b = B.from_dict({"x": "three", "a": {"x": 1, "y": "two"}})
-            b = B.from_dict({"x": "three", "a:x": 1, "a:y": "two"})
             b = B.from_dict({"x": "three", "a": A(x=1, y="two")})
             b = B(x="three", a=A(x=1, y="two"))
+
+        Arguments for groups can also be passed directly in the dictionary by prefixing
+        their names with the group name and a colon::
+
+            b = B.from_dict({"x": "three", "a:x": 1, "a:y": "two"})
+
+            class C(Corgy):
+                b: B
+
+            c = C.from_dict({"b:x": "three", "b:a:x": 1, "b:a:x": "two"})
         """
-        args = {}
-        for k, v in d.items():
-            if isinstance(v, dict) and hasattr(cls, k):
-                kcls = getattr(cls, k).fget.__annotations__["return"]
-                if isinstance(kcls, _CorgyMeta):
-                    args[k] = kcls.from_dict(v)  # type: ignore
+        main_args_map = {}
+        grp_args_map: Dict[str, Any] = defaultdict(dict)
+
+        for arg_name, arg_val in d.items():
+            if ":" in arg_name:
+                grp_name, arg_name_base = arg_name.split(":", maxsplit=1)
+                if not hasattr(cls, grp_name):
+                    raise ValueError(
+                        f"invalid argument `{arg_name}`: "
+                        f"`{cls}` has no group named `{grp_name}`"
+                    )
+                if grp_name in d:
+                    raise ValueError(
+                        f"conflicting arguments: `{arg_name}` and `{grp_name}`"
+                    )
+                grp_type = getattr(cls, grp_name).fget.__annotations__["return"]
+                if not isinstance(grp_type, _CorgyMeta):
+                    raise ValueError(f"`{grp_name}` is not a `Corgy` class")
+                grp_args_map[grp_name][arg_name_base] = arg_val
+
+            elif hasattr(cls, arg_name):
+                arg_type = getattr(cls, arg_name).fget.__annotations__["return"]
+                if isinstance(arg_type, _CorgyMeta) and isinstance(arg_val, dict):
+                    grp_args_map[arg_name] = arg_val
                 else:
-                    args[k] = v
-            else:
-                args[k] = v
-        return cls(**args)
+                    main_args_map[arg_name] = arg_val
+
+        for grp_name, grp_args in grp_args_map.items():
+            grp_type = getattr(cls, grp_name).fget.__annotations__["return"]
+            main_args_map[grp_name] = grp_type.from_dict(grp_args)
+
+        return cls(**main_args_map)
 
     @classmethod
     def parse_from_cmdline(
@@ -938,7 +947,7 @@ class Corgy(metaclass=_CorgyMeta):
             parser = argparse.ArgumentParser(**parser_args)
         cls.add_args_to_parser(parser, defaults=defaults)
         args = vars(parser.parse_args())
-        return cls(**args)
+        return cls.from_dict(args)
 
     @classmethod
     def parse_from_toml(

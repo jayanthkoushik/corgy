@@ -538,7 +538,7 @@ class TestCorgyMeta(unittest.TestCase):
         self.assertEqual(c.g.x1, 1)
         self.assertEqual(c.g.x2, "2")
 
-    def test_corgy_cls_init_handles_flat_group_args(self):
+    def test_corgy_cls_from_dict_handles_flat_group_args(self):
         class G(Corgy):
             x1: int
             x2: str
@@ -547,17 +547,17 @@ class TestCorgyMeta(unittest.TestCase):
             x1: int
             g: G
 
-        c = C(x1=10, **{"g:x1": 1, "g:x2": "2"})
+        c = C.from_dict({"x1": 10, "g:x1": 1, "g:x2": "2"})
         self.assertEqual(c.x1, 10)
         self.assertEqual(c.g.x1, 1)
         self.assertEqual(c.g.x2, "2")
 
-        c = C(x1=10, **{"g:x1": 1})
+        c = C.from_dict({"x1": 10, "g:x1": 1})
         self.assertEqual(c.x1, 10)
         self.assertEqual(c.g.x1, 1)
         self.assertFalse(hasattr(c.g, "x2"))
 
-    def test_corgy_cls_init_handles_nested_groups(self):
+    def test_corgy_cls_from_dict_handles_nested_groups(self):
         class G(Corgy):
             x1: int
             x2: str
@@ -571,13 +571,13 @@ class TestCorgyMeta(unittest.TestCase):
             g: G
             h: H
 
-        c = C(x1=100, g=G(x1=10, x2="20"), **{"h:x2": "2"})
+        c = C.from_dict({"x1": 100, "g": G(x1=10, x2="20"), "h:x2": "2"})
         self.assertEqual(c.x1, 100)
         self.assertEqual(c.g.x1, 10)
         self.assertEqual(c.g.x2, "20")
         self.assertEqual(c.h.x2, "2")
 
-    def test_corgy_cls_init_raises_on_unknown_group_flat_args(self):
+    def test_corgy_cls_from_dict_raises_on_unknown_group_flat_args(self):
         class G(Corgy):
             x1: int
             x2: str
@@ -587,9 +587,9 @@ class TestCorgyMeta(unittest.TestCase):
             g: G
 
         with self.assertRaises(ValueError):
-            _ = C(**{"gee:x1": 1})
+            _ = C.from_dict({"gee:x1": 1})
 
-    def test_corgy_cls_init_raises_on_conflicting_group_args(self):
+    def test_corgy_cls_from_dict_raises_on_conflicting_group_args(self):
         class G(Corgy):
             x1: int
             x2: str
@@ -599,18 +599,18 @@ class TestCorgyMeta(unittest.TestCase):
             g: G
 
         with self.assertRaises(ValueError):
-            _ = C(g=G(x1=1), **{"g:x2": "2"})
+            _ = C.from_dict({"g": G(x1=1), "g:x2": "2"})
 
-    def test_corgy_cls_init_raises_on_non_corgy_group(self):
+    def test_corgy_cls_from_dict_raises_on_non_corgy_group(self):
         class C(Corgy):
             x: int
 
         with self.assertRaises(ValueError):
-            C(**{"x:": 1})
+            C.from_dict({"x:": 1})
         with self.assertRaises(ValueError):
-            C(**{"x:x": 1})
+            C.from_dict({"x:x": 1})
         with self.assertRaises(ValueError):
-            C(**{"y:x": 1})
+            C.from_dict({"y:x": 1})
 
     def test_corgy_cls_from_dict(self):
         c = self._CorgyCls.from_dict({"x1": [0, 1], "x4": "four"})
