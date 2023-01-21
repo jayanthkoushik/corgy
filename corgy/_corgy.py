@@ -173,9 +173,7 @@ class _CorgyMeta(type):
             # Check for name conflicts.
             _mangled_name = f"_{name.lstrip('_')}__{var_name}"
             if _mangled_name in namespace or _mangled_name in cls_annotations:
-                raise TypeError(
-                    f"cannot use name `__{var_name}`: internal clash with `{var_name}`"
-                )
+                raise TypeError(f"name clash: `{var_name}`, `{_mangled_name}`")
 
             if hasattr(var_ano, "__origin__") and hasattr(var_ano, "__metadata__"):
                 # `<var_name>: Annotated[<var_type>, <var_help>, [<var_flags>]]`.
@@ -265,7 +263,6 @@ class _CorgyMeta(type):
     def _create_var_property(cls_name, var_name, var_type, var_doc) -> property:
         # Properties are stored in private instance variables prefixed with `__`, and
         # must be accessed as `_<cls>__<var_name>`.
-        # def var_fget(self) -> var_type:
         def var_fget(self):
             with suppress(AttributeError):
                 return getattr(self, f"_{cls_name.lstrip('_')}__{var_name}")
@@ -273,7 +270,6 @@ class _CorgyMeta(type):
                 return getattr(self, "__defaults")[var_name]
             raise AttributeError(f"no value available for attribute `{var_name}`")
 
-        # def var_fset(self, val: var_type):
         def var_fset(self, val):
             setattr(self, f"_{cls_name.lstrip('_')}__{var_name}", val)
 
