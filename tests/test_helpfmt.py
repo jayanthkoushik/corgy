@@ -887,7 +887,7 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
                 return "T" + self.s
 
         class C(Corgy):
-            x: Tuple[Optional[T], ...] = [T("1"), None, T("2")]
+            x: Tuple[Optional[T], ...] = (T("1"), None, T("2"))
 
         self.assertEqual(
             self._get_help_for_corgy_cls(C),
@@ -907,7 +907,7 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
                 return "T" + self.s
 
         class C(Corgy):
-            x: Tuple[Tuple[Optional[T], ...], ...] = [[T("1"), None], [None, T("2")]]
+            x: Tuple[Tuple[Optional[T], ...], ...] = ((T("1"), None), (None, T("2")))
 
         self.assertEqual(
             self._get_help_for_corgy_cls(C),

@@ -65,6 +65,30 @@ class BooleanOptionalAction(argparse.Action):
             setattr(namespace, self.dest, not option_string.startswith("--no-"))
 
 
+class MakeTupleAction(argparse.Action):
+    """Action to convert sequence to tuple.
+
+    This is used when adding tuple types to an argument parser, so that the parsed
+    sequence is converted to a tuple, and can be set as the value for the corresponding
+    attribute.
+    """
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, tuple(values))
+
+
+class MakeBoolAction(argparse.Action):
+    """Action to convert int to bool.
+
+    This action is used when adding nested bool types (e.g., `Sequence[bool]`) to an
+    argument parser. Arguments are added as `int`, and converted to `bool` after
+    parsing.
+    """
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, tuple(map(bool, values)))
+
+
 def _is_union_type(t) -> bool:
     """Check if the argument is a union type."""
     if sys.version_info >= (3, 10):
@@ -83,18 +107,85 @@ def _is_optional_type(t) -> bool:
     return False
 
 
-def _is_sequence_type(t) -> bool:
-    """Check if the argument is a sequence type."""
-    if t is Sequence or t is AbstractSequence or t is Tuple or t is tuple:
+def _is_tuple_type(t) -> bool:
+    """Check if the argument is a tuple type."""
+    if t is Tuple or t is tuple:
         return True
-    if hasattr(t, "__origin__") and (
-        t.__origin__ is Sequence
-        or t.__origin__ is AbstractSequence
-        or t.__origin__ is Tuple
-        or t.__origin__ is tuple
-    ):
-        return True
+    if hasattr(t, "__origin__"):
+        if t.__origin__ is Tuple or t.__origin__ is tuple:
+            return True
     return False
+
+
+def _is_sequence_type(t) -> bool:
+    """Check if the argument is a generic sequence type."""
+    if t is Sequence or t is AbstractSequence:
+        return True
+    if hasattr(t, "__origin__"):
+        if t.__origin__ is Sequence or t.__origin__ is AbstractSequence:
+            return True
+    return False
+
+
+def _is_literal_type(t) -> bool:
+    """Check if the argument is `Literal`."""
+    return hasattr(t, "__origin__") and t.__origin__ is Literal
+
+
+def _check_val_type(_val, _type):
+    _is_seq, _is_tup = _is_sequence_type(_type), _is_tuple_type(_type)
+    if _is_seq or _is_tup:
+        if (_is_seq and not isinstance(_val, AbstractSequence)) or (
+            _is_tup and not isinstance(_val, tuple)
+        ):
+            raise ValueError(f"invalid value for type '{_type}': {_val}")
+
+        try:
+            _base_types = _type.__args__
+        except AttributeError:
+            # Untyped sequence, e.g., `x: Sequence`.
+            return
+
+        if len(_base_types) == 1:
+            # All items in `_val` should match the base type.
+            for _val_i in _val:
+                _check_val_type(_val_i, _base_types[0])
+        elif len(_base_types) == 2 and _base_types[1] is Ellipsis:
+            # Same as the previous condition, but `_val` must be non-empty.
+            if not _val:
+                raise ValueError(f"expected non-empty sequence for type '{_type}'")
+            for _val_i in _val:
+                _check_val_type(_val_i, _base_types[0])
+        else:
+            # There should be a one-to-one correspondence between items in `_val` and
+            # items in `_type`.
+            if len(_val) != len(_base_types):
+                raise ValueError(
+                    f"invalid value for type '{_type}': {_val}: "
+                    f"expected exactly '{len(_base_types)}' elements"
+                )
+            for _val_i, _base_type_i in zip(_val, _base_types):
+                _check_val_type(_val_i, _base_type_i)
+
+    elif _is_optional_type(_type):
+        if _val is None:
+            return
+        _base_type = _type.__args__[0]
+        _check_val_type(_val, _base_type)
+
+    elif _is_literal_type(_type):
+        if not hasattr(_type, "__args__") or _val not in _type.__args__:
+            raise ValueError(f"invalid value for type '{_type}': {_val}")
+
+    elif hasattr(_type, "__choices__"):
+        if _val not in _type.__choices__:
+            raise ValueError(
+                f"invalid value for type '{_type}': {_val}: "
+                f"expected one of: {_type.__choices__}"
+            )
+
+    elif not isinstance(_val, _type):
+        raise ValueError(f"invalid value for type '{_type}': '{_val}'")
 
 
 class _CorgyMeta(type):
@@ -225,6 +316,12 @@ class _CorgyMeta(type):
 
             # Add default value to dedicated dict.
             if var_name in namespace:
+                try:
+                    _check_val_type(namespace[var_name], var_type)
+                except ValueError as e:
+                    raise ValueError(
+                        f"default value type mismatch for '{var_name}'"
+                    ) from e
                 namespace["__defaults"][var_name] = namespace[var_name]
             elif var_name in namespace["__defaults"] and var_name in cls_annotations:
                 # Variable had a default value in a base class, but does not anymore.
@@ -271,6 +368,7 @@ class _CorgyMeta(type):
             raise AttributeError(f"no value available for attribute `{var_name}`")
 
         def var_fset(self, val):
+            _check_val_type(val, var_type)
             setattr(self, f"_{cls_name.lstrip('_')}__{var_name}", val)
 
         var_fget.__annotations__ = {"return": var_type}
@@ -282,8 +380,7 @@ class _CorgyMeta(type):
 class Corgy(metaclass=_CorgyMeta):
     """Base class for collections of variables.
 
-    To create a command line interface, subclass `Corgy`, and declare your arguments
-    using type annotations::
+    To use, subclass `Corgy`, and declare arguments using type annotations::
 
         class A(Corgy):
             x: int
@@ -303,6 +400,15 @@ class Corgy(metaclass=_CorgyMeta):
         A(x=1, y=2.1)
         A(x=1, z=3)  # y is not set, and z is ignored
         A(**{"x": 1, "y": 2.1, "z": 3})
+
+    Attribute values are type-checked, and `ValueError` is raised on type mismatch::
+
+        a = A(x="1")      # ERROR!
+        a = A()
+        a.x = "1"         # ERROR!
+
+        class A(Corgy):
+            x: int = "1"  # ERROR!
 
     For command line parsing, the `add_args_to_parser` class method can be used to add
     arguments to an `ArgumentParser` object. Refer to the method's documentation for
@@ -361,7 +467,7 @@ class Corgy(metaclass=_CorgyMeta):
             y: float = 1.0
             z: str
 
-        class C(Corgy, B):
+        class C(B):
             y: float = 2.0
             z: str
             w: float
@@ -383,159 +489,7 @@ class Corgy(metaclass=_CorgyMeta):
         b = B()
         print(b)  # prints B(y=1.0, z=<unset>)
 
-    `Corgy` recognizes a number of special annotations, which are used to control how
-    the argument is parsed.
-
-    Note:
-        If any of the following annotations are unavilable in the Python version being
-        used, you can import them from `typing_extension` (which is available on PyPI).
-
-    **Annotated**:
-    `typing.Annotated` can be used to add a help message::
-
-        x: Annotated[int, "help for x"]
-
-    Annotations can also be used to modify the flags used to parse the argument. By
-    default, the argument name is used, prefixed with `--`, and `_` replaced by `-`.
-    This syntax can also be used to create a positional argument, by specifying a flag
-    without any leading `-`::
-
-        x: Annotated[int, "help for x"]  # flag is `--x`
-        x: Annotated[int, "help for x", ["-x", "--ex"]]  # flags are `-x/--ex`
-        x: Annotated[int, "help for x", ["x"]]  # positional argument
-
-    `Annotated` can accept multiple arguments, but only the first three are used by
-    `Corgy`. The first argument is the type, the second is the help message, and the
-    third is a list of flags. `Annotated` should always be the outermost annotation;
-    other special annotations should be part of the type.
-
-    **Optional**:
-    `typing.Optional` can be used to mark an argument as optional::
-
-        x: Optional[int]
-        x: int | None  # Python 3.10+ (can also use `Optional`)
-
-    Another way to mark an argument as optional is to provide a default value::
-
-        x: int = 0
-
-    Default values can be used in conjunction with `Optional`::
-
-        x: Optional[int] = 0
-
-    Note that the last two examples are not equivalent, since the type of `x` is
-    `Optional[int]` in the last example, so it is allowed to be `None`.
-
-    When parsing from the command line, arguments which are not marked as optional
-    (because they are not marked with `Optional`, and don't have a default value) will
-    be required.
-
-    Note:
-        Default values are not type checked, and can be arbitrary objects.
-
-    When parsing, non-sequence positional arguments marked optional will have `nargs`
-    set to `?`, and will accept a single argument or none.
-
-    **Sequence**
-    `collections.abc.Sequence` can be used to specify that an argument accepts multiple
-    space-separated values. On Python versions below 3.9, `typing.Sequence` must be
-    used instead.
-
-    There are a few different ways to use `Sequence`, each resulting in different
-    conditions for the parser. The simplest case is a plain sequence::
-
-        x: Sequence[int]
-
-    This represents a (possibly empty) sequence, and corresponds to the following call
-    to `ArgumentParser.add_argument`::
-
-        parser.add_argument("--x", type=int, nargs="*", required=True)
-
-    Note that since the argument is required, parsing an empty list will still require
-    `--x` in the command line. After parsing, `x` will be a `list`. To denote an
-    optional sequence, use `Optional[Sequence[...]]`.
-
-    The sequence length can be controlled by the arguments to `Sequence`. However, this
-    feature is only available in Python 3.9 and above, since `typing.Sequence` only
-    accepts a single argument.
-
-    To specify that a sequence must be non-empty, use::
-
-        x: Sequence[int, ...]
-
-    This will result in `nargs` being set to `+` in the call to
-    `ArgumentParser.add_argument`.
-
-    Finally, you can specify a fixed length sequence::
-
-        x: Sequence[int, int, int]
-
-    This amounts to `nargs=3`. All types in the sequence must be the same. So,
-    `Sequence[int, str, int]` will result in a `TypeError`.
-
-    **Tuple**
-    `typing.Tuple` (or `tuple` in Python 3.9+) can be used instead of `Sequence`. The
-    interface is the same. This is useful in Python versions below 3.9, since
-    `typing.Tuple` accepts multiple arguments, unlike `typing.Sequence`. Note that
-    adding arguments to a parser will require the tuple to have a single type.
-
-    **Literal**
-    `typing.Literal` can be used to specify that an argument takes one of a fixed set of
-    values::
-
-        x: Literal[0, 1, 2]
-
-    The provided values are passed to the `choices` argument of
-    `ArgumentParser.add_argument`. All values must be of the same type, which will be
-    inferred from the type of the first value. If the first value has a `__bases__`
-    attribute, the type will be inferred as the first base type, and all other choices
-    must be subclasses of that type::
-
-        class A: ...
-        class A1(A): ...
-        class A2(A): ...
-
-        x: Literal[A1, A2]  # inferred type is A
-
-    `Literal` itself can be used as a type, for instance inside a `Sequence`::
-
-        x: Sequence[Literal[0, 1, 2], Literal[0, 1, 2]]
-
-    This is a sequence of length 2, where each element is either 0, 1, or 2.
-
-    Choices can also be specified by adding a `__choices__` attribute to the argument
-    type, containing a sequence of choices for the type. Note that this will not be type
-    checked::
-
-        class A:
-            def __init__(s):
-                self.s = s
-
-            __choices__ = (A("a1"), A("a2"))
-
-        x: A
-
-    **Bool**
-    `bool` types (when not in a sequence) are converted to a pair of options::
-
-        class A(Corgy):
-            arg: bool
-
-        parser = ArgumentParser()
-        A.add_to_parser(parser)
-        parser.print_help()
-
-    Output:
-
-    .. code-block:: text
-
-        usage: -c [-h] --arg | --no-arg
-
-        optional arguments:
-        -h, --help       show this help message and exit
-        --arg, --no-arg
-
-    Finally, `Corgy` classes can themselves be used as a type, to represent a group of
+    `Corgy` classes can themselves be used as a type, to represent a group of
     arguments::
 
         class A(Corgy):
@@ -544,28 +498,79 @@ class Corgy(metaclass=_CorgyMeta):
 
         class B(Corgy):
             x: int
-            grp: Annotated[A, "a group"]
+            grp: A
 
-    Group arguments are added to the command line parser with the group argument name
-    prefixed. In the above example, parsing using `B` would result in the arguments
-    `--x`, `--grp:x`, and `--grp:y`. `grp:x` and `grp:y` will be converted to an
-    instance of `A`, and set as the `grp` property of `B`. Note that groups will ignore
-    any custom flags when computing the prefix; elements within the group will use
-    custom flags, but because they are prefixed with `--`, they will not be positional.
+    `Corgy` recognizes a number of special annotations, which are used to control how
+    the argument is parsed.
 
-    If initializing a `Corgy` class with `__init__`, arguments for groups can be passed
-    with their names prefixed with the group name and a colon::
+    Note:
+        If any of the following annotations are unavailable in the Python version being
+        used, you can import them from `typing_extensions` (which is available on PyPI).
 
-        class C(Corgy):
-            x: int
+    **Sequence**
+    `collections.abc.Sequence` can be used to annotate sequences of arbitrary types.
+    On Python versions below 3.9, `typing.Sequence` must be used instead. Values will be
+    checked to ensure that elements match the annotated sequence types.
 
-        class D(Corgy):
-            x: int
-            c: C
+    There are a few different ways to use `Sequence`, each resulting in different
+    validation conditions. The simplest case is a plain (possibly empty) sequence of a
+    single type::
 
-        d = D(**{"x": 1, "c:x": 2})
-        d.x  # 1
-        d.c  # C(x=2)
+        x: Sequence[int]
+        x = [1, 2]    # OK
+        x = []        # OK
+        x = [1, "2"]  # ERROR!
+        x = (1, 2)    # OK (any sequence type is allowed)
+
+    The sequence length can be controlled by the arguments to `Sequence`. However, this
+    feature is only available in Python 3.9 and above, since `typing.Sequence` only
+    accepts a single argument.
+
+    To specify that a sequence must be non-empty, use::
+
+        x: Sequence[int, ...]
+        x = []  # ERROR! (`x` cannot be empty)
+
+    Finally, you can specify a fixed-length sequence::
+
+       x: Sequence[int, str, float]
+       x = [1]               # ERROR!
+       x = [1, "1", 1.0]     # OK
+       x = [1, "1", 1.0, 1]  # ERROR!
+
+    **Tuple**
+    `typing.Tuple` (or `tuple` in Python 3.9+) can be used instead of `Sequence`. The
+    main difference is that values are restricted to be tuples instead of arbitrary
+    sequence types. This method is useful in Python versions below 3.9, since
+    `typing.Tuple` accepts multiple arguments, unlike `typing.Sequence`.
+
+    **Literal**
+    `typing.Literal` can be used to specify that an argument takes one of a fixed set of
+    values::
+
+        x: Literal[0, 1, "2"]
+        x = 0    # OK
+        x = "2"  # OK
+        x = "1"  # ERROR!
+
+    `Literal` itself can be used as a type, for instance inside a `Sequence`::
+
+        x: Sequence[Literal[0, 1, 2], Literal[0, 1, 2]]
+
+    This is a sequence of length 2, where each element is either 0, 1, or 2.
+
+    Choices can also be specified by adding a `__choices__` attribute to the argument
+    type, containing a sequence of choices::
+
+        class T(int):
+            __choices__ = (1, 2)
+
+        x: A
+        x = 1  # OK
+        x = 3  # ERROR!
+
+    Note that choices specified in this way are not type-checked to ensure that they
+    match the argument type.
     """
 
     @classmethod
@@ -592,6 +597,126 @@ class Corgy(metaclass=_CorgyMeta):
                 Values for groups can be specified either as `Corgy` instances, or as
                 individual values using the same syntax as for `__init__`.
 
+        Arguments are added based on their type annotations. A number of special
+        annotations are recognized, and can be used to control the way an argument
+        is parsed.
+
+        **Annotated**:
+        `typing.Annotated` can be used to add a help message for an argument::
+
+            x: Annotated[int, "help for x"]
+
+        Annotations can also be used to modify the parser flags for the argument. By
+        default, the argument name is used, prefixed with `--`, and `_` replaced by `-`.
+        This syntax can also be used to create a positional argument, by specifying a
+        flag without any leading `-`::
+
+            x: Annotated[int, "help for x"]  # flag is `--x`
+            x: Annotated[int, "help for x", ["-x", "--ex"]]  # flags are `-x/--ex`
+            x: Annotated[int, "help for x", ["x"]]  # positional argument
+
+        `Annotated` can accept multiple arguments, but only the first three are used by
+        `Corgy`. The first argument is the type, the second is the help message, and the
+        third is a list of flags.
+
+        Note:
+            `Annotated` should always be the outermost annotation for an argument.
+
+        **Optional**:
+        `typing.Optional` can be used to mark an argument as optional::
+
+            x: Optional[int]
+            x: int | None  # Python 3.10+ (can also use `Optional`)
+
+        Another way to mark an argument as optional is to provide a default value::
+
+            x: int = 0
+
+        Default values can be used in conjunction with `Optional`::
+
+            x: Optional[int] = 0
+
+        Note that the last two examples are not equivalent, since the type of `x` is
+        `Optional[int]` in the last example, so it is allowed to be `None`::
+
+            class A(Corgy):
+                x: Optional[int]
+                y: int = 0
+
+            a = A()
+            a.x = None  # OK
+            a.y = None  # ERROR!
+
+        Arguments which are not marked as optional (because they are not annotated with
+        `Optional`, and don't have a default value) will added to the parser with
+        `required=True`.
+
+        Non-sequence positional arguments marked optional will have `nargs` set to `?`,
+        and will accept a single argument or none.
+
+        **bool**
+        `bool` types (when not in a sequence) are converted to a pair of options::
+
+            class A(Corgy):
+                arg: bool
+
+            parser = ArgumentParser()
+            A.add_to_parser(parser)
+            parser.print_help()
+
+        Output:
+
+        .. code-block:: text
+
+            usage: -c [-h] --arg | --no-arg
+
+            optional arguments:
+            -h, --help       show this help message and exit
+            --arg, --no-arg
+
+
+        **Sequence**
+        Sequence types are added to the parser by setting `nargs`. The value for
+        `nargs` is determined by the sequence type. Plain sequences, such as
+        `Sequence[int]`, will be added with `nargs=*`; Non-empty sequences, such as
+        `Sequence[int, ...]`, will be added with `nargs=+`; Finally, fixed-length
+        sequences, such as `Sequence[int, int, int]`, will be added with `nargs` set to
+        the length of the sequence.
+
+        In all cases, sequence types can only be added to a parser if they are single
+        type. Heterogenous sequences, such as `Sequence[int, str]` cannot be added, and
+        will raise `ValueError`. Untyped sequences, i.e., annotated with only `Sequence`
+        also cannot be added, and will raise `ValueError`.
+
+        **Tuple**
+        Tuple types are treated similar to sequences, but will convert the list parsed
+        from the command line to a tuple.
+
+        **Literal**
+        For `Literal` types, the provided values are passed to the `choices` argument
+        of `ArgumentParser.add_argument`. All values must be of the same type, which
+        will be inferred from the type of the first value. If the first value has a
+        `__bases__` attribute, the type will be inferred as the first base type, and
+        all other choices must be subclasses of that type::
+
+            class A: ...
+            class A1(A): ...
+            class A2(A): ...
+
+            x: Literal[A1, A2]  # inferred type is A
+
+        **`__choices__`**
+        For types which specify choices by defining `__choices__`, the values are
+        passed to the `choices` argument as with `Literal`, but no type inference is
+        performed, and the base type will be used as the argument type.
+
+        **Group**
+        Attributes which are themselves `Corgy` types are treated as argument groups.
+        Group arguments are added to the command line parser with the group argument
+        name prefixed. Note that groups will ignore any custom flags when computing the
+        prefix; elements within the group will use custom flags, but because they are
+        prefixed with `--`, they will not be positional.
+
         Example::
 
             class G(Corgy):
@@ -611,6 +736,17 @@ class Corgy(metaclass=_CorgyMeta):
             C.add_args_to_parser(parser, defaults={"g": G(x=1, y=2.0)})
             # Set default value for `g` using individual values.
             C.add_args_to_parser(parser, defaults={"g:y": 2.0})
+
+        Custom parsers:
+        Arguments for which a custom parser is defined using `@corgyparser`, will use
+        that as the argument type. Refer to the documentation for `corgyparser` for
+        details.
+
+        Metavar:
+        This function will not explicitly pass a value for the `metavar` argument of
+        `ArgumentParser.add_argument`, unless an argument's type has a `__metavar__`
+        attribute, in which case, it will be passed as is. To change the metavar for
+        arguments with custom parsers, set the `metavar` argument of `corgyparser`.
         """
         base_parser = parser
         base_defaults = getattr(cls, "__defaults").copy()
@@ -678,8 +814,7 @@ class Corgy(metaclass=_CorgyMeta):
                 var_type.add_args_to_parser(grp_parser, var_dest, True, grp_defaults)
                 continue
 
-            # Check if the variable is optional. `<var_name>: Optional[<var_type>]` is
-            # equivalent to `<var_name>: Union[<var_type>, None]`.
+            # Check if the variable is optional.
             if _is_optional_type(var_type):
                 var_base_type = var_type.__args__[0]
                 var_required = False
@@ -689,7 +824,10 @@ class Corgy(metaclass=_CorgyMeta):
 
             # Check if the variable is a sequence.
             var_nargs: Union[int, Literal["+", "*", "?"], None]
-            if _is_sequence_type(var_base_type):
+            var_action: Optional[Type[argparse.Action]] = None
+            _is_sequence = _is_sequence_type(var_base_type)
+            _is_tuple = _is_tuple_type(var_base_type)
+            if _is_sequence or _is_tuple:
                 if (
                     not hasattr(var_base_type, "__args__")
                     or not var_base_type.__args__
@@ -720,17 +858,18 @@ class Corgy(metaclass=_CorgyMeta):
                         )
                     var_nargs = len(var_base_type.__args__)
                 var_base_type = var_base_type.__args__[0]
+
+                if _is_tuple:
+                    # Create a custom action to convert the parsed sequence to a tuple.
+                    var_action = MakeTupleAction
             elif var_positional and not var_required:
                 # "Optional" positional argument: set `nargs` to `?`.
                 var_nargs = "?"
             else:
                 var_nargs = None
 
-            # Check if the variable has choices i.e. `Literal[<x>, <y>, ...]`.
-            if (
-                hasattr(var_base_type, "__origin__")
-                and var_base_type.__origin__ is Literal
-            ):
+            # Check if the variable has choices.
+            if _is_literal_type(var_base_type):
                 # Determine if the first choice has `__bases__`, in which case
                 # the first base class is the type for the argument.
                 try:
@@ -758,11 +897,14 @@ class Corgy(metaclass=_CorgyMeta):
 
             # Check if the variable is boolean. Boolean variables are converted to
             # `--<var-name>`/`--no-<var-name>` arguments.
-            var_action: Optional[Type[argparse.Action]]
             if var_base_type is bool and var_nargs is None:
+                assert var_action is None
                 var_action = BooleanOptionalAction
-            else:
-                var_action = None
+            elif var_base_type is bool:
+                # Nested bool type: add to the parser as `int`, and convert to `bool`
+                # after parsing.
+                var_action = MakeBoolAction
+                var_base_type = int
 
             var_type_metavar: Optional[str] = getattr(
                 var_base_type, "__metavar__", None
@@ -808,15 +950,26 @@ class Corgy(metaclass=_CorgyMeta):
 
     def _str(self, f_str: Callable[..., str]) -> str:
         s = f"{self.__class__.__name__}("
-        for i, arg_name in enumerate(getattr(self.__class__, "__annotations__")):
-            if i != 0:
-                s = s + ", "
-            s = s + f"{arg_name}="
-            try:
-                _val_s = f_str(getattr(self, arg_name))
-            except AttributeError:
-                _val_s = "<unset>"
-            s = s + _val_s
+        i = 0
+        for arg_name in getattr(self.__class__, "__annotations__"):
+            if hasattr(self, arg_name):
+                if i != 0:
+                    s = s + ", "
+                s = s + f"{arg_name}={f_str(getattr(self, arg_name))}"
+                i += 1
+            elif f_str is str:
+                if i != 0:
+                    s = s + ", "
+                s = s + f"{arg_name}=<unset>"
+                i += 1
+            # if i != 0:
+            #     s = s + ", "
+            # s = s + f"{arg_name}="
+            # try:
+            #     _val_s = f_str(getattr(self, arg_name))
+            # except AttributeError:
+            #     _val_s = "<unset>" if f_str is str else ""
+            # s = s + _val_s
         s = s + ")"
         return s
 
@@ -846,6 +999,48 @@ class Corgy(metaclass=_CorgyMeta):
                 _val = _val.as_dict(recursive=True)
             _dict[arg_name] = _val
         return _dict
+
+    def load_dict(self, d: Dict[str, Any]):
+        """Load a dictionary into an instance of the class.
+
+        All previous attributes are overwritten, including those for which no new
+        value is provided. Sub-dictionaries will be parsed recursively if the
+        corresponding attribute already exists, else will be parsed using `from_dict`.
+        As with `from_dict`, items in the dictionary without corresponding attributes
+        are ignored.
+
+        Args:
+            d: Dictionary to load.
+
+        Example::
+
+            class A(Corgy):
+                x: int
+                y: str
+
+            a = A(x=1)
+            a.load_dict({"y": "two"})  # `a` is now `A(y="two")`
+        """
+        for arg_name in getattr(self, "__annotations__"):
+            if arg_name not in d:
+                try:
+                    delattr(self, arg_name)
+                except AttributeError:
+                    pass
+                continue
+            arg_new_val = d[arg_name]
+            if isinstance(arg_new_val, dict):
+                try:
+                    arg_obj = getattr(self, arg_name)
+                except AttributeError:
+                    arg_type = getattr(self.__class__, arg_name).fget.__annotations__[
+                        "return"
+                    ]
+                    setattr(self, arg_name, arg_type.from_dict(arg_new_val))
+                else:
+                    arg_obj.load_dict(arg_new_val)
+            else:
+                setattr(self, arg_name, arg_new_val)
 
     @classmethod
     def from_dict(cls: Type[_T], d: Dict[str, Any]) -> _T:

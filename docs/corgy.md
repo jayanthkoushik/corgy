@@ -6,8 +6,7 @@ Corgy package for elegant command line parsing.
 ### _class_ corgy.Corgy(\*\*args)
 Base class for collections of variables.
 
-To create a command line interface, subclass `Corgy`, and declare your arguments
-using type annotations:
+To use, subclass `Corgy`, and declare arguments using type annotations:
 
 ```python
 class A(Corgy):
@@ -32,6 +31,17 @@ arguments without a corresponding attribute. The following are all valid:
 A(x=1, y=2.1)
 A(x=1, z=3)  # y is not set, and z is ignored
 A(**{"x": 1, "y": 2.1, "z": 3})
+```
+
+Attribute values are type-checked, and `ValueError` is raised on type mismatch:
+
+```python
+a = A(x="1")      # ERROR!
+a = A()
+a.x = "1"         # ERROR!
+
+class A(Corgy):
+    x: int = "1"  # ERROR!
 ```
 
 For command line parsing, the `add_args_to_parser` class method can be used to add
@@ -100,7 +110,7 @@ class B(Corgy, A):
     y: float = 1.0
     z: str
 
-class C(Corgy, B):
+class C(B):
     y: float = 2.0
     z: str
     w: float
@@ -125,89 +135,41 @@ b = B()
 print(b)  # prints B(y=1.0, z=<unset>)
 ```
 
+`Corgy` classes can themselves be used as a type, to represent a group of
+arguments:
+
+```python
+class A(Corgy):
+    x: int
+    y: float
+
+class B(Corgy):
+    x: int
+    grp: A
+```
+
 `Corgy` recognizes a number of special annotations, which are used to control how
 the argument is parsed.
 
-**NOTE**: If any of the following annotations are unavilable in the Python version being
-used, you can import them from `typing_extension` (which is available on PyPI).
-
-**Annotated**:
-`typing.Annotated` can be used to add a help message:
-
-```python
-x: Annotated[int, "help for x"]
-```
-
-Annotations can also be used to modify the flags used to parse the argument. By
-default, the argument name is used, prefixed with `--`, and `_` replaced by `-`.
-This syntax can also be used to create a positional argument, by specifying a flag
-without any leading `-`:
-
-```python
-x: Annotated[int, "help for x"]  # flag is `--x`
-x: Annotated[int, "help for x", ["-x", "--ex"]]  # flags are `-x/--ex`
-x: Annotated[int, "help for x", ["x"]]  # positional argument
-```
-
-`Annotated` can accept multiple arguments, but only the first three are used by
-`Corgy`. The first argument is the type, the second is the help message, and the
-third is a list of flags. `Annotated` should always be the outermost annotation;
-other special annotations should be part of the type.
-
-**Optional**:
-`typing.Optional` can be used to mark an argument as optional:
-
-```python
-x: Optional[int]
-x: int | None  # Python 3.10+ (can also use `Optional`)
-```
-
-Another way to mark an argument as optional is to provide a default value:
-
-```python
-x: int = 0
-```
-
-Default values can be used in conjunction with `Optional`:
-
-```python
-x: Optional[int] = 0
-```
-
-Note that the last two examples are not equivalent, since the type of `x` is
-`Optional[int]` in the last example, so it is allowed to be `None`.
-
-When parsing from the command line, arguments which are not marked as optional
-(because they are not marked with `Optional`, and don’t have a default value) will
-be required.
-
-**NOTE**: Default values are not type checked, and can be arbitrary objects.
-
-When parsing, non-sequence positional arguments marked optional will have `nargs`
-set to `?`, and will accept a single argument or none.
+**NOTE**: If any of the following annotations are unavailable in the Python version being
+used, you can import them from `typing_extensions` (which is available on PyPI).
 
 **Sequence**
-`collections.abc.Sequence` can be used to specify that an argument accepts multiple
-space-separated values. On Python versions below 3.9, `typing.Sequence` must be
-used instead.
+`collections.abc.Sequence` can be used to annotate sequences of arbitrary types.
+On Python versions below 3.9, `typing.Sequence` must be used instead. Values will be
+checked to ensure that elements match the annotated sequence types.
 
 There are a few different ways to use `Sequence`, each resulting in different
-conditions for the parser. The simplest case is a plain sequence:
+validation conditions. The simplest case is a plain (possibly empty) sequence of a
+single type:
 
 ```python
 x: Sequence[int]
+x = [1, 2]    # OK
+x = []        # OK
+x = [1, "2"]  # ERROR!
+x = (1, 2)    # OK (any sequence type is allowed)
 ```
-
-This represents a (possibly empty) sequence, and corresponds to the following call
-to `ArgumentParser.add_argument`:
-
-```python
-parser.add_argument("--x", type=int, nargs="*", required=True)
-```
-
-Note that since the argument is required, parsing an empty list will still require
-`--x` in the command line. After parsing, `x` will be a `list`. To denote an
-optional sequence, use `Optional[Sequence[...]]`.
 
 The sequence length can be controlled by the arguments to `Sequence`. However, this
 feature is only available in Python 3.9 and above, since `typing.Sequence` only
@@ -217,46 +179,33 @@ To specify that a sequence must be non-empty, use:
 
 ```python
 x: Sequence[int, ...]
+x = []  # ERROR! (`x` cannot be empty)
 ```
 
-This will result in `nargs` being set to `+` in the call to
-`ArgumentParser.add_argument`.
-
-Finally, you can specify a fixed length sequence:
+Finally, you can specify a fixed-length sequence:
 
 ```python
-x: Sequence[int, int, int]
+x: Sequence[int, str, float]
+x = [1]               # ERROR!
+x = [1, "1", 1.0]     # OK
+x = [1, "1", 1.0, 1]  # ERROR!
 ```
-
-This amounts to `nargs=3`. All types in the sequence must be the same. So,
-`Sequence[int, str, int]` will result in a `TypeError`.
 
 **Tuple**
 `typing.Tuple` (or `tuple` in Python 3.9+) can be used instead of `Sequence`. The
-interface is the same. This is useful in Python versions below 3.9, since
-`typing.Tuple` accepts multiple arguments, unlike `typing.Sequence`. Note that
-adding arguments to a parser will require the tuple to have a single type.
+main difference is that values are restricted to be tuples instead of arbitrary
+sequence types. This method is useful in Python versions below 3.9, since
+`typing.Tuple` accepts multiple arguments, unlike `typing.Sequence`.
 
 **Literal**
 `typing.Literal` can be used to specify that an argument takes one of a fixed set of
 values:
 
 ```python
-x: Literal[0, 1, 2]
-```
-
-The provided values are passed to the `choices` argument of
-`ArgumentParser.add_argument`. All values must be of the same type, which will be
-inferred from the type of the first value. If the first value has a `__bases__`
-attribute, the type will be inferred as the first base type, and all other choices
-must be subclasses of that type:
-
-```python
-class A: ...
-class A1(A): ...
-class A2(A): ...
-
-x: Literal[A1, A2]  # inferred type is A
+x: Literal[0, 1, "2"]
+x = 0    # OK
+x = "2"  # OK
+x = "1"  # ERROR!
 ```
 
 `Literal` itself can be used as a type, for instance inside a `Sequence`:
@@ -268,76 +217,19 @@ x: Sequence[Literal[0, 1, 2], Literal[0, 1, 2]]
 This is a sequence of length 2, where each element is either 0, 1, or 2.
 
 Choices can also be specified by adding a `__choices__` attribute to the argument
-type, containing a sequence of choices for the type. Note that this will not be type
-checked:
+type, containing a sequence of choices:
 
 ```python
-class A:
-    def __init__(s):
-        self.s = s
-
-    __choices__ = (A("a1"), A("a2"))
+class T(int):
+    __choices__ = (1, 2)
 
 x: A
+x = 1  # OK
+x = 3  # ERROR!
 ```
 
-**Bool**
-`bool` types (when not in a sequence) are converted to a pair of options:
-
-```python
-class A(Corgy):
-    arg: bool
-
-parser = ArgumentParser()
-A.add_to_parser(parser)
-parser.print_help()
-```
-
-Output:
-
-```text
-usage: -c [-h] --arg | --no-arg
-
-optional arguments:
--h, --help       show this help message and exit
---arg, --no-arg
-```
-
-Finally, `Corgy` classes can themselves be used as a type, to represent a group of
-arguments:
-
-```python
-class A(Corgy):
-    x: int
-    y: float
-
-class B(Corgy):
-    x: int
-    grp: Annotated[A, "a group"]
-```
-
-Group arguments are added to the command line parser with the group argument name
-prefixed. In the above example, parsing using `B` would result in the arguments
-`--x`, `--grp:x`, and `--grp:y`. `grp:x` and `grp:y` will be converted to an
-instance of `A`, and set as the `grp` property of `B`. Note that groups will ignore
-any custom flags when computing the prefix; elements within the group will use
-custom flags, but because they are prefixed with `--`, they will not be positional.
-
-If initializing a `Corgy` class with `__init__`, arguments for groups can be passed
-with their names prefixed with the group name and a colon:
-
-```python
-class C(Corgy):
-    x: int
-
-class D(Corgy):
-    x: int
-    c: C
-
-d = D(**{"x": 1, "c:x": 2})
-d.x  # 1
-d.c  # C(x=2)
-```
+Note that choices specified in this way are not type-checked to ensure that they
+match the argument type.
 
 
 #### _classmethod_ add_args_to_parser(parser, name_prefix='', flatten_subgrps=False, defaults=None)
@@ -367,6 +259,140 @@ Add arguments for this class to the given parser.
     individual values using the same syntax as for `__init__`.
 
 
+Arguments are added based on their type annotations. A number of special
+annotations are recognized, and can be used to control the way an argument
+is parsed.
+
+**Annotated**:
+`typing.Annotated` can be used to add a help message for an argument:
+
+```python
+x: Annotated[int, "help for x"]
+```
+
+Annotations can also be used to modify the parser flags for the argument. By
+default, the argument name is used, prefixed with `--`, and `_` replaced by `-`.
+This syntax can also be used to create a positional argument, by specifying a
+flag without any leading `-`:
+
+```python
+x: Annotated[int, "help for x"]  # flag is `--x`
+x: Annotated[int, "help for x", ["-x", "--ex"]]  # flags are `-x/--ex`
+x: Annotated[int, "help for x", ["x"]]  # positional argument
+```
+
+`Annotated` can accept multiple arguments, but only the first three are used by
+`Corgy`. The first argument is the type, the second is the help message, and the
+third is a list of flags.
+
+**NOTE**: `Annotated` should always be the outermost annotation for an argument.
+
+**Optional**:
+`typing.Optional` can be used to mark an argument as optional:
+
+```python
+x: Optional[int]
+x: int | None  # Python 3.10+ (can also use `Optional`)
+```
+
+Another way to mark an argument as optional is to provide a default value:
+
+```python
+x: int = 0
+```
+
+Default values can be used in conjunction with `Optional`:
+
+```python
+x: Optional[int] = 0
+```
+
+Note that the last two examples are not equivalent, since the type of `x` is
+`Optional[int]` in the last example, so it is allowed to be `None`:
+
+```python
+class A(Corgy):
+    x: Optional[int]
+    y: int = 0
+
+a = A()
+a.x = None  # OK
+a.y = None  # ERROR!
+```
+
+Arguments which are not marked as optional (because they are not annotated with
+`Optional`, and don’t have a default value) will added to the parser with
+`required=True`.
+
+Non-sequence positional arguments marked optional will have `nargs` set to `?`,
+and will accept a single argument or none.
+
+**bool**
+`bool` types (when not in a sequence) are converted to a pair of options:
+
+```python
+class A(Corgy):
+    arg: bool
+
+parser = ArgumentParser()
+A.add_to_parser(parser)
+parser.print_help()
+```
+
+Output:
+
+```text
+usage: -c [-h] --arg | --no-arg
+
+optional arguments:
+-h, --help       show this help message and exit
+--arg, --no-arg
+```
+
+**Sequence**
+Sequence types are added to the parser by setting `nargs`. The value for
+`nargs` is determined by the sequence type. Plain sequences, such as
+`Sequence[int]`, will be added with `nargs=\*`; Non-empty sequences, such as
+`Sequence[int, ...]`, will be added with `nargs=+`; Finally, fixed-length
+sequences, such as `Sequence[int, int, int]`, will be added with `nargs` set to
+the length of the sequence.
+
+In all cases, sequence types can only be added to a parser if they are single
+type. Heterogenous sequences, such as `Sequence[int, str]` cannot be added, and
+will raise `ValueError`. Untyped sequences, i.e., annotated with only `Sequence`
+also cannot be added, and will raise `ValueError`.
+
+**Tuple**
+Tuple types are treated similar to sequences, but will convert the list parsed
+from the command line to a tuple.
+
+**Literal**
+For `Literal` types, the provided values are passed to the `choices` argument
+of `ArgumentParser.add_argument`. All values must be of the same type, which
+will be inferred from the type of the first value. If the first value has a
+`__bases__` attribute, the type will be inferred as the first base type, and
+all other choices must be subclasses of that type:
+
+```python
+class A: ...
+class A1(A): ...
+class A2(A): ...
+
+x: Literal[A1, A2]  # inferred type is A
+```
+
+**\`__choices__\`**
+For types which specify choices by defining `__choices__`, the values are
+passed to the `choices` argument as with `Literal`, but no type inference is
+performed, and the base type will be used as the argument type.
+
+**Group**
+Attributes which are themselves `Corgy` types are treated as argument groups.
+Group arguments are added to the command line parser with the group argument
+name prefixed. Note that groups will ignore any custom flags when computing the
+prefix; elements within the group will use custom flags, but because they are
+prefixed with `--`, they will not be positional.
+
 Example:
 
 ```python
@@ -389,6 +415,17 @@ C.add_args_to_parser(parser, defaults={"g": G(x=1, y=2.0)})
 C.add_args_to_parser(parser, defaults={"g:y": 2.0})
 ```
 
+Custom parsers:
+Arguments for which a custom parser is defined using `@corgyparser`, will use
+that as the argument type. Refer to the documentation for `corgyparser` for
+details.
+
+Metavar:
+This function will not explicitly pass a value for the `metavar` argument of
+`ArgumentParser.add_argument`, unless an argument’s type has a `__metavar__`
+attribute, in which case, it will be passed as is. To change the metavar for
+arguments with custom parsers, set the `metavar` argument of `corgyparser`.
+
 
 #### as_dict(recursive=False)
 Return the object as a dictionary.
@@ -402,6 +439,33 @@ are omitted, unless they have default values.
     **recursive** – whether to recursively call `as_dict` on attributes which are
     `Corgy` instances. Otherwise, they are returned as is.
 
+
+
+#### load_dict(d)
+Load a dictionary into an instance of the class.
+
+All previous attributes are overwritten, including those for which no new
+value is provided. Sub-dictionaries will be parsed recursively if the
+corresponding attribute already exists, else will be parsed using `from_dict`.
+As with `from_dict`, items in the dictionary without corresponding attributes
+are ignored.
+
+
+* **Parameters**
+
+    **d** – Dictionary to load.
+
+
+Example:
+
+```python
+class A(Corgy):
+    x: int
+    y: str
+
+a = A(x=1)
+a.load_dict({"y": "two"})  # `a` is now `A(y="two")`
+```
 
 
 #### _classmethod_ from_dict(d)
@@ -660,7 +724,7 @@ Call self as a function.
 Call self as a function.
 
 
-#### _classmethod_ add_short_full_helps(parser, short_help_flags=('-h', '--help'), full_help_flags=('--helpfull',), short_help_msg='show help message and exit', full_help_msg='show full help messsage and exit')
+#### _classmethod_ add_short_full_helps(parser, short_help_flags=('-h', '--help'), full_help_flags=('--helpfull',), short_help_msg='show help message and exit', full_help_msg='show full help message and exit')
 Add arguments for displaying the short or full help.
 
 The parser must be created with `add_help=False` to prevent a clash with the

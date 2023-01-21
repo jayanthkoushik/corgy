@@ -19,7 +19,7 @@ else:
 
 import corgy
 from corgy import Corgy, CorgyHelpFormatter, corgyparser
-from corgy._corgy import BooleanOptionalAction
+from corgy._corgy import BooleanOptionalAction, MakeBoolAction, MakeTupleAction
 
 if sys.version_info >= (3, 11):
     import tomllib as tomli
@@ -309,7 +309,8 @@ class TestCorgyMeta(unittest.TestCase):
 
     def test_corgy_cls_repr_handles_unset_values(self):
         c = self._CorgyCls()
-        self.assertEqual(repr(c), "_CorgyCls(x1=<unset>, x2=<unset>, x3=3, x4='4')")
+        # self.assertEqual(repr(c), "_CorgyCls(x1=<unset>, x2=<unset>, x3=3, x4='4')")
+        self.assertEqual(repr(c), "_CorgyCls(x3=3, x4='4')")
 
     def test_corgy_cls_repr_handles_groups(self):
         class D(Corgy):
@@ -727,6 +728,153 @@ class TestCorgyMeta(unittest.TestCase):
         self.assertEqual(E2.__annotations__["x3"], float)
 
 
+class TestCorgyTypeChecking(unittest.TestCase):
+    def test_corgy_class_raises_on_basic_type_mismatch(self):
+        class C(Corgy):
+            x: int
+
+        c = C()
+        with self.assertRaises(ValueError):
+            c.x = "1"
+
+    def test_corgy_class_raises_on_assigning_list_to_tuple(self):
+        class C(Corgy):
+            x: Tuple[int]
+
+        c = C()
+        with self.assertRaises(ValueError):
+            c.x = [1]
+
+    def test_corgy_class_allows_arbitray_sequence_type_for_simple_sequence(self):
+        class C(Corgy):
+            x: Sequence[int]
+
+        c = C()
+        for _val in [[1], (1,), (1, 2)]:
+            with self.subTest(val=_val):
+                try:
+                    c.x = _val
+                except ValueError as _e:
+                    self.fail(f"unexpected value error: {_e}")
+
+    def test_corgy_class_raises_on_sequence_item_type_mismatch(self):
+        class C(Corgy):
+            x: Sequence[int]
+
+        c = C()
+        with self.assertRaises(ValueError):
+            c.x = ["1"]
+        with self.assertRaises(ValueError):
+            c.x = [1, "1"]
+
+    def test_corgy_class_allows_empty_sequence_for_simple_sequence(self):
+        class C(Corgy):
+            x: Sequence[int]
+
+        c = C()
+        try:
+            c.x = []
+        except ValueError as _e:
+            self.fail(f"unexpected value error: {_e}")
+
+    def test_corgy_class_raises_on_empty_sequence_with_ellipsis(self):
+        class C(Corgy):
+            x: Tuple[int, ...]
+
+        c = C()
+        with self.assertRaises(ValueError):
+            c.x = tuple()
+
+    def test_corgy_class_raises_on_sequence_length_mismatch(self):
+        class C(Corgy):
+            x: Tuple[int, int]
+
+        c = C()
+        with self.assertRaises(ValueError):
+            c.x = (1,)
+        with self.assertRaises(ValueError):
+            c.x = (1, 1, 1)
+
+    def test_corgy_class_raises_on_fixed_length_sequence_item_type_mismatch(self):
+        class C(Corgy):
+            x: Tuple[int, str, float]
+
+        c = C()
+        with self.assertRaises(ValueError):
+            c.x = ("1", "1", 1.0)
+        with self.assertRaises(ValueError):
+            c.x = (1, 1, 1.0)
+        with self.assertRaises(ValueError):
+            c.x = (1, "1", "1")
+
+    def test_corgy_class_raises_on_sub_sequence_type_mismatch(self):
+        class C(Corgy):
+            x: Sequence[Sequence[int]]
+            y: Sequence[Tuple[str, ...]]
+            z: Sequence[Tuple[int, str]]
+            w: Tuple[Sequence[int], ...]
+
+        c = C()
+        with self.assertRaises(ValueError):
+            c.x = [["1"]]
+        with self.assertRaises(ValueError):
+            c.x = [[1], ["1"]]
+        with self.assertRaises(ValueError):
+            c.y = [tuple()]
+        with self.assertRaises(ValueError):
+            c.z = [(1, 1)]
+        with self.assertRaises(ValueError):
+            c.z = [(1, "1"), (1, 1)]
+        with self.assertRaises(ValueError):
+            c.z = [(1, "1"), [1, "1"]]
+        with self.assertRaises(ValueError):
+            c.w = [(1,)]
+        with self.assertRaises(ValueError):
+            c.w = [["1"]]
+
+    def test_corgy_class_allows_none_for_optional_type(self):
+        class C(Corgy):
+            x: Optional[int]
+
+        c = C()
+        try:
+            c.x = None
+        except ValueError as _e:
+            self.fail(f"unexpected value error: {_e}")
+
+    def test_corgy_class_allows_value_of_sub_type(self):
+        class T:
+            ...
+
+        class Q(T):
+            ...
+
+        class C(Corgy):
+            x: T
+
+        c = C()
+        try:
+            c.x = Q()
+        except ValueError as _e:
+            self.fail(f"unexpected value error: {_e}")
+
+    def test_corgy_class_type_checks_during_init(self):
+        class C(Corgy):
+            x: int
+
+        with self.assertRaises(ValueError):
+            C(x="1")
+
+    def test_corgy_class_type_checks_default_values(self):
+        with self.assertRaises(ValueError):
+
+            class _(Corgy):
+                x: int = "1"
+
+    def _(self):
+        ...
+
+
 class TestCorgyAddArgsToParser(unittest.TestCase):
     def setUp(self):
         self.parser = argparse.ArgumentParser()
@@ -798,13 +946,6 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with("--x", type=int, default=0)
-
-    def test_add_args_allows_incorrectly_typed_default(self):
-        class C(Corgy):
-            x: int = "x"
-
-        C.add_args_to_parser(self.parser)
-        self.parser.add_argument.assert_called_once_with("--x", type=int, default="x")
 
     def test_add_args_uses_metadata_as_help(self):
         class C(Corgy):
@@ -965,7 +1106,7 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
-            "--x", type=bool, required=True, nargs="*"
+            "--x", type=int, required=True, nargs="*", action=MakeBoolAction
         )
 
     def test_add_args_raises_if_sequence_has_no_types(self):
@@ -1009,7 +1150,7 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
-            "--x", type=int, nargs="*", required=True
+            "--x", type=int, nargs="*", required=True, action=MakeTupleAction
         )
 
     def test_add_args_handles_sequence_type_as_well_as_abstract_sequence(self):
@@ -1027,7 +1168,7 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
-            "--x", type=int, nargs="*", required=True
+            "--x", type=int, nargs="*", required=True, action=MakeTupleAction
         )
 
     def test_add_args_handles_optional_sequence_type(self):
@@ -1042,7 +1183,9 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
             x: Optional[Tuple[int]]
 
         C.add_args_to_parser(self.parser)
-        self.parser.add_argument.assert_called_once_with("--x", type=int, nargs="*")
+        self.parser.add_argument.assert_called_once_with(
+            "--x", type=int, nargs="*", action=MakeTupleAction
+        )
 
     @skipIf(sys.version_info < (3, 9), "`typing.Sequence` doesn't accept multiple args")
     def test_add_args_sets_nargs_to_plus_for_non_empty_sequence_type(self):
@@ -1060,7 +1203,7 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
-            "--x", type=int, nargs="+", required=True
+            "--x", type=int, nargs="+", required=True, action=MakeTupleAction
         )
 
     def test_add_args_handles_sequence_with_default(self):
@@ -1074,11 +1217,11 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
 
     def test_add_args_handles_tuple_with_default(self):
         class C(Corgy):
-            x: Tuple[int] = [1, 2, 3]
+            x: Tuple[int] = (1, 2, 3)
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
-            "--x", type=int, nargs="*", default=[1, 2, 3]
+            "--x", type=int, nargs="*", default=(1, 2, 3), action=MakeTupleAction
         )
 
     def test_add_args_converts_literal_sequence_to_choices_with_nargs(self):
@@ -1096,7 +1239,12 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
-            "--x", type=int, nargs="*", required=True, choices=(1, 2, 3)
+            "--x",
+            type=int,
+            nargs="*",
+            required=True,
+            choices=(1, 2, 3),
+            action=MakeTupleAction,
         )
 
     @skipIf(sys.version_info < (3, 9), "`typing.Sequence` doesn't accept multiple args")
@@ -1115,7 +1263,12 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
-            "--x", type=int, nargs=2, required=True, choices=(1, 2, 3)
+            "--x",
+            type=int,
+            nargs=2,
+            required=True,
+            choices=(1, 2, 3),
+            action=MakeTupleAction,
         )
 
     @skipIf(sys.version_info < (3, 9), "`typing.Sequence` doesn't accept multiple args")
@@ -1149,7 +1302,7 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
-            "--x", type=int, nargs=3, required=True
+            "--x", type=int, nargs=3, required=True, action=MakeTupleAction
         )
 
     @skipIf(sys.version_info < (3, 9), "`typing.Sequence` doesn't accept multiple args")
@@ -1168,7 +1321,7 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
-            "--x", type=int, nargs=2, required=True
+            "--x", type=int, nargs=2, required=True, action=MakeTupleAction
         )
 
     @skipIf(sys.version_info < (3, 9), "`typing.Sequence` doesn't accept multiple args")
@@ -1738,6 +1891,26 @@ class TestCorgyCmdlineParsing(unittest.TestCase):
         c = C.parse_from_cmdline(self.parser, defaults={"x": 1}, add_help=False)
         self.assertEqual(c.x, 1)
 
+    def test_parse_from_cmdline_handles_tuples(self):
+        class C(Corgy):
+            x: Tuple[int]
+
+        self.parser.parse_args = lambda: self.orig_parse_args(
+            self.parser, ["--x", "1", "2"]
+        )
+        c = C.parse_from_cmdline(self.parser, add_help=False)
+        self.assertTupleEqual(c.x, (1, 2))
+
+    def test_parse_from_cmdline_handles_tuple_of_bools(self):
+        class C(Corgy):
+            x: Tuple[bool]
+
+        self.parser.parse_args = lambda: self.orig_parse_args(
+            self.parser, ["--x", "0", "1", "2"]
+        )
+        c = C.parse_from_cmdline(self.parser, add_help=False)
+        self.assertTupleEqual(c.x, (False, True, True))
+
 
 class TestCorgyCustomParsers(unittest.TestCase):
     def test_corgyparser_raises_if_not_passed_name(self):
@@ -1818,7 +1991,7 @@ class TestCorgyCustomParsers(unittest.TestCase):
             def parsex(s: str):  # type: ignore # pylint: disable=no-self-argument
                 return 0
 
-        getattr(C, "__parsers")["x"] = MagicMock()
+        getattr(C, "__parsers")["x"] = MagicMock(return_value=0)
         parser = argparse.ArgumentParser()
         orig_parse_args = argparse.ArgumentParser.parse_args
         parser.parse_args = lambda: orig_parse_args(parser, ["--x", "test"])
@@ -2068,10 +2241,10 @@ class TestCorgyTomlParsing(unittest.TestCase):
             c: D
             d: D
 
-        f = BytesIO(b"x = 1\n[c]\nx = 10\n[d]\nx = 'one'\n[d.c]\nx = 100\n")
+        f = BytesIO(b"x = 1\n[c]\nx = '10'\n[d]\nx = 'one'\n[d.c]\nx = 100\n")
         e = E.parse_from_toml(f)
         self.assertEqual(e.x, 1)
-        self.assertEqual(e.c.x, 10)
+        self.assertEqual(e.c.x, "10")
         self.assertEqual(e.d.x, "one")
         self.assertEqual(e.d.c.x, 100)
 

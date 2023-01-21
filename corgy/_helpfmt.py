@@ -252,7 +252,9 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     def _stringify(obj, type_) -> str:
         if isinstance(obj, AbstractSequence) and not isinstance(obj, str):
             # `obj` is a sequence: recursively apply `_stringify` on its elements.
-            if corgy._corgy._is_sequence_type(type_):
+            if corgy._corgy._is_sequence_type(type_) or corgy._corgy._is_tuple_type(
+                type_
+            ):
                 # `type_` is also a sequence, so unwrap it to get the base type. This
                 # happens in case of nested types like `Sequence[Sequence[int]]`.
                 try:
@@ -337,8 +339,10 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 marker_metavars_end = _MARKER_METAVARS_END
                 marker_metavars_repeat = _MARKER_METAVARS_REPEAT
 
-            if corgy._corgy._is_sequence_type(action.type) and isinstance(
-                getattr(action.type, "__args__"), AbstractSequence
+            if (
+                corgy._corgy._is_sequence_type(action.type)
+                or corgy._corgy._is_tuple_type(action.type)
+                and isinstance(getattr(action.type, "__args__"), AbstractSequence)
             ):
                 # `action.type` is a sequence. So, create a metavar list based on the
                 # base type(s).
@@ -778,7 +782,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         short_help_flags: Sequence[str] = ("-h", "--help"),
         full_help_flags: Sequence[str] = ("--helpfull",),
         short_help_msg: str = "show help message and exit",
-        full_help_msg: str = "show full help messsage and exit",
+        full_help_msg: str = "show full help message and exit",
     ):
         """Add arguments for displaying the short or full help.
 
