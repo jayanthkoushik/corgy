@@ -204,9 +204,9 @@ class _TestDirectory(TestCase):
             self.type(fname)
 
     def test_directory_repr(self):
-        with self.type(self.tmp_dir.name) as d:
-            self.assertEqual(repr(d), f"{self.type.__name__}({self.tmp_dir.name!r})")
-            self.assertEqual(str(d), self.tmp_dir.name)
+        d = self.type(self.tmp_dir.name)
+        self.assertEqual(repr(d), f"{self.type.__name__}({self.tmp_dir.name!r})")
+        self.assertEqual(str(d), self.tmp_dir.name)
 
     def test_directory_accepts_path(self):
         d = self.type(Path(self.tmp_dir.name))
