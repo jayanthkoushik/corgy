@@ -16,7 +16,7 @@ from argparse import (
 )
 from collections.abc import Sequence as AbstractSequence
 from functools import lru_cache, partial
-from itertools import cycle
+from itertools import cycle, zip_longest
 from types import ModuleType
 from typing import Optional, Sequence, Tuple, Union
 from unittest.mock import patch
@@ -250,21 +250,26 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
 
     @staticmethod
     def _stringify(obj, type_) -> str:
-        if isinstance(obj, AbstractSequence) and not isinstance(obj, str):
+        if isinstance(obj, AbstractSequence) and not isinstance(obj, (str, bytes)):
             # `obj` is a sequence: recursively apply `_stringify` on its elements.
-            if corgy._corgy._is_sequence_type(type_) or corgy._corgy._is_tuple_type(
-                type_
-            ):
+            if (
+                corgy._corgy._is_sequence_type(type_)
+                or corgy._corgy._is_tuple_type(type_)
+            ) and isinstance(getattr(type_, "__args__", None), AbstractSequence):
                 # `type_` is also a sequence, so unwrap it to get the base type. This
                 # happens in case of nested types like `Sequence[Sequence[int]]`.
-                try:
-                    _base_type = type_.__args__[0]
-                except (AttributeError, TypeError, IndexError):
-                    _base_type = type_
+                _base_types = type_.__args__
+                if len(_base_types) == 2 and _base_types[1] is Ellipsis:
+                    _base_types = _base_types[:1]
+                elif len(_base_types) > 1 and len(_base_types) != len(obj):
+                    raise ValueError(f"cannot format object as type '{type_}': {obj}")
             else:
-                _base_type = type_
+                _base_types = [type_]
             _part_strs = [
-                CorgyHelpFormatter._stringify(_part, _base_type) for _part in obj
+                CorgyHelpFormatter._stringify(_part, _base_type)
+                for _part, _base_type in zip_longest(
+                    obj, _base_types, fillvalue=_base_types[-1]
+                )
             ]
             return "[" + ", ".join(_part_strs) + "]"
 

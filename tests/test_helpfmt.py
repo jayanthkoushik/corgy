@@ -916,6 +916,73 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
             f"{_D('[[T1, None], [None, T2]]')})",
         )
 
+    def test_corgy_help_formatter_handles_directly_added_bare_sequence(self):
+        _parser = ArgumentParser(
+            formatter_class=CorgyHelpFormatter, add_help=False, usage=SUPPRESS
+        )
+        _parser.add_argument("--x", type=Sequence, required=True)
+        _help = _parser.format_help()
+        if _help:
+            _help = _help.split("\n", maxsplit=1)[1].rstrip()
+
+        _tname = "typing.Sequence" if sys.version_info < (3, 9) else "Sequence"
+        self.assertEqual(_help, f"  {_O('--x')} {_M(_tname)}  ({_K('required')})")
+
+    def test_corgy_help_formatter_handles_directly_added_heterogenous_tuple(self):
+        _T = Tuple[int, str, float]
+        _parser = ArgumentParser(
+            formatter_class=CorgyHelpFormatter, add_help=False, usage=SUPPRESS
+        )
+        _parser.add_argument("--x", type=_T, required=True)
+        _help = _parser.format_help()
+        if _help:
+            _help = _help.split("\n", maxsplit=1)[1].rstrip()
+
+        self.assertEqual(
+            _help,
+            f"  {_O('--x')} {_M('int')} {_M('str')} {_M('float')}"
+            f"  ({_K('required')})",
+        )
+
+    def test_corgy_help_formatter_handles_default_of_directly_added_het_tuple(self):
+        class _TBase:
+            def __init__(self, s):
+                self.s = s
+
+            def __str__(self):
+                return f"{self.__class__.__name__}{self.s}"
+
+        class T1(_TBase):
+            ...
+
+        class T2(_TBase):
+            ...
+
+        class T3(_TBase):
+            ...
+
+        _T = Tuple[T1, T2, T3]
+        _parser = ArgumentParser(
+            formatter_class=CorgyHelpFormatter, add_help=False, usage=SUPPRESS
+        )
+        _parser.add_argument("--x", type=_T, default=(T1(1), T2(2), T3(3)))
+        _help = _parser.format_help()
+        if _help:
+            _help = _help.split("\n", maxsplit=1)[1].rstrip()
+
+        self.assertEqual(
+            _help,
+            f"  {_O('--x')} {_M('T1')} {_M('T2')} {_M('T3')}"
+            f"  ({_K('default')}: {_D('[T11, T22, T33]')})",
+        )
+
+        _parser = ArgumentParser(
+            formatter_class=CorgyHelpFormatter, add_help=False, usage=SUPPRESS
+        )
+        _parser.add_argument("--x", type=_T, default=(T1(1), T2(2)))
+        with self.assertRaises(ValueError):
+            _parser.format_help()
+
 
 class TestCorgyHelpFormatterUsage(TestCase):
     def setUp(self):
