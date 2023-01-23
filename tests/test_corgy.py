@@ -675,6 +675,14 @@ class TestCorgyTypeChecking(unittest.TestCase):
         with self.assertRaises(ValueError):
             c.x = 3
 
+    def test_corgy_instance_raises_on_assigning_to_bare_literal(self):
+        class C(Corgy):
+            x: Literal
+
+        c = C()
+        with self.assertRaises(ValueError):
+            c.x = 1
+
 
 class TestCorgyInit(unittest.TestCase):
     def test_corgy_cls_init_assigns_values_to_attrs(self):
