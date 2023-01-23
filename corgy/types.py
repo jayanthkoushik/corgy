@@ -320,8 +320,6 @@ class OutputDirectory(Path):
             os.makedirs(path, exist_ok=True)
         except OSError as e:
             raise ValueError(f"could not create directory `{path}`: {e}") from None
-        if not os.path.isdir(path):
-            raise ValueError(f"`{path}` is not a directory")
         if not os.access(path, os.W_OK):
             raise ValueError(f"`{path}` is not writable")
 
@@ -662,9 +660,9 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
             if cls._subclass_name(subcls) == name:
                 break
         else:
+            if subcls is None:
+                raise ValueError(f"`{cls._base}` has no valid sub-classes")
             raise ValueError(f"invalid sub-class name: `{name}`")
-        if subcls is None:
-            raise ValueError(f"`{cls._base}` has no valid sub-classes")
 
         obj = super().__new__(cls)
         obj._subcls = subcls
