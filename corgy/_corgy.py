@@ -140,11 +140,11 @@ def _check_val_type(_val, _type):
         ):
             raise ValueError(f"invalid value for type '{_type}': {_val}")
 
-        try:
-            _base_types = _type.__args__
-        except AttributeError:
+        if _type is Sequence or not hasattr(_type, "__args__"):
             # Untyped sequence, e.g., `x: Sequence`.
             return
+
+        _base_types = _type.__args__
 
         if len(_base_types) == 1:
             # All items in `_val` should match the base type.
@@ -184,8 +184,13 @@ def _check_val_type(_val, _type):
                 f"expected one of: {_type.__choices__}"
             )
 
-    elif not isinstance(_val, _type):
-        raise ValueError(f"invalid value for type '{_type}': '{_val}'")
+    else:
+        try:
+            _is_inst = isinstance(_val, _type)
+        except TypeError:
+            raise ValueError(f"invalid type: {_type}") from None
+        if not _is_inst:
+            raise ValueError(f"invalid value for type '{_type}': '{_val}'")
 
 
 class _CorgyMeta(type):
@@ -952,24 +957,15 @@ class Corgy(metaclass=_CorgyMeta):
         s = f"{self.__class__.__name__}("
         i = 0
         for arg_name in getattr(self.__class__, "__annotations__"):
-            if hasattr(self, arg_name):
-                if i != 0:
-                    s = s + ", "
-                s = s + f"{arg_name}={f_str(getattr(self, arg_name))}"
-                i += 1
-            elif f_str is str:
-                if i != 0:
-                    s = s + ", "
-                s = s + f"{arg_name}=<unset>"
-                i += 1
-            # if i != 0:
-            #     s = s + ", "
-            # s = s + f"{arg_name}="
-            # try:
-            #     _val_s = f_str(getattr(self, arg_name))
-            # except AttributeError:
-            #     _val_s = "<unset>" if f_str is str else ""
-            # s = s + _val_s
+            if i != 0:
+                s = s + ", "
+            s = s + f"{arg_name}="
+            try:
+                _val_s = f_str(getattr(self, arg_name))
+            except AttributeError:
+                _val_s = "<unset>"
+            s = s + _val_s
+            i += 1
         s = s + ")"
         return s
 
@@ -999,48 +995,6 @@ class Corgy(metaclass=_CorgyMeta):
                 _val = _val.as_dict(recursive=True)
             _dict[arg_name] = _val
         return _dict
-
-    def load_dict(self, d: Dict[str, Any]):
-        """Load a dictionary into an instance of the class.
-
-        All previous attributes are overwritten, including those for which no new
-        value is provided. Sub-dictionaries will be parsed recursively if the
-        corresponding attribute already exists, else will be parsed using `from_dict`.
-        As with `from_dict`, items in the dictionary without corresponding attributes
-        are ignored.
-
-        Args:
-            d: Dictionary to load.
-
-        Example::
-
-            class A(Corgy):
-                x: int
-                y: str
-
-            a = A(x=1)
-            a.load_dict({"y": "two"})  # `a` is now `A(y="two")`
-        """
-        for arg_name in getattr(self, "__annotations__"):
-            if arg_name not in d:
-                try:
-                    delattr(self, arg_name)
-                except AttributeError:
-                    pass
-                continue
-            arg_new_val = d[arg_name]
-            if isinstance(arg_new_val, dict):
-                try:
-                    arg_obj = getattr(self, arg_name)
-                except AttributeError:
-                    arg_type = getattr(self.__class__, arg_name).fget.__annotations__[
-                        "return"
-                    ]
-                    setattr(self, arg_name, arg_type.from_dict(arg_new_val))
-                else:
-                    arg_obj.load_dict(arg_new_val)
-            else:
-                setattr(self, arg_name, arg_new_val)
 
     @classmethod
     def from_dict(cls: Type[_T], d: Dict[str, Any]) -> _T:
@@ -1159,12 +1113,7 @@ class Corgy(metaclass=_CorgyMeta):
         if sys.version_info >= (3, 11):
             tomli = importlib.import_module("tomllib")
         else:
-            try:
-                tomli = importlib.import_module("tomli")
-            except ImportError:
-                raise ImportError(
-                    "`tomli` library is required to parse toml files"
-                ) from None
+            tomli = importlib.import_module("tomli")
         toml_data = tomli.load(toml_file)
         if defaults is not None:
             for _k, _v in defaults.items():
@@ -1258,10 +1207,7 @@ def corgyparser(
             corgy_parser = _CorgyParser(list(var_names), fparse)
 
         if metavar is not None:
-            try:
-                corgy_parser.fparse.__metavar__ = metavar
-            except Exception as e:
-                raise TypeError(f"failed to set `__metavar__` on parser: {e}") from None
+            corgy_parser.fparse.__metavar__ = metavar
         return corgy_parser
 
     return partial(wrapper, var_names, metavar)

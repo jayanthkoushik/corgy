@@ -342,7 +342,9 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             if (
                 corgy._corgy._is_sequence_type(action.type)
                 or corgy._corgy._is_tuple_type(action.type)
-                and isinstance(getattr(action.type, "__args__"), AbstractSequence)
+            ) and (
+                isinstance(getattr(action.type, "__args__", None), AbstractSequence)
+                and action.type is not Sequence
             ):
                 # `action.type` is a sequence. So, create a metavar list based on the
                 # base type(s).

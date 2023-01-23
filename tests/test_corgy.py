@@ -47,20 +47,6 @@ class TestCorgyMeta(unittest.TestCase):
                 self.assertTrue(hasattr(self._CorgyCls, _x))
                 self.assertIsInstance(getattr(self._CorgyCls, _x), property)
 
-    def test_corgy_instance_returns_correct_defaults(self):
-        corgy_inst = self._CorgyCls()
-        for _x, _d in zip(["x3", "x4"], [3, "4"]):
-            with self.subTest(var=_x):
-                _x_default = getattr(corgy_inst, _x)
-                self.assertEqual(_x_default, _d)
-
-    def test_corgy_instance_raises_on_unset_attr_access_without_default(self):
-        corgy_inst = self._CorgyCls()
-        for _x in ["x1", "x2"]:
-            with self.subTest(var=_x):
-                with self.assertRaises(AttributeError):
-                    _x_default = getattr(corgy_inst, _x)
-
     def test_corgy_cls_adds_hint_metadata_as_property_docstrings(self):
         for _x in ["x1", "x2", "x3", "x4"]:
             with self.subTest(var=_x):
@@ -106,15 +92,6 @@ class TestCorgyMeta(unittest.TestCase):
 
             class _(Corgy):
                 x: Annotated[int, "x help", []]
-
-    def test_add_args_raises_if_custom_flags_on_group(self):
-        with self.assertRaises(TypeError):
-
-            class G(Corgy):
-                x: int
-
-            class _(Corgy):
-                g: Annotated[G, "group G", ["-g", "--grp"]]
 
     def test_corgy_cls_allows_dunder_defaults_as_var_name(self):
         class C(Corgy):
@@ -202,28 +179,6 @@ class TestCorgyMeta(unittest.TestCase):
         with self.assertRaises(AttributeError):
             c.z = 3
 
-    def test_corgy_cls_disabling_slots_does_not_interfere_with_inheritance(self):
-        class C1(Corgy):
-            x: int
-
-        class C2(Corgy, corgy_make_slots=False):
-            x: int
-
-        class D1(C1, corgy_make_slots=False):
-            y: int
-
-        class D2(C2):
-            y: int
-
-        for cls in (D1, D2):
-            d = cls()
-            d.x = 1
-            d.y = 2
-            d.z = 3
-            self.assertEqual(d.x, 1)
-            self.assertEqual(d.y, 2)
-            self.assertEqual(d.z, 3)
-
     def test_corgy_cls_does_not_add_classvar(self):
         class C(Corgy):
             x: ClassVar[int] = 0
@@ -242,6 +197,216 @@ class TestCorgyMeta(unittest.TestCase):
 
             class _(Corgy):
                 x: ClassVar[int]
+
+    def test_corgy_cls_raises_if_initialized_directly(self):
+        with self.assertRaises(TypeError):
+            Corgy()
+
+    def test_corgy_cls_usable_without_annotations(self):
+        class C(Corgy):
+            ...
+
+        c = C()
+        self.assertEqual(repr(c), "C()")
+        self.assertDictEqual(c.as_dict(), {})
+
+    def test_corgy_cls_works_with_string_annotations(self):
+        class C(Corgy):
+            x1: "int"
+            x2: "Annotated[str, 'x2 help']"
+            x3: SequenceType["str"]
+
+        for _x, _type in zip(["x1", "x2", "x3"], [int, str, SequenceType[str]]):
+            with self.subTest(var=_x):
+                self.assertIn(_x, C.__annotations__)
+                self.assertEqual(C.__annotations__[_x], _type)
+
+        self.assertEqual(getattr(C, "__helps")["x2"], "x2 help")
+
+    def test_corgy_instance_returns_correct_defaults(self):
+        corgy_inst = self._CorgyCls()
+        for _x, _d in zip(["x3", "x4"], [3, "4"]):
+            with self.subTest(var=_x):
+                _x_default = getattr(corgy_inst, _x)
+                self.assertEqual(_x_default, _d)
+
+    def test_corgy_instance_raises_on_unset_attr_access_without_default(self):
+        corgy_inst = self._CorgyCls()
+        for _x in ["x1", "x2"]:
+            with self.subTest(var=_x):
+                with self.assertRaises(AttributeError):
+                    _x_default = getattr(corgy_inst, _x)
+
+
+class TestCorgyClassInheritance(unittest.TestCase):
+    def test_corgy_cls_inherits_annotations_by_default(self):
+        class C:
+            x1: int
+            x3: "str"
+
+        class D(Corgy, C):
+            x2: int
+
+        class CCorgy(Corgy):
+            x1: int
+            x3: "str"
+
+        class DCorgy(CCorgy):
+            x2: int
+
+        for cls in (D, DCorgy):
+            with self.subTest(cls=cls):
+                self.assertIn("x1", cls.__annotations__)
+                self.assertIn("x2", cls.__annotations__)
+                self.assertIn("x3", cls.__annotations__)
+
+    def test_corgy_cls_doesnt_inherit_annotations_if_disabled(self):
+        class C:
+            x1: int
+
+        class D(Corgy, C, corgy_track_bases=False):
+            x2: int
+
+        class CCorgy(Corgy):
+            x1: int
+
+        class DCorgy(CCorgy, corgy_track_bases=False):
+            x2: int
+
+        for cls in (D, DCorgy):
+            with self.subTest(cls=cls):
+                self.assertIn("x2", cls.__annotations__)
+                self.assertNotIn("x1", cls.__annotations__)
+
+    def test_corgy_cls_inherits_annotations_from_ancestors(self):
+        class C(Corgy):
+            x1: int
+
+        class D(C):
+            x2: str
+
+        class E1(D):
+            x3: float
+
+        class E2(D, corgy_track_bases=False):
+            x3: float
+
+        for _x, _type in zip(["x1", "x2", "x3"], [int, str, float]):
+            with self.subTest(var=_x):
+                self.assertIn(_x, E1.__annotations__)
+                self.assertEqual(E1.__annotations__[_x], _type)
+
+        self.assertNotIn("x1", E2.__annotations__)
+        self.assertNotIn("x2", E2.__annotations__)
+        self.assertIn("x3", E2.__annotations__)
+        self.assertEqual(E2.__annotations__["x3"], float)
+
+    def test_corgy_cls_overrides_inherited_annotations(self):
+        class C:
+            x1: int
+
+        class D(Corgy, C):
+            x1: str  # type: ignore
+
+        class CCorgy(Corgy):
+            x1: int
+
+        class DCorgy(CCorgy):
+            x1: str  # type: ignore
+
+        for cls in (D, DCorgy):
+            with self.subTest(cls=cls):
+                self.assertEqual(cls.x1.fget.__annotations__["return"], str)
+
+    def test_corgy_cls_subclass_works_without_annotations(self):
+        class C(Corgy):
+            x: int
+
+        class D(C):
+            ...
+
+        self.assertTrue(hasattr(D, "x"))
+        self.assertIsInstance(getattr(D, "x"), property)
+
+    def test_corgy_cls_handles_inheritance_from_multiple_classes(self):
+        class C:
+            x1: int
+            x2: str
+
+        class D:
+            x3: str
+
+        class E(Corgy, C, D):
+            ...
+
+        self.assertIn("x1", E.__annotations__)
+        self.assertIn("x2", E.__annotations__)
+        self.assertIn("x3", E.__annotations__)
+
+    def test_corgy_cls_inherits_group_annotations(self):
+        class C:
+            x: int
+
+        class D:
+            x: str
+            c: C
+
+        class E(Corgy, D):
+            ...
+
+        class CCorgy(Corgy):
+            x: int
+
+        class DCorgy(Corgy):
+            x: str
+            c: CCorgy
+
+        class ECorgy(DCorgy):
+            ...
+
+        for cls, ccls in zip((E, ECorgy), (C, CCorgy)):
+            with self.subTest(cls=cls):
+                self.assertIn("c", cls.__annotations__)
+                self.assertIs(cls.c.fget.__annotations__["return"], ccls)
+
+    def test_corgy_cls_inherits_defaults(self):
+        class C:
+            x1: int = 1
+
+        class D(Corgy, C):
+            ...
+
+        class CCorgy(Corgy):
+            x1: int = 1
+
+        class DCorgy(CCorgy):
+            ...
+
+        for cls in (D, DCorgy):
+            with self.subTest(cls=cls):
+                self.assertIn("x1", getattr(cls, "__defaults"))
+
+    def test_corgy_cls_overrides_inherited_defaults(self):
+        class C:
+            x1: int = 1
+            x2: int = 2
+
+        class D(Corgy, C):
+            x1: int = 2
+            x2: int
+
+        class CCorgy(Corgy):
+            x1: int = 1
+
+        class DCorgy(CCorgy):
+            x1: int = 2
+            x2: int
+
+        for cls in (D, DCorgy):
+            with self.subTest(cls=cls):
+                self.assertIn("x1", getattr(cls, "__defaults"))
+                self.assertEqual(getattr(cls, "__defaults")["x1"], 2)
+                self.assertNotIn("x2", getattr(cls, "__defaults"))
 
     def test_corgy_cls_inherits_classvar(self):
         class C:
@@ -299,206 +464,220 @@ class TestCorgyMeta(unittest.TestCase):
                 _ = dobj.x
             self.assertEqual(dobj.y, "1")
 
-    def test_corgy_cls_has_correct_repr_str(self):
-        c = self._CorgyCls()
-        c.x1 = [0, 1]
-        c.x2 = 2
-        c.x4 = "8"
-        self.assertEqual(repr(c), "_CorgyCls(x1=[0, 1], x2=2, x3=3, x4='8')")
-        self.assertEqual(str(c), "_CorgyCls(x1=[0, 1], x2=2, x3=3, x4=8)")
-
-    def test_corgy_cls_repr_handles_unset_values(self):
-        c = self._CorgyCls()
-        # self.assertEqual(repr(c), "_CorgyCls(x1=<unset>, x2=<unset>, x3=3, x4='4')")
-        self.assertEqual(repr(c), "_CorgyCls(x3=3, x4='4')")
-
-    def test_corgy_cls_repr_handles_groups(self):
-        class D(Corgy):
+    def test_corgy_cls_disabling_slots_does_not_interfere_with_inheritance(self):
+        class C1(Corgy):
             x: int
-            c: self._CorgyCls
 
-        d = D(x=1, c=self._CorgyCls(x1=[0, 1], x2=2, x4="8"))
-        self.assertEqual(repr(d), "D(x=1, c=_CorgyCls(x1=[0, 1], x2=2, x3=3, x4='8'))")
-
-    def test_corgy_cls_as_dict(self):
-        c = self._CorgyCls(x1=[0, 1], x2=2, x3=30, x4="40")
-        self.assertDictEqual(c.as_dict(), {"x1": [0, 1], "x2": 2, "x3": 30, "x4": "40"})
-
-    def test_corgy_cls_as_dict_uses_default_values(self):
-        c = self._CorgyCls(x1=[0, 1], x2=2, x3=30)
-        self.assertDictEqual(c.as_dict(), {"x1": [0, 1], "x2": 2, "x3": 30, "x4": "4"})
-
-    def test_corgy_cls_as_dict_ignores_unset_attrs_without_defaults(self):
-        c = self._CorgyCls(x3=30, x4="40")
-        self.assertDictEqual(c.as_dict(), {"x3": 30, "x4": "40"})
-
-    def test_corgy_cls_as_dict_handles_groups(self):
-        class D(Corgy):
+        class C2(Corgy, corgy_make_slots=False):
             x: int
-            c: self._CorgyCls
 
-        c = self._CorgyCls()
-        d = D(x=1, c=c)
-        self.assertDictEqual(d.as_dict(), {"x": 1, "c": c})
+        class D1(C1, corgy_make_slots=False):
+            y: int
 
-    def test_corgy_cls_as_dict_handles_inherited_attributes(self):
-        class C:
-            x1: int
+        class D2(C2):
+            y: int
 
-        class D(C, Corgy):
-            x2: int
+        for cls in (D1, D2):
+            d = cls()
+            d.x = 1
+            d.y = 2
+            d.z = 3
+            self.assertEqual(d.x, 1)
+            self.assertEqual(d.y, 2)
+            self.assertEqual(d.z, 3)
 
-        class CCorgy(Corgy):
-            x1: int
 
-        class DCorgy(CCorgy):
-            x2: int
-
-        for cls in (D, DCorgy):
-            obj = cls(x1=1, x2=2)
-            self.assertDictEqual(obj.as_dict(), {"x1": 1, "x2": 2})
-
-    def test_corgy_cls_as_dict_handles_groups_when_recursive(self):
+class TestCorgyTypeChecking(unittest.TestCase):
+    def test_corgy_cls_type_checks_during_init(self):
         class C(Corgy):
             x: int
-            y: str
 
-        class D(Corgy):
-            x: int
-            c: C
+        with self.assertRaises(ValueError):
+            C(x="1")
 
-        class E(Corgy):
-            x: int
-            d: D
+    def test_corgy_cls_type_checks_default_values(self):
+        with self.assertRaises(ValueError):
 
-        e = E(x=1, d=D(x=10, c=C(x=100, y="100")))
-        self.assertDictEqual(
-            e.as_dict(recursive=True),
-            {"x": 1, "d": {"x": 10, "c": {"x": 100, "y": "100"}}},
-        )
+            class _(Corgy):
+                x: int = "1"
 
-    def test_corgy_cls_raises_if_initialized_directly(self):
-        with self.assertRaises(TypeError):
-            Corgy()
-
-    def test_corgy_cls_usable_without_annotations(self):
+    def test_corgy_instance_raises_on_basic_type_mismatch(self):
         class C(Corgy):
-            ...
+            x: int
 
         c = C()
-        self.assertEqual(repr(c), "C()")
-        self.assertDictEqual(c.as_dict(), {})
+        with self.assertRaises(ValueError):
+            c.x = "1"
 
-    def test_corgy_cls_subclasses_work_without_annotations(self):
-        class D(self._CorgyCls):
+    def test_corgy_instance_raises_on_assigning_list_to_tuple(self):
+        class C(Corgy):
+            x: Tuple[int]
+
+        c = C()
+        with self.assertRaises(ValueError):
+            c.x = [1]
+
+    def test_corgy_instance_allows_arbitray_sequence_type_for_simple_sequence(self):
+        class C(Corgy):
+            x: Sequence[int]
+
+        c = C()
+        for _val in [[1], (1,), (1, 2)]:
+            with self.subTest(val=_val):
+                try:
+                    c.x = _val
+                except ValueError as _e:
+                    self.fail(f"unexpected value error: {_e}")
+
+    def test_corgy_instance_allows_arbitrary_sequence_for_empty_sequence_type(self):
+        class C(Corgy):
+            x: Sequence
+
+        c = C()
+        for _val in [[1], ["1"], [1, "1"], [], (1, "2", 3.0)]:
+            try:
+                c.x = _val
+            except ValueError as _e:
+                self.fail(f"unexpected value error: {_e}")
+
+    def test_corgy_instance_raises_on_sequence_item_type_mismatch(self):
+        class C(Corgy):
+            x: Sequence[int]
+
+        c = C()
+        with self.assertRaises(ValueError):
+            c.x = ["1"]
+        with self.assertRaises(ValueError):
+            c.x = [1, "1"]
+
+    def test_corgy_instance_allows_empty_sequence_for_simple_sequence(self):
+        class C(Corgy):
+            x: Sequence[int]
+
+        c = C()
+        try:
+            c.x = []
+        except ValueError as _e:
+            self.fail(f"unexpected value error: {_e}")
+
+    def test_corgy_instance_raises_on_empty_sequence_with_ellipsis(self):
+        class C(Corgy):
+            x: Tuple[int, ...]
+
+        c = C()
+        with self.assertRaises(ValueError):
+            c.x = tuple()
+
+    def test_corgy_instance_raises_on_sequence_length_mismatch(self):
+        class C(Corgy):
+            x: Tuple[int, int]
+
+        c = C()
+        with self.assertRaises(ValueError):
+            c.x = (1,)
+        with self.assertRaises(ValueError):
+            c.x = (1, 1, 1)
+
+    def test_corgy_instance_raises_on_fixed_length_sequence_item_type_mismatch(self):
+        class C(Corgy):
+            x: Tuple[int, str, float]
+
+        c = C()
+        with self.assertRaises(ValueError):
+            c.x = ("1", "1", 1.0)
+        with self.assertRaises(ValueError):
+            c.x = (1, 1, 1.0)
+        with self.assertRaises(ValueError):
+            c.x = (1, "1", "1")
+
+    def test_corgy_instance_raises_on_sub_sequence_type_mismatch(self):
+        class C(Corgy):
+            x: Sequence[Sequence[int]]
+            y: Sequence[Tuple[str, ...]]
+            z: Sequence[Tuple[int, str]]
+            w: Tuple[Sequence[int], ...]
+
+        c = C()
+        with self.assertRaises(ValueError):
+            c.x = [["1"]]
+        with self.assertRaises(ValueError):
+            c.x = [[1], ["1"]]
+        with self.assertRaises(ValueError):
+            c.y = [tuple()]
+        with self.assertRaises(ValueError):
+            c.z = [(1, 1)]
+        with self.assertRaises(ValueError):
+            c.z = [(1, "1"), (1, 1)]
+        with self.assertRaises(ValueError):
+            c.z = [(1, "1"), [1, "1"]]
+        with self.assertRaises(ValueError):
+            c.w = [(1,)]
+        with self.assertRaises(ValueError):
+            c.w = [["1"]]
+
+    def test_corgy_instance_allows_none_for_optional_type(self):
+        class C(Corgy):
+            x: Optional[int]
+
+        c = C()
+        try:
+            c.x = None
+        except ValueError as _e:
+            self.fail(f"unexpected value error: {_e}")
+
+    def test_corgy_instance_allows_value_of_sub_type(self):
+        class T:
             ...
 
-        self.assertTrue(hasattr(D, "x1"))
-        self.assertIsInstance(getattr(D, "x1"), property)
-
-    def test_corgy_cls_inherits_annotations(self):
-        class C:
-            x1: int
-
-        class D(Corgy, C):
-            x2: int
-
-        class CCorgy(Corgy):
-            x1: int
-
-        class DCorgy(CCorgy):
-            x2: int
-
-        for cls in (D, DCorgy):
-            self.assertIn("x1", cls.__annotations__)
-            self.assertIn("x2", cls.__annotations__)
-
-    def test_corgy_cls_doesnt_inherit_annotations_if_disabled(self):
-        class C:
-            x1: int
-
-        class D(Corgy, C, corgy_track_bases=False):
-            x2: int
-
-        class CCorgy(Corgy):
-            x1: int
-
-        class DCorgy(CCorgy, corgy_track_bases=False):
-            x2: int
-
-        for cls in (D, DCorgy):
-            self.assertIn("x2", cls.__annotations__)
-            self.assertNotIn("x1", cls.__annotations__)
-
-    def test_corgy_cls_inherits_annotations_from_ancestors(self):
-        class C:
-            x1: int
-
-        class D(Corgy, C):
-            x2: str
-
-        class E(D):
-            x3: float
-
-        for _x in ["x1", "x2", "x3"]:
-            with self.subTest(var=_x):
-                self.assertTrue(hasattr(E, _x))
-                self.assertIsInstance(getattr(E, _x), property)
-
-    def test_corgy_cls_overrides_inherited_annotations(self):
-        class C:
-            x1: int
-
-        class D(Corgy, C):
-            x1: str  # type: ignore
-
-        class CCorgy(Corgy):
-            x1: int
-
-        class DCorgy(CCorgy):
-            x1: str  # type: ignore
-
-        for cls in (D, DCorgy):
-            self.assertEqual(cls.x1.fget.__annotations__["return"], str)
-
-    def test_corgy_cls_inherits_defaults(self):
-        class C:
-            x1: int = 1
-
-        class D(Corgy, C):
+        class Q(T):
             ...
 
-        class CCorgy(Corgy):
-            x1: int = 1
+        class C(Corgy):
+            x: T
 
-        class DCorgy(CCorgy):
-            ...
+        c = C()
+        try:
+            c.x = Q()
+        except ValueError as _e:
+            self.fail(f"unexpected value error: {_e}")
 
-        for cls in (D, DCorgy):
-            self.assertIn("x1", getattr(cls, "__defaults"))
+    def test_corgy_instance_raises_on_assigning_out_of_set_to_literal(self):
+        class C(Corgy):
+            x: Literal[1, 2]
 
-    def test_corgy_cls_overrides_inherited_defaults(self):
-        class C:
-            x1: int = 1
-            x2: int = 2
+        c = C()
+        with self.assertRaises(ValueError):
+            c.x = 3
 
-        class D(Corgy, C):
-            x1: int = 2
-            x2: int
+    def test_corgy_instance_accepts_values_specified_with_choices(self):
+        class T:
+            __choices__ = [1, "2"]
 
-        class CCorgy(Corgy):
-            x1: int = 1
+        class C(Corgy):
+            x: T
 
-        class DCorgy(CCorgy):
-            x1: int = 2
-            x2: int
+        c = C()
+        for _val in [1, "2"]:
+            with self.subTest(val=_val):
+                try:
+                    c.x = _val
+                except ValueError as _e:
+                    self.fail(f"unexpected value error: {_e}")
 
-        for cls in (D, DCorgy):
-            self.assertIn("x1", getattr(cls, "__defaults"))
-            self.assertEqual(getattr(cls, "__defaults")["x1"], 2)
-            self.assertNotIn("x2", getattr(cls, "__defaults"))
+    def test_corgy_instance_raises_on_assigning_out_of_set_to_type_with_choices(self):
+        class T:
+            __choices__ = [1, "2"]
 
-    def test_corgy_cls_init_creates_correct_object(self):
+        class C(Corgy):
+            x: T
+
+        c = C()
+        with self.assertRaises(ValueError):
+            c.x = 3
+
+
+class TestCorgyInit(unittest.TestCase):
+    def test_corgy_cls_init_assigns_values_to_attrs(self):
         class C(Corgy):
             x1: int
             x2: str
@@ -539,7 +718,101 @@ class TestCorgyMeta(unittest.TestCase):
         self.assertEqual(c.g.x1, 1)
         self.assertEqual(c.g.x2, "2")
 
-    def test_corgy_cls_from_dict_handles_flat_group_args(self):
+
+class TestCorgyAsDict(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        class _CorgyCls(Corgy):
+            x1: Sequence[int]
+            x2: Annotated[int, "x2 docstr"]
+            x3: int = 3
+            x4: Annotated[str, "x4 docstr"] = "4"
+
+        cls._CorgyCls = _CorgyCls
+
+    def test_as_dict_creates_dict_with_attr_values(self):
+        c = self._CorgyCls(x1=[0, 1], x2=2, x3=30, x4="40")
+        self.assertDictEqual(c.as_dict(), {"x1": [0, 1], "x2": 2, "x3": 30, "x4": "40"})
+
+    def test_as_dict_uses_default_values(self):
+        c = self._CorgyCls(x1=[0, 1], x2=2, x3=30)
+        self.assertDictEqual(c.as_dict(), {"x1": [0, 1], "x2": 2, "x3": 30, "x4": "4"})
+
+    def test_as_dict_ignores_unset_attrs_without_defaults(self):
+        c = self._CorgyCls(x3=30, x4="40")
+        self.assertDictEqual(c.as_dict(), {"x3": 30, "x4": "40"})
+
+    def test_as_dict_adds_groups_directly_by_default(self):
+        class D(Corgy):
+            x: int
+            c: self._CorgyCls
+
+        c = self._CorgyCls()
+        d = D(x=1, c=c)
+        self.assertDictEqual(d.as_dict(), {"x": 1, "c": c})
+
+    def test_as_dict_add_groups_as_dicts_when_recursive(self):
+        class C(Corgy):
+            x: int
+            y: str
+
+        class D(Corgy):
+            x: int
+            c: C
+
+        class E(Corgy):
+            x: int
+            d: D
+
+        e = E(x=1, d=D(x=10, c=C(x=100, y="100")))
+        self.assertDictEqual(
+            e.as_dict(recursive=True),
+            {"x": 1, "d": {"x": 10, "c": {"x": 100, "y": "100"}}},
+        )
+
+
+class TestCorgyFromDict(unittest.TestCase):
+    def test_cls_from_dict_creates_instance_from_dict(self):
+        class C(Corgy):
+            x: int
+            y: str
+
+        c = C.from_dict({"x": 1, "y": "two"})
+        self.assertIsInstance(c, C)
+        self.assertEqual(c.x, 1)
+        self.assertEqual(c.y, "two")
+
+    def test_cls_from_dict_handles_groups_as_dicts(self):
+        class C(Corgy):
+            x: int
+
+        class D(Corgy):
+            x: str
+            c: C
+
+        d = D.from_dict({"x": "two", "c": {"x": 1}})
+        self.assertTrue(hasattr(d, "x"))
+        self.assertEqual(d.x, "two")
+        self.assertTrue(hasattr(d, "c"))
+        self.assertTrue(hasattr(d.c, "x"))
+        self.assertEqual(d.c.x, 1)
+
+    def test_cls_from_dict_handles_groups_as_objects(self):
+        class C(Corgy):
+            x: int
+
+        class D(Corgy):
+            x: str
+            c: C
+
+        c = C(x=1)
+        d = D.from_dict({"x": "two", "c": c})
+        self.assertTrue(hasattr(d, "x"))
+        self.assertEqual(d.x, "two")
+        self.assertTrue(hasattr(d, "c"))
+        self.assertIs(d.c, c)
+
+    def test_cls_from_dict_handles_flat_group_args(self):
         class G(Corgy):
             x1: int
             x2: str
@@ -558,7 +831,7 @@ class TestCorgyMeta(unittest.TestCase):
         self.assertEqual(c.g.x1, 1)
         self.assertFalse(hasattr(c.g, "x2"))
 
-    def test_corgy_cls_from_dict_handles_nested_groups(self):
+    def test_cls_from_dict_handles_nested_groups(self):
         class G(Corgy):
             x1: int
             x2: str
@@ -578,7 +851,7 @@ class TestCorgyMeta(unittest.TestCase):
         self.assertEqual(c.g.x2, "20")
         self.assertEqual(c.h.x2, "2")
 
-    def test_corgy_cls_from_dict_raises_on_unknown_group_flat_args(self):
+    def test_cls_from_dict_raises_on_unknown_group_flat_args(self):
         class G(Corgy):
             x1: int
             x2: str
@@ -590,7 +863,7 @@ class TestCorgyMeta(unittest.TestCase):
         with self.assertRaises(ValueError):
             _ = C.from_dict({"gee:x1": 1})
 
-    def test_corgy_cls_from_dict_raises_on_conflicting_group_args(self):
+    def test_cls_from_dict_raises_on_conflicting_group_args(self):
         class G(Corgy):
             x1: int
             x2: str
@@ -602,7 +875,7 @@ class TestCorgyMeta(unittest.TestCase):
         with self.assertRaises(ValueError):
             _ = C.from_dict({"g": G(x1=1), "g:x2": "2"})
 
-    def test_corgy_cls_from_dict_raises_on_non_corgy_group(self):
+    def test_cls_from_dict_raises_on_non_corgy_group(self):
         class C(Corgy):
             x: int
 
@@ -613,266 +886,53 @@ class TestCorgyMeta(unittest.TestCase):
         with self.assertRaises(ValueError):
             C.from_dict({"y:x": 1})
 
-    def test_corgy_cls_from_dict(self):
-        c = self._CorgyCls.from_dict({"x1": [0, 1], "x4": "four"})
-        self.assertTrue(hasattr(c, "x1"))
-        self.assertListEqual(c.x1, [0, 1])
-        self.assertFalse(hasattr(c, "x2"))
-        self.assertTrue(hasattr(c, "x3"))
-        self.assertEqual(c.x3, 3)
-        self.assertTrue(hasattr(c, "x4"))
-        self.assertEqual(c.x4, "four")
-
-    def test_corgy_cls_from_dict_handles_groups_as_dicts(self):
-        class D(Corgy):
-            x2: str = "two"
-            c: self._CorgyCls
-            x5: int
-
-        d = D.from_dict({"x5": 5, "c": {"x2": 2, "x4": "four"}})
-        self.assertTrue(hasattr(d, "x2"))
-        self.assertEqual(d.x2, "two")
-        self.assertTrue(hasattr(d, "x5"))
-        self.assertEqual(d.x5, 5)
-        self.assertTrue(hasattr(d, "c"))
-        self.assertTrue(hasattr(d.c, "x2"))
-        self.assertEqual(d.c.x2, 2)
-        self.assertTrue(hasattr(d.c, "x4"))
-        self.assertEqual(d.c.x4, "four")
-
-    def test_corgy_cls_from_dict_handles_groups_as_objects(self):
-        class D(Corgy):
-            x2: str
-            c: self._CorgyCls
-
-        d = D.from_dict({"x2": "two", "c": self._CorgyCls(x2=2, x4="four")})
-        self.assertTrue(hasattr(d, "c"))
-        self.assertEqual(d.c.x2, 2)
-        self.assertEqual(d.c.x4, "four")
-
-    def test_corgy_cls_from_dict_handles_flattened_group_arguments(self):
-        class D(Corgy):
-            x2: str
-            c: self._CorgyCls
-
-        d = D.from_dict({"x2": "two", "c:x2": 2, "c:x4": "four"})
-        self.assertTrue(hasattr(d, "c"))
-        self.assertEqual(d.c.x2, 2)
-        self.assertEqual(d.c.x4, "four")
-
-    def test_corgy_cls_from_dict_raises_on_conflicting_group_arguments(self):
-        class D(Corgy):
-            x2: str
-            c: self._CorgyCls
-
-        with self.assertRaises(ValueError):
-            D.from_dict({"x2": "two", "c": self._CorgyCls(x2=2), "c:x4": "four"})
-
-    def test_corgy_cls_from_dict_allows_dict_as_value(self):
+    def test_cls_from_dict_allows_dict_as_value(self):
         class D(Corgy):
             x: dict
 
         d = D.from_dict({"x": {"x": 1}})
         self.assertDictEqual(d.x, {"x": 1})
 
-    def test_corgy_cls_from_dict_ignores_unknown_arguments(self):
-        self._CorgyCls.from_dict({"y1": 1, "y2": {"x1": 1}})
-
-    def test_corgy_cls_from_dict_handles_inherited_attributes(self):
-        class C(Corgy):
-            x1: int
-
-        class D(C):
-            x2: str
-
-        d = D.from_dict({"x1": 1, "x2": "two"})
-        self.assertTrue(hasattr(d, "x1"))
-        self.assertEqual(d.x1, 1)
-        self.assertTrue(hasattr(d, "x2"))
-        self.assertEqual(d.x2, "two")
-
-    def test_corgy_cls_works_with_string_annotations(self):
-        class C(Corgy):
-            x1: "int"
-            x2: "Annotated[str, 'x2 help']"
-            x3: SequenceType["str"]
-
-        for _x, _type in zip(["x1", "x2", "x3"], [int, str, SequenceType[str]]):
-            with self.subTest(var=_x):
-                self.assertIn(_x, C.__annotations__)
-                self.assertEqual(C.__annotations__[_x], _type)
-
-        self.assertEqual(getattr(C, "__helps")["x2"], "x2 help")
-
-    def test_corgy_cls_handles_inherited_group_annotations(self):
-        class C(Corgy):
-            x1: "int"
-
-        class D(C):
-            x2: "str"
-
-        class E1(D):
-            x3: "float"
-
-        class E2(D, corgy_track_bases=False):
-            x3: "float"
-
-        for _x, _type in zip(["x1", "x2", "x3"], [int, str, float]):
-            with self.subTest(var=_x):
-                self.assertIn(_x, E1.__annotations__)
-                self.assertEqual(E1.__annotations__[_x], _type)
-
-        self.assertNotIn("x1", E2.__annotations__)
-        self.assertNotIn("x2", E2.__annotations__)
-        self.assertIn("x3", E2.__annotations__)
-        self.assertEqual(E2.__annotations__["x3"], float)
-
-
-class TestCorgyTypeChecking(unittest.TestCase):
-    def test_corgy_class_raises_on_basic_type_mismatch(self):
+    def test_cls_from_dict_ignores_unknown_arguments(self):
         class C(Corgy):
             x: int
 
-        c = C()
-        with self.assertRaises(ValueError):
-            c.x = "1"
-
-    def test_corgy_class_raises_on_assigning_list_to_tuple(self):
-        class C(Corgy):
-            x: Tuple[int]
-
-        c = C()
-        with self.assertRaises(ValueError):
-            c.x = [1]
-
-    def test_corgy_class_allows_arbitray_sequence_type_for_simple_sequence(self):
-        class C(Corgy):
-            x: Sequence[int]
-
-        c = C()
-        for _val in [[1], (1,), (1, 2)]:
-            with self.subTest(val=_val):
-                try:
-                    c.x = _val
-                except ValueError as _e:
-                    self.fail(f"unexpected value error: {_e}")
-
-    def test_corgy_class_raises_on_sequence_item_type_mismatch(self):
-        class C(Corgy):
-            x: Sequence[int]
-
-        c = C()
-        with self.assertRaises(ValueError):
-            c.x = ["1"]
-        with self.assertRaises(ValueError):
-            c.x = [1, "1"]
-
-    def test_corgy_class_allows_empty_sequence_for_simple_sequence(self):
-        class C(Corgy):
-            x: Sequence[int]
-
-        c = C()
         try:
-            c.x = []
-        except ValueError as _e:
-            self.fail(f"unexpected value error: {_e}")
+            C.from_dict({"x": 1, "y": {"x": 1}})
+        except ValueError as e:
+            self.fail(f"unexpected error: {e}")
 
-    def test_corgy_class_raises_on_empty_sequence_with_ellipsis(self):
-        class C(Corgy):
-            x: Tuple[int, ...]
 
-        c = C()
-        with self.assertRaises(ValueError):
-            c.x = tuple()
+class TestCorgyPrinting(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        class _CorgyCls(Corgy):
+            x1: Sequence[int]
+            x2: Annotated[int, "x2 docstr"]
+            x3: int = 3
+            x4: Annotated[str, "x4 docstr"] = "4"
 
-    def test_corgy_class_raises_on_sequence_length_mismatch(self):
-        class C(Corgy):
-            x: Tuple[int, int]
+        cls._CorgyCls = _CorgyCls
 
-        c = C()
-        with self.assertRaises(ValueError):
-            c.x = (1,)
-        with self.assertRaises(ValueError):
-            c.x = (1, 1, 1)
+    def test_corgy_instance_has_correct_repr_str(self):
+        c = self._CorgyCls()
+        c.x1 = [0, 1]
+        c.x2 = 2
+        c.x4 = "8"
+        self.assertEqual(repr(c), "_CorgyCls(x1=[0, 1], x2=2, x3=3, x4='8')")
+        self.assertEqual(str(c), "_CorgyCls(x1=[0, 1], x2=2, x3=3, x4=8)")
 
-    def test_corgy_class_raises_on_fixed_length_sequence_item_type_mismatch(self):
-        class C(Corgy):
-            x: Tuple[int, str, float]
+    def test_repr_handles_unset_values(self):
+        c = self._CorgyCls()
+        self.assertEqual(repr(c), "_CorgyCls(x1=<unset>, x2=<unset>, x3=3, x4='4')")
 
-        c = C()
-        with self.assertRaises(ValueError):
-            c.x = ("1", "1", 1.0)
-        with self.assertRaises(ValueError):
-            c.x = (1, 1, 1.0)
-        with self.assertRaises(ValueError):
-            c.x = (1, "1", "1")
-
-    def test_corgy_class_raises_on_sub_sequence_type_mismatch(self):
-        class C(Corgy):
-            x: Sequence[Sequence[int]]
-            y: Sequence[Tuple[str, ...]]
-            z: Sequence[Tuple[int, str]]
-            w: Tuple[Sequence[int], ...]
-
-        c = C()
-        with self.assertRaises(ValueError):
-            c.x = [["1"]]
-        with self.assertRaises(ValueError):
-            c.x = [[1], ["1"]]
-        with self.assertRaises(ValueError):
-            c.y = [tuple()]
-        with self.assertRaises(ValueError):
-            c.z = [(1, 1)]
-        with self.assertRaises(ValueError):
-            c.z = [(1, "1"), (1, 1)]
-        with self.assertRaises(ValueError):
-            c.z = [(1, "1"), [1, "1"]]
-        with self.assertRaises(ValueError):
-            c.w = [(1,)]
-        with self.assertRaises(ValueError):
-            c.w = [["1"]]
-
-    def test_corgy_class_allows_none_for_optional_type(self):
-        class C(Corgy):
-            x: Optional[int]
-
-        c = C()
-        try:
-            c.x = None
-        except ValueError as _e:
-            self.fail(f"unexpected value error: {_e}")
-
-    def test_corgy_class_allows_value_of_sub_type(self):
-        class T:
-            ...
-
-        class Q(T):
-            ...
-
-        class C(Corgy):
-            x: T
-
-        c = C()
-        try:
-            c.x = Q()
-        except ValueError as _e:
-            self.fail(f"unexpected value error: {_e}")
-
-    def test_corgy_class_type_checks_during_init(self):
-        class C(Corgy):
+    def test_repr_handles_groups(self):
+        class D(Corgy):
             x: int
+            c: self._CorgyCls
 
-        with self.assertRaises(ValueError):
-            C(x="1")
-
-    def test_corgy_class_type_checks_default_values(self):
-        with self.assertRaises(ValueError):
-
-            class _(Corgy):
-                x: int = "1"
-
-    def _(self):
-        ...
+        d = D(x=1, c=self._CorgyCls(x1=[0, 1], x2=2, x4="8"))
+        self.assertEqual(repr(d), "D(x=1, c=_CorgyCls(x1=[0, 1], x2=2, x3=3, x4='8'))")
 
 
 class TestCorgyAddArgsToParser(unittest.TestCase):
@@ -880,6 +940,15 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
         self.parser = argparse.ArgumentParser()
         self.parser.add_argument = MagicMock()
         self.parser.add_argument_group = MagicMock()
+
+    def test_add_args_raises_if_custom_flags_on_group(self):
+        with self.assertRaises(TypeError):
+
+            class G(Corgy):
+                x: int
+
+            class _(Corgy):
+                g: Annotated[G, "group G", ["-g", "--grp"]]
 
     def test_add_args_replaces_underscores_with_hyphens(self):
         class C(Corgy):
@@ -1890,6 +1959,18 @@ class TestCorgyCmdlineParsing(unittest.TestCase):
         self.parser.parse_args = lambda: self.orig_parse_args(self.parser, [])
         c = C.parse_from_cmdline(self.parser, defaults={"x": 1}, add_help=False)
         self.assertEqual(c.x, 1)
+
+    def test_parse_from_cmdline_handles_bools(self):
+        class C(Corgy):
+            x: bool
+            y: bool
+
+        self.parser.parse_args = lambda: self.orig_parse_args(
+            self.parser, ["--x", "--no-y"]
+        )
+        c = C.parse_from_cmdline(self.parser, add_help=False)
+        self.assertEqual(c.x, True)
+        self.assertEqual(c.y, False)
 
     def test_parse_from_cmdline_handles_tuples(self):
         class C(Corgy):

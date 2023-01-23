@@ -441,33 +441,6 @@ are omitted, unless they have default values.
 
 
 
-#### load_dict(d)
-Load a dictionary into an instance of the class.
-
-All previous attributes are overwritten, including those for which no new
-value is provided. Sub-dictionaries will be parsed recursively if the
-corresponding attribute already exists, else will be parsed using `from_dict`.
-As with `from_dict`, items in the dictionary without corresponding attributes
-are ignored.
-
-
-* **Parameters**
-
-    **d** – Dictionary to load.
-
-
-Example:
-
-```python
-class A(Corgy):
-    x: int
-    y: str
-
-a = A(x=1)
-a.load_dict({"y": "two"})  # `a` is now `A(y="two")`
-```
-
-
 #### _classmethod_ from_dict(d)
 Return a new instance of the class using a dictionary.
 
