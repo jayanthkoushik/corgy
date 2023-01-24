@@ -2556,3 +2556,16 @@ class TestCorgyTomlParsing(unittest.TestCase):
         f = BytesIO(b"x = 1\n")
         c = C.parse_from_toml(f)
         self.assertEqual(c.x, 2)
+
+    def test_toml_file_parsing_handles_custom_parsers_with_nargs(self):
+        class C(Corgy):
+            x: int
+
+            @corgyparser("x", nargs=3)
+            @staticmethod
+            def parsex(s):
+                return sum(map(int, s))
+
+        f = BytesIO(b"x = [1, 2, 3]\n")
+        c = C.parse_from_toml(f)
+        self.assertEqual(c.x, 6)
