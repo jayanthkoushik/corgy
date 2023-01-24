@@ -10,6 +10,7 @@ from argparse import (
     Action,
     ArgumentParser,
     HelpFormatter,
+    ONE_OR_MORE,
     PARSER,
     SUPPRESS,
     ZERO_OR_MORE,
@@ -252,10 +253,11 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     def _stringify(obj, type_) -> str:
         if isinstance(obj, AbstractSequence) and not isinstance(obj, (str, bytes)):
             # `obj` is a sequence: recursively apply `_stringify` on its elements.
-            if (
-                corgy._corgy._is_sequence_type(type_)
-                or corgy._corgy._is_tuple_type(type_)
-            ) and isinstance(getattr(type_, "__args__", None), AbstractSequence):
+            _is_seq = corgy._corgy._is_sequence_type(type_)
+            _is_tup = corgy._corgy._is_tuple_type(type_)
+            if (_is_seq or _is_tup) and isinstance(
+                getattr(type_, "__args__", None), AbstractSequence
+            ):
                 # `type_` is also a sequence, so unwrap it to get the base type. This
                 # happens in case of nested types like `Sequence[Sequence[int]]`.
                 _base_types = type_.__args__
@@ -271,7 +273,9 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                     obj, _base_types, fillvalue=_base_types[-1]
                 )
             ]
-            return "[" + ", ".join(_part_strs) + "]"
+            _seq_start = "(" if _is_tup or isinstance(obj, tuple) else "["
+            _seq_end = ")" if _seq_start == "(" else "]"
+            return _seq_start + ", ".join(_part_strs) + _seq_end
 
         if corgy._corgy._is_optional_type(type_):
             # type_ is `Optional`; so unwrap to get the base type. This case happens
@@ -288,6 +292,19 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 return type_.__str__(obj)
             except:  # pylint: disable=bare-except
                 return str(obj)
+
+    @staticmethod
+    def _get_stringify_type_for_default(action):
+        """Get the type that should be used to stringify `action.default`."""
+        _stringify_type = action.type
+        if isinstance(action.nargs, int) or action.nargs in (ZERO_OR_MORE, ONE_OR_MORE):
+            # If the argument specifies nargs, and the default value is a,
+            # sequence, wrap the action type with the default sequence type.
+            if isinstance(action.default, tuple):
+                _stringify_type = Tuple[action.type]  # type: ignore
+            elif isinstance(action.default, AbstractSequence):
+                _stringify_type = Sequence[action.type]  # type: ignore
+        return _stringify_type
 
     def _sub_non_ws_with_colored_repl(
         self, match: re.Match, replacement: Optional[str], color: str
@@ -548,18 +565,19 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                     else "optional"
                 )
         else:
+            _stringify_type = self._get_stringify_type_for_default(action)
             if self.using_colors:
                 arg_qualifier = (
                     (_PLACEHOLDER_KWD_DEFAULT * len("default"))
                     + ": "
                     + (
                         _PLACEHOLDER_DEFAULT_VAL
-                        * len(self._stringify(action.default, action.type))
+                        * len(self._stringify(action.default, _stringify_type))
                     )
                 )
             else:
                 arg_qualifier = (
-                    f"default: {self._stringify(action.default, action.type)}"
+                    f"default: {self._stringify(action.default, _stringify_type)}"
                 )
 
         # Add qualifier to choice list e.g. `({a/b/c} required)`.
@@ -688,9 +706,10 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         # Colorize the default value.
         if action.default is not None and action.default != SUPPRESS:
             pattern = self._pattern_placeholder_text(_PLACEHOLDER_DEFAULT_VAL)
+            _stringify_type = self._get_stringify_type_for_default(action)
             f_sub = partial(
                 self._sub_non_ws_with_colored_repl,
-                replacement=self._stringify(action.default, action.type),
+                replacement=self._stringify(action.default, _stringify_type),
                 color=self.color_defaults,
             )
             fmt = pattern.sub(f_sub, fmt)

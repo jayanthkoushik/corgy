@@ -808,6 +808,16 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
             f"  {_O('--x')} [{_M('int')}] [[{_M('int')}] ...]  ({_K('required')})",
         )
 
+    def test_corgy_help_formatter_handles_sequence_of_strings(self):
+        class C(Corgy):
+            x: Sequence[str] = ["asdf", "g", "hj"]
+
+        self.assertEqual(
+            self._get_help_for_corgy_cls(C),
+            f"  {_O('--x')} [{_M('str')} ...]  ({_K('default')}: "
+            f"{_D('[asdf, g, hj]')})",
+        )
+
     def test_corgy_help_formatter_handles_sequence_of_sequences(self):
         class C(Corgy):
             x: Tuple[Tuple[int, ...], ...]
@@ -867,12 +877,41 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
                 return "T" + self.s
 
         class C(Corgy):
+            x: Sequence[T] = [T("1"), T("2"), T("3")]
+
+        self.assertEqual(
+            self._get_help_for_corgy_cls(C),
+            f"  {_O('--x')} [{_M('T')} ...]  ({_K('default')}: "
+            f"{_D('[T1, T2, T3]')})",
+        )
+
+    def test_corgy_help_formatter_handles_custom_type_tuple_default_value(self):
+        class T:
+            def __init__(self, s):
+                self.s = s
+
+            def __repr__(self):
+                return f"T('{self.s}')"
+
+            def __str__(self):
+                return "T" + self.s
+
+        class C(Corgy):
             x: Tuple[T, ...] = (T("1"), T("2"), T("3"))
 
         self.assertEqual(
             self._get_help_for_corgy_cls(C),
             f"  {_O('--x')} {_M('T')} [{_M('T')} ...]  ({_K('default')}: "
-            f"{_D('[T1, T2, T3]')})",
+            f"{_D('(T1, T2, T3)')})",
+        )
+
+    def test_corgy_help_formatter_handles_tuple_default_for_sequence_type(self):
+        class C(Corgy):
+            x: Sequence[int] = (1, 2)
+
+        self.assertEqual(
+            self._get_help_for_corgy_cls(C),
+            f"  {_O('--x')} [{_M('int')} ...]  ({_K('default')}: " f"{_D('(1, 2)')})",
         )
 
     def test_corgy_help_formatter_handles_default_of_optional_sequence(self):
@@ -892,10 +931,10 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
         self.assertEqual(
             self._get_help_for_corgy_cls(C),
             f"  {_O('--x')} [{_M('T')}] [[{_M('T')}] ...]  ({_K('default')}: "
-            f"{_D('[T1, None, T2]')})",
+            f"{_D('(T1, None, T2)')})",
         )
 
-    def test_corgy_help_formatter_handles_default_of_nested_sequences(self):
+    def test_corgy_help_formatter_handles_default_of_nested_tuples(self):
         class T:
             def __init__(self, s):
                 self.s = s
@@ -913,7 +952,27 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
             self._get_help_for_corgy_cls(C),
             f"  {_O('--x')} [{_M('T')}] [[{_M('T')}] ...] "
             f"[[{_M('T')}] [[{_M('T')}] ...] ...]  ({_K('default')}: "
-            f"{_D('[[T1, None], [None, T2]]')})",
+            f"{_D('((T1, None), (None, T2))')})",
+        )
+
+    def test_corgy_help_formatter_handles_default_of_nested_sequences(self):
+        class T:
+            def __init__(self, s):
+                self.s = s
+
+            def __repr__(self):
+                return f"T('{self.s}')"
+
+            def __str__(self):
+                return "T" + self.s
+
+        class C(Corgy):
+            x: Sequence[Sequence[Optional[T]]] = ([T("1"), None], (None, T("2")))
+
+        self.assertEqual(
+            self._get_help_for_corgy_cls(C),
+            f"  {_O('--x')} [[[{_M('T')}] ...] ...]  ({_K('default')}: "
+            f"{_D('([T1, None], (None, T2))')})",
         )
 
     def test_corgy_help_formatter_handles_directly_added_bare_sequence(self):
@@ -973,7 +1032,7 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
         self.assertEqual(
             _help,
             f"  {_O('--x')} {_M('T1')} {_M('T2')} {_M('T3')}"
-            f"  ({_K('default')}: {_D('[T11, T22, T33]')})",
+            f"  ({_K('default')}: {_D('(T11, T22, T33)')})",
         )
 
         _parser = ArgumentParser(
@@ -982,6 +1041,29 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
         _parser.add_argument("--x", type=_T, default=(T1(1), T2(2)))
         with self.assertRaises(ValueError):
             _parser.format_help()
+
+    def test_corgy_help_formatter_handles_seq_default_for_non_seq_type(self):
+        class T:
+            def __init__(self, s):
+                self.s = s
+
+            def __repr__(self):
+                return f"T('{self.s}')"
+
+            def __str__(self):
+                return "T" + self.s
+
+        _parser = ArgumentParser(
+            formatter_class=CorgyHelpFormatter, add_help=False, usage=SUPPRESS
+        )
+        _parser.add_argument("--x", type=T, default=[T("1"), T("2")])
+        _help = _parser.format_help()
+        if _help:
+            _help = _help.split("\n", maxsplit=1)[1].rstrip()
+
+        self.assertEqual(
+            _help, f"  {_O('--x')} {_M('T')}  ({_K('default')}: {_D('[T1, T2]')})"
+        )
 
 
 class TestCorgyHelpFormatterUsage(TestCase):
