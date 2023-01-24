@@ -532,11 +532,11 @@ Parse an object of the class from a toml file.
 
 
 
-### corgy.corgyparser(\*var_names, metavar=None)
+### corgy.corgyparser(\*var_names, metavar=None, nargs=None)
 Decorate a function as a custom parser for one or more variables.
 
 To use a custom function for parsing an argument with `Corgy`, use this decorator.
-Parsing functions must be static, and should only accept a single string argument.
+Parsing functions must be static, and should only accept a single argument.
 Decorating the function with `@staticmethod` is optional, but prevents type errors.
 `@corgyparser` must be the final decorator in the decorator chain.
 
@@ -551,12 +551,21 @@ Decorating the function with `@staticmethod` is optional, but prevents type erro
     argument(s) to an `ArgumentParser` instance.
 
 
+    * **nargs** – Keyword only argument to set the number of arguments to be used for the
+    associated argument(s). Must be `None`, `'\*'`, `'+'`, or a positive number.
+    This value is passed as the `nargs` argument to
+    `ArgumentParser.add_argument`, and controls the number of arguments that
+    will be read from the command line, and passed to the parsing function.
+    For all values other than `None`, the parsing function will receive a list
+    of strings.
+
+
 Example:
 
 ```python
 class A(Corgy):
     time: tuple[int, int, int]
-    @corgyparser("time", metavar="int int int")
+    @corgyparser("time", metavar="int:int:int")
     @staticmethod
     def parse_time(s):
         return tuple(map(int, s.split(":")))
@@ -590,6 +599,22 @@ class A(Corgy):
 ```
 
 Note: when chaining, the outer-most non-`None` value of `metavar` will be used.
+
+Custom parsers can control the number of arguments they receive, independent of the
+argument type:
+
+```python
+class A(Corgy):
+    x: int
+    @corgyparser("x", nargs=3)
+    @staticmethod
+    def parse_x(s):
+        # `s` will be a list of 3 strings.
+        return sum(map(int, s))
+```
+
+When chaining, `nargs` must be the same for all decorator, otherwise `TypeError` is
+raised.
 
 
 ### _class_ corgy.CorgyHelpFormatter(prog)

@@ -919,8 +919,11 @@ class Corgy(metaclass=_CorgyMeta):
             # Check if the variable has a custom parser.
             _parsers = getattr(cls, "__parsers")
             if var_name in _parsers:
-                var_add_type = _parsers[var_name]
-                _parser_metavar = getattr(var_add_type, "__metavar__", None)
+                _var_parser = _parsers[var_name]
+                var_action = partial(CorgyParserAction, _var_parser)  # type: ignore
+                var_add_type = str
+                var_nargs = getattr(_var_parser, "__nargs__", None)
+                _parser_metavar = getattr(_var_parser, "__metavar__", None)
                 if _parser_metavar is not None:
                     var_type_metavar = _parser_metavar
             else:
@@ -1136,18 +1139,21 @@ class _CorgyParser(NamedTuple):
 
     var_names: Sequence[str]
     fparse: Callable[[str], Any]
+    nargs: Union[None, Literal["*", "+"], int]
 
     def __call__(self, s):
         return self.fparse(s)
 
 
 def corgyparser(
-    *var_names: str, metavar: Optional[str] = None
+    *var_names: str,
+    metavar: Optional[str] = None,
+    nargs: Union[None, Literal["*", "+"], int] = None,
 ) -> Callable[[Union[Callable[[str], Any], _CorgyParser]], _CorgyParser]:
     """Decorate a function as a custom parser for one or more variables.
 
     To use a custom function for parsing an argument with `Corgy`, use this decorator.
-    Parsing functions must be static, and should only accept a single string argument.
+    Parsing functions must be static, and should only accept a single argument.
     Decorating the function with `@staticmethod` is optional, but prevents type errors.
     `@corgyparser` must be the final decorator in the decorator chain.
 
@@ -1155,12 +1161,19 @@ def corgyparser(
         var_names: The arguments associated with the decorated parser.
         metavar: Keyword only argument to set the metavar when adding the associated
             argument(s) to an `ArgumentParser` instance.
+        nargs: Keyword only argument to set the number of arguments to be used for the
+            associated argument(s). Must be `None`, `'*'`, `'+'`, or a positive number.
+            This value is passed as the `nargs` argument to
+            `ArgumentParser.add_argument`, and controls the number of arguments that
+            will be read from the command line, and passed to the parsing function.
+            For all values other than `None`, the parsing function will receive a list
+            of strings.
 
     Example::
 
         class A(Corgy):
             time: tuple[int, int, int]
-            @corgyparser("time", metavar="int int int")
+            @corgyparser("time", metavar="int:int:int")
             @staticmethod
             def parse_time(s):
                 return tuple(map(int, s.split(":")))
@@ -1189,6 +1202,20 @@ def corgyparser(
                 return int(s)
 
     Note: when chaining, the outer-most non-`None` value of `metavar` will be used.
+
+    Custom parsers can control the number of arguments they receive, independent of the
+    argument type::
+
+        class A(Corgy):
+            x: int
+            @corgyparser("x", nargs=3)
+            @staticmethod
+            def parse_x(s):
+                # `s` will be a list of 3 strings.
+                return sum(map(int, s))
+
+    When chaining, `nargs` must be the same for all decorator, otherwise `TypeError` is
+    raised.
     """
     if not all(isinstance(_var_name, str) for _var_name in var_names):
         raise TypeError(
@@ -1198,6 +1225,10 @@ def corgyparser(
 
     def wrapper(var_names, metavar, fparse):
         if isinstance(fparse, _CorgyParser):
+            if nargs != fparse.nargs:
+                raise TypeError(
+                    "all `corgyparser` decorations of a funciton must have same `nargs`"
+                )
             corgy_parser = fparse
             corgy_parser.var_names.extend(var_names)
         else:
@@ -1205,10 +1236,24 @@ def corgyparser(
                 fparse = fparse.__func__
             if not callable(fparse):
                 raise TypeError("corgyparser can only decorate static functions")
-            corgy_parser = _CorgyParser(list(var_names), fparse)
+            corgy_parser = _CorgyParser(list(var_names), fparse, nargs)
 
         if metavar is not None:
             corgy_parser.fparse.__metavar__ = metavar
+        if nargs is not None:
+            corgy_parser.fparse.__nargs__ = nargs
         return corgy_parser
 
     return partial(wrapper, var_names, metavar)
+
+
+class CorgyParserAction(argparse.Action):
+    def __init__(self, corgy_parser: _CorgyParser, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._corgy_parser = corgy_parser
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        try:
+            setattr(namespace, self.dest, self._corgy_parser(values))
+        except ValueError as e:
+            raise argparse.ArgumentTypeError from e

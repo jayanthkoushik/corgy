@@ -1,6 +1,7 @@
 import argparse
 import sys
 import unittest
+from functools import partial
 from io import BytesIO
 from typing import ClassVar, Optional, Sequence, Tuple
 from unittest import skipIf
@@ -19,7 +20,12 @@ else:
 
 import corgy
 from corgy import Corgy, CorgyHelpFormatter, corgyparser
-from corgy._corgy import BooleanOptionalAction, MakeBoolAction, MakeTupleAction
+from corgy._corgy import (
+    BooleanOptionalAction,
+    CorgyParserAction,
+    MakeBoolAction,
+    MakeTupleAction,
+)
 
 if sys.version_info >= (3, 11):
     import tomllib as tomli
@@ -2021,7 +2027,7 @@ class TestCorgyCustomParsers(unittest.TestCase):
                 x: int
 
                 @corgyparser("y")
-                def parsex(s: str):  # type: ignore # pylint: disable=no-self-argument
+                def parsex(s):  # type: ignore # pylint: disable=no-self-argument
                     return 0
 
     def test_corgy_raises_if_corgyparser_target_not_annotated(self):
@@ -2033,7 +2039,7 @@ class TestCorgyCustomParsers(unittest.TestCase):
 
                 @corgyparser("y")
                 @staticmethod
-                def parsex(s: str):
+                def parsex(s):
                     return 0
 
     def test_corgy_raises_if_corgyparser_target_classvar(self):
@@ -2044,7 +2050,32 @@ class TestCorgyCustomParsers(unittest.TestCase):
 
                 @corgyparser("x")
                 @staticmethod
-                def parsex(s: str):
+                def parsex(s):
+                    return 0
+
+    def test_corgyparser_raises_on_nargs_mismatch(self):
+        with self.assertRaises(TypeError):
+
+            class _(Corgy):
+                x: int
+                y: int
+
+                @corgyparser("x")
+                @corgyparser("y", nargs="+")
+                @staticmethod
+                def parsex(s):
+                    return 0
+
+        with self.assertRaises(TypeError):
+
+            class _(Corgy):
+                x: int
+                y: int
+
+                @corgyparser("x", nargs=2)
+                @corgyparser("y", nargs="*")
+                @staticmethod
+                def parsex(s):
                     return 0
 
     def test_add_args_handles_corgyparser(self):
@@ -2052,14 +2083,16 @@ class TestCorgyCustomParsers(unittest.TestCase):
             x: Annotated[int, "x"]
 
             @corgyparser("x")
-            def parsex(s: str):  # type: ignore # pylint: disable=no-self-argument
+            def parsex(s):  # type: ignore # pylint: disable=no-self-argument
                 return 0
 
         parser = argparse.ArgumentParser()
         parser.add_argument = MagicMock()
-        C.add_args_to_parser(parser)
+        _parser_action = partial(CorgyParserAction, C.parsex)
+        with patch("corgy._corgy.partial", MagicMock(return_value=_parser_action)):
+            C.add_args_to_parser(parser)
         parser.add_argument.assert_called_once_with(
-            "--x", type=getattr(C, "__parsers")["x"], required=True, help="x"
+            "--x", type=str, required=True, help="x", action=_parser_action
         )
 
     def test_add_args_with_custom_parser_respects_default_value(self):
@@ -2067,14 +2100,16 @@ class TestCorgyCustomParsers(unittest.TestCase):
             x: int = 1
 
             @corgyparser("x")
-            def parsex(s: str):  # type: ignore # pylint: disable=no-self-argument
+            def parsex(s):  # type: ignore # pylint: disable=no-self-argument
                 return 0
 
         parser = argparse.ArgumentParser()
         parser.add_argument = MagicMock()
-        C.add_args_to_parser(parser)
+        _parser_action = partial(CorgyParserAction, C.parsex)
+        with patch("corgy._corgy.partial", MagicMock(return_value=_parser_action)):
+            C.add_args_to_parser(parser)
         parser.add_argument.assert_called_once_with(
-            "--x", type=getattr(C, "__parsers")["x"], default=1
+            "--x", type=str, default=1, action=_parser_action
         )
 
     def test_cmdline_parsing_calls_custom_parser(self):
@@ -2082,7 +2117,7 @@ class TestCorgyCustomParsers(unittest.TestCase):
             x: int
 
             @corgyparser("x")
-            def parsex(s: str):  # type: ignore # pylint: disable=no-self-argument
+            def parsex(s):  # type: ignore # pylint: disable=no-self-argument
                 return 0
 
         getattr(C, "__parsers")["x"] = MagicMock(return_value=0)
@@ -2093,12 +2128,50 @@ class TestCorgyCustomParsers(unittest.TestCase):
         C.parse_from_cmdline(parser)
         getattr(C, "__parsers")["x"].assert_called_once_with("test")
 
+    def test_cmdline_parsing_calls_custom_parser_with_specified_nargs(self):
+        orig_parse_args = argparse.ArgumentParser.parse_args
+
+        def _run_and_check(cls, nargs, cmd_args, expected_call_args):
+            getattr(cls, "__parsers")["x"] = MagicMock(return_value=0, __nargs__=nargs)
+            parser = argparse.ArgumentParser()
+            parser.parse_args = lambda: orig_parse_args(parser, ["--x"] + cmd_args)
+            parser.error = MagicMock(side_effect=argparse.ArgumentTypeError)
+            cls.parse_from_cmdline(parser)
+            getattr(cls, "__parsers")["x"].assert_called_once_with(*expected_call_args)
+
+        for nargs in [None, "*", "+", 3]:
+
+            class C(Corgy):
+                x: int
+
+                @corgyparser("x", nargs=nargs)  # pylint: disable=cell-var-from-loop
+                @staticmethod
+                def parsex(s):
+                    return 0
+
+            if nargs is None:
+                _run_and_check(C, nargs, ["x"], ["x"])
+                # _run_and_check(C, [], [])
+                with self.assertRaises(argparse.ArgumentTypeError):
+                    _run_and_check(C, nargs, ["x", "y"], [["x", "y"]])
+            elif nargs == "*":
+                _run_and_check(C, nargs, ["x"], [["x"]])
+                _run_and_check(C, nargs, [], [[]])
+            elif nargs == "+":
+                _run_and_check(C, nargs, ["x"], [["x"]])
+                with self.assertRaises(argparse.ArgumentTypeError):
+                    _run_and_check(C, nargs, [], [])
+            else:
+                _run_and_check(C, nargs, ["x", "y", "z"], [["x", "y", "z"]])
+                with self.assertRaises(argparse.ArgumentTypeError):
+                    _run_and_check(C, nargs, ["x", "y"], [["x", "y"]])
+
     def test_cmdline_parsing_returns_custom_parser_output(self):
         class C(Corgy):
             x: int
 
             @corgyparser("x")
-            def parsex(s: str):  # type: ignore # pylint: disable=no-self-argument
+            def parsex(s):  # type: ignore # pylint: disable=no-self-argument
                 return -1
 
         parser = argparse.ArgumentParser()
@@ -2114,7 +2187,7 @@ class TestCorgyCustomParsers(unittest.TestCase):
 
             @corgyparser("x")
             @staticmethod
-            def parsex(s: str):
+            def parsex(s):
                 return 0
 
         parser = argparse.ArgumentParser()
@@ -2132,7 +2205,7 @@ class TestCorgyCustomParsers(unittest.TestCase):
 
                 @corgyparser("x")
                 @classmethod
-                def parsex(cls, s: str):
+                def parsex(cls, s):
                     return 0
 
     def test_corgyparser_functions_are_callable(self):
@@ -2142,11 +2215,11 @@ class TestCorgyCustomParsers(unittest.TestCase):
 
             @corgyparser("x")
             @staticmethod
-            def parsex(s: str):
+            def parsex(s):
                 return 0
 
             @corgyparser("y")
-            def parsey(s: str):  # type: ignore # pylint: disable=no-self-argument
+            def parsey(s):  # type: ignore # pylint: disable=no-self-argument
                 return 1
 
         self.assertEqual(C.parsex("x"), 0)
@@ -2159,8 +2232,8 @@ class TestCorgyCustomParsers(unittest.TestCase):
 
             @corgyparser("x", "y")
             @staticmethod
-            def parsexy(s: str):
-                return int(s)
+            def parsexy(s):
+                return 0
 
         self.assertIs(getattr(C, "__parsers")["x"], getattr(C, "__parsers")["y"])
 
@@ -2172,8 +2245,8 @@ class TestCorgyCustomParsers(unittest.TestCase):
             @corgyparser("x")
             @corgyparser("y")
             @staticmethod
-            def parsexy(s: str):
-                return int(s)
+            def parsexy(s):
+                return 0
 
         self.assertIs(getattr(C, "__parsers")["x"], getattr(C, "__parsers")["y"])
 
@@ -2183,14 +2256,16 @@ class TestCorgyCustomParsers(unittest.TestCase):
 
             @corgyparser("x", metavar="custom")
             @staticmethod
-            def parsex(s: str):
+            def parsex(s):
                 return 0
 
         parser = argparse.ArgumentParser()
         parser.add_argument = MagicMock()
-        C.add_args_to_parser(parser)
+        _parser_action = partial(CorgyParserAction, C.parsex)
+        with patch("corgy._corgy.partial", MagicMock(return_value=_parser_action)):
+            C.add_args_to_parser(parser)
         parser.add_argument.assert_called_once_with(
-            "--x", type=C.parsex.fparse, required=True, metavar="custom"
+            "--x", type=str, action=_parser_action, required=True, metavar="custom"
         )
 
     def test_corgyparser_handles_setting_metavar_with_chaining(self):
@@ -2205,7 +2280,7 @@ class TestCorgyCustomParsers(unittest.TestCase):
             @corgyparser("z")
             @corgyparser("w", metavar="custom w")
             @staticmethod
-            def parsexyzw(s: str):
+            def parsexyzw(s):
                 return 0
 
         self.assertEqual(C.parsexyzw.fparse.__metavar__, "custom y")
@@ -2219,14 +2294,16 @@ class TestCorgyCustomParsers(unittest.TestCase):
 
             @corgyparser("x")
             @staticmethod
-            def parsex(s: str):
+            def parsex(s):
                 return 0
 
         parser = argparse.ArgumentParser()
         parser.add_argument = MagicMock()
-        C.add_args_to_parser(parser)
+        _parser_action = partial(CorgyParserAction, C.parsex)
+        with patch("corgy._corgy.partial", MagicMock(return_value=_parser_action)):
+            C.add_args_to_parser(parser)
         parser.add_argument.assert_called_once_with(
-            "--x", type=C.parsex.fparse, required=True, metavar="T"
+            "--x", type=str, action=_parser_action, required=True, metavar="T"
         )
 
     def test_corgyparser_metavar_overrides_type_metavar(self):
@@ -2238,14 +2315,16 @@ class TestCorgyCustomParsers(unittest.TestCase):
 
             @corgyparser("x", metavar="custom")
             @staticmethod
-            def parsex(s: str):
+            def parsex(s):
                 return 0
 
         parser = argparse.ArgumentParser()
         parser.add_argument = MagicMock()
-        C.add_args_to_parser(parser)
+        _parser_action = partial(CorgyParserAction, C.parsex)
+        with patch("corgy._corgy.partial", MagicMock(return_value=_parser_action)):
+            C.add_args_to_parser(parser)
         parser.add_argument.assert_called_once_with(
-            "--x", type=C.parsex.fparse, required=True, metavar="custom"
+            "--x", type=str, action=_parser_action, required=True, metavar="custom"
         )
 
     def test_corgy_cls_inherits_custom_parser(self):
@@ -2255,7 +2334,7 @@ class TestCorgyCustomParsers(unittest.TestCase):
             @corgyparser("x")
             @staticmethod
             def parsex(s):
-                return int(s) + 1
+                return int(s[0]) + 1
 
         class D(C):
             ...
@@ -2266,6 +2345,110 @@ class TestCorgyCustomParsers(unittest.TestCase):
 
         d = D.parse_from_cmdline(parser)
         self.assertEqual(d.x, 2)
+
+    def test_corgy_cls_overrides_nargs_with_custom_parser(self):
+        class C1(Corgy):
+            x: Tuple[int]
+
+            @corgyparser("x")
+            @staticmethod
+            def parsex(s):
+                return 0
+
+        class C2(C1):
+            x: Tuple[int, ...]  # type: ignore
+
+        class C3(C1):
+            x: Tuple[int, int, int]  # type: ignore
+
+        for C in (C1, C2, C3):
+            with self.subTest(cls=C.__name__):
+                parser = argparse.ArgumentParser()
+                parser.add_argument = MagicMock()
+                _parser_action = partial(CorgyParserAction, C.parsex)
+                with patch(
+                    "corgy._corgy.partial", MagicMock(return_value=_parser_action)
+                ):
+                    C.add_args_to_parser(parser)
+                parser.add_argument.assert_called_once_with(
+                    "--x", type=str, required=True, action=_parser_action
+                )
+
+    def test_corgy_cls_respects_choices_with_custom_parser(self):
+        class C(Corgy):
+            x: Literal[1, 2, 3]
+
+            @corgyparser("x")
+            @staticmethod
+            def parsex(s):
+                return 1
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument = MagicMock()
+        _parser_action = partial(CorgyParserAction, C.parsex)
+        with patch("corgy._corgy.partial", MagicMock(return_value=_parser_action)):
+            C.add_args_to_parser(parser)
+        parser.add_argument.assert_called_once_with(
+            "--x", type=str, required=True, action=_parser_action, choices=(1, 2, 3)
+        )
+
+    def test_corgy_cls_respects_optional_with_custom_parser(self):
+        class C(Corgy):
+            x: Optional[int]
+
+            @corgyparser("x")
+            @staticmethod
+            def parsex(s):
+                return 0
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument = MagicMock()
+        _parser_action = partial(CorgyParserAction, C.parsex)
+        with patch("corgy._corgy.partial", MagicMock(return_value=_parser_action)):
+            C.add_args_to_parser(parser)
+        parser.add_argument.assert_called_once_with(
+            "--x", type=str, action=_parser_action
+        )
+
+    def test_cmdline_parsing_of_complex_nested_types_works_with_custom_parser(self):
+        class C(Corgy):
+            x: Tuple[Tuple[int, float], ...]
+
+            @corgyparser("x", nargs="*")
+            @staticmethod
+            def parsex(s_tup):
+                if not s_tup:
+                    raise ValueError
+                if len(s_tup) % 2:
+                    raise ValueError
+                o_list = []
+                for _i in range(len(s_tup) // 2):
+                    s = [s_tup[2 * _i], s_tup[2 * _i + 1]]
+                    o_list.append((int(s[0]), float(s[1])))
+                return tuple(o_list)
+
+        orig_parse_args = argparse.ArgumentParser.parse_args
+
+        def _run_with_args(*cmd_args):
+            parser = argparse.ArgumentParser()
+            parser.parse_args = lambda: orig_parse_args(
+                parser, ["--x"] + list(cmd_args)
+            )
+            args = C.parse_from_cmdline(parser)
+            return args.x
+
+        self.assertTupleEqual(_run_with_args("1", "2.1"), ((1, 2.1),))
+        self.assertTupleEqual(
+            _run_with_args("1", "2.1", "3", "4.1"), ((1, 2.1), (3, 4.1))
+        )
+        with self.assertRaises(argparse.ArgumentTypeError):
+            _run_with_args("1", "two")
+        with self.assertRaises(argparse.ArgumentTypeError):
+            _run_with_args("1.1", "2.1")
+        with self.assertRaises(argparse.ArgumentTypeError):
+            _run_with_args("1", "2.1", "3")
+        with self.assertRaises(argparse.ArgumentTypeError):
+            _run_with_args()
 
 
 @skipIf(tomli is None, "`tomli` package not found")
