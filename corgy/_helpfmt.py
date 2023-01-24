@@ -341,18 +341,19 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 text_pieces[i] = self._color_helper.colorize(repl_piece, color)
         return "".join(text_pieces)
 
-    def _get_default_metavar_for_optional(self, action: Action) -> str:
+    @staticmethod
+    def _get_default_metavar_for_type(type_, using_colors) -> str:
         """Metavar to use if none is explicitly provided.
 
         Special attribute `__metavar__` can be added to any type, to use a custom
         metavar for that type. Other types use the name of type itself.
         """
-        if action.type:
-            custom_metavar = getattr(action.type, "__metavar__", None)
+        if type_:
+            custom_metavar = getattr(type_, "__metavar__", None)
             if custom_metavar is not None:
                 return custom_metavar
 
-            if self.using_colors:
+            if using_colors:
                 marker_metavars_begin = _PLACEHOLDER_METAVARS_BEGIN
                 marker_metavars_end = _PLACEHOLDER_METAVARS_END
                 marker_metavars_repeat = _PLACEHOLDER_METAVARS_REPEAT
@@ -362,20 +363,21 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 marker_metavars_repeat = _MARKER_METAVARS_REPEAT
 
             if (
-                corgy._corgy._is_sequence_type(action.type)
-                or corgy._corgy._is_tuple_type(action.type)
+                corgy._corgy._is_sequence_type(type_)
+                or corgy._corgy._is_tuple_type(type_)
             ) and (
-                isinstance(getattr(action.type, "__args__", None), AbstractSequence)
-                and action.type is not Sequence
+                isinstance(getattr(type_, "__args__", None), AbstractSequence)
+                and type_ is not Sequence
             ):
                 # `action.type` is a sequence. So, create a metavar list based on the
                 # base type(s).
-                _type_args = getattr(action.type, "__args__")
+                _type_args = getattr(type_, "__args__")
                 if len(_type_args) == 1 or (
                     len(_type_args) == 2 and _type_args[1] is Ellipsis
                 ):
-                    with patch.object(action, "type", _type_args[0]):
-                        _base_metavar = self._get_default_metavar_for_optional(action)
+                    _base_metavar = CorgyHelpFormatter._get_default_metavar_for_type(
+                        _type_args[0], using_colors
+                    )
                     # '[<base_type> ...]'.
                     _metavar_repeat = (
                         marker_metavars_begin
@@ -391,29 +393,34 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
 
                 _part_metavars = []
                 for _part_type in _type_args:
-                    with patch.object(action, "type", _part_type):
-                        _part_metavars.append(
-                            self._get_default_metavar_for_optional(action)
+                    _part_metavars.append(
+                        CorgyHelpFormatter._get_default_metavar_for_type(
+                            _part_type, using_colors
                         )
+                    )
                 # '<base_type_1> <base_type_2> <...> <base_type_n>'.
                 return " ".join(_part_metavars)
 
-            if corgy._corgy._is_optional_type(action.type):
+            if corgy._corgy._is_optional_type(type_):
                 # `action.type` is optional. So, return '[<base metavar>]'.
-                _base_type = getattr(action.type, "__args__")[0]
-                with patch.object(action, "type", _base_type):
-                    _s = (
-                        marker_metavars_begin
-                        + self._get_default_metavar_for_optional(action)
-                        + marker_metavars_end
+                _base_type = getattr(type_, "__args__")[0]
+                _s = (
+                    marker_metavars_begin
+                    + CorgyHelpFormatter._get_default_metavar_for_type(
+                        _base_type, using_colors
                     )
-                    return _s
+                    + marker_metavars_end
+                )
+                return _s
 
             try:
-                return getattr(action.type, "__name__")
+                return getattr(type_, "__name__")
             except AttributeError:
-                return str(action.type)
+                return str(type_)
         return ""
+
+    def _get_default_metavar_for_optional(self, action: Action) -> str:
+        return self._get_default_metavar_for_type(action.type, self.using_colors)
 
     def _format_action_invocation(self, action: Action) -> str:
         """Format the invocation part of an argument, e.g. `-x, --x int`."""
