@@ -979,7 +979,7 @@ class Corgy(metaclass=_CorgyMeta):
     def __str__(self) -> str:
         return self._str(str)
 
-    def as_dict(self, recursive: bool = False) -> Dict[str, Any]:
+    def as_dict(self, recursive: bool = True) -> Dict[str, Any]:
         """Return the object as a dictionary.
 
         The returned dictionary maps attribute names to their values. Unset attributes

@@ -756,16 +756,16 @@ class TestCorgyAsDict(unittest.TestCase):
         c = self._CorgyCls(x3=30, x4="40")
         self.assertDictEqual(c.as_dict(), {"x3": 30, "x4": "40"})
 
-    def test_as_dict_adds_groups_directly_by_default(self):
+    def test_as_dict_adds_groups_directly_if_recursion_disabled(self):
         class D(Corgy):
             x: int
             c: self._CorgyCls
 
         c = self._CorgyCls()
         d = D(x=1, c=c)
-        self.assertDictEqual(d.as_dict(), {"x": 1, "c": c})
+        self.assertDictEqual(d.as_dict(recursive=False), {"x": 1, "c": c})
 
-    def test_as_dict_add_groups_as_dicts_when_recursive(self):
+    def test_as_dict_add_groups_as_dicts_by_default(self):
         class C(Corgy):
             x: int
             y: str
@@ -780,8 +780,7 @@ class TestCorgyAsDict(unittest.TestCase):
 
         e = E(x=1, d=D(x=10, c=C(x=100, y="100")))
         self.assertDictEqual(
-            e.as_dict(recursive=True),
-            {"x": 1, "d": {"x": 10, "c": {"x": 100, "y": "100"}}},
+            e.as_dict(), {"x": 1, "d": {"x": 10, "c": {"x": 100, "y": "100"}}}
         )
 
 
