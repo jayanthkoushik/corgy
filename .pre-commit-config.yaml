@@ -57,3 +57,8 @@ repos:
     exclude: "tests/.*\\.py"
     entry: poetry run docs/make.sh
     pass_filenames: false
+  - id: cspell
+    name: spell check docs
+    language: system
+    files: "docs/.*\\.md"
+    entry: "npx cspell --no-summary --no-progress --no-must-find-files --file-list stdin"

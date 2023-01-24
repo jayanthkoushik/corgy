@@ -205,7 +205,7 @@ class Sub2(Base): ...
 
 BaseSubType = SubClass[Base]  # type for a sub-class of `Base`
 BaseSub = BaseSubType("Sub1")  # sub-class of `Base` named `Sub1`
-base_sub = BaseSub()  # instace of a sub-class of `Base`
+base_sub = BaseSub()  # instance of a sub-class of `Base`
 ```
 
 This class cannot be called directly. It first needs to be associated with a base
@@ -334,7 +334,7 @@ By default, the class expects a string of the form `key1=value1,key2=value2,...`
 This can be changed by setting the following class attributes:
 
 
-* sequence_separator: The string that separates indidivual key-value pairs. The
+* sequence_separator: The string that separates individual key-value pairs. The
 
     default is `,`.
 
