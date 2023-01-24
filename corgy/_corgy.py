@@ -900,6 +900,10 @@ class Corgy(metaclass=_CorgyMeta):
             else:
                 var_choices = None
 
+            var_type_metavar: Optional[str] = getattr(
+                var_base_type, "__metavar__", None
+            )
+
             # Check if the variable is boolean. Boolean variables are converted to
             # `--<var-name>`/`--no-<var-name>` arguments.
             if var_base_type is bool and var_nargs is None:
@@ -910,10 +914,7 @@ class Corgy(metaclass=_CorgyMeta):
                 # after parsing.
                 var_action = MakeBoolAction
                 var_base_type = int
-
-            var_type_metavar: Optional[str] = getattr(
-                var_base_type, "__metavar__", None
-            )
+                var_type_metavar = "bool"
 
             # Check if the variable has a custom parser.
             _parsers = getattr(cls, "__parsers")

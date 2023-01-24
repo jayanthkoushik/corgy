@@ -1183,7 +1183,12 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
-            "--x", type=int, required=True, nargs="*", action=MakeBoolAction
+            "--x",
+            type=int,
+            required=True,
+            nargs="*",
+            action=MakeBoolAction,
+            metavar="bool",
         )
 
     def test_add_args_raises_if_sequence_has_no_types(self):
