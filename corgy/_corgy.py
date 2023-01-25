@@ -1010,7 +1010,7 @@ class Corgy(metaclass=_CorgyMeta):
         return _dict
 
     @classmethod
-    def from_dict(cls: Type[_T], d: Dict[str, Any]) -> _T:
+    def from_dict(cls: Type[_T], d: Mapping[str, Any]) -> _T:
         """Return a new instance of the class using a dictionary.
 
         This is roughly equivalent to `cls(**d)`, with the main exception being that
