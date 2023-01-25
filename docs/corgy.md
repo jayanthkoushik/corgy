@@ -427,6 +427,12 @@ attribute, in which case, it will be passed as is. To change the metavar for
 arguments with custom parsers, set the `metavar` argument of `corgyparser`.
 
 
+#### _classmethod_ attrs()
+Return a dictionary mapping attributes of the class to their types.
+
+`Annotated` annotations are stripped, and only the underlying type is returned.
+
+
 #### as_dict(recursive=True, flatten=False)
 Return the object as a dictionary.
 

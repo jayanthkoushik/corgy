@@ -224,8 +224,8 @@ class TestCorgyMeta(unittest.TestCase):
 
         for _x, _type in zip(["x1", "x2", "x3"], [int, str, SequenceType[str]]):
             with self.subTest(var=_x):
-                self.assertIn(_x, C.__annotations__)
-                self.assertEqual(C.__annotations__[_x], _type)
+                self.assertIn(_x, C.attrs())
+                self.assertEqual(C.attrs()[_x], _type)
 
         self.assertEqual(getattr(C, "__helps")["x2"], "x2 help")
 
@@ -261,10 +261,11 @@ class TestCorgyClassInheritance(unittest.TestCase):
             x2: int
 
         for cls in (D, DCorgy):
+            cls_attrs = cls.attrs()
             with self.subTest(cls=cls):
-                self.assertIn("x1", cls.__annotations__)
-                self.assertIn("x2", cls.__annotations__)
-                self.assertIn("x3", cls.__annotations__)
+                self.assertIn("x1", cls_attrs)
+                self.assertIn("x2", cls_attrs)
+                self.assertIn("x3", cls_attrs)
 
     def test_corgy_cls_doesnt_inherit_annotations_if_disabled(self):
         class C:
@@ -280,9 +281,10 @@ class TestCorgyClassInheritance(unittest.TestCase):
             x2: int
 
         for cls in (D, DCorgy):
+            cls_attrs = cls.attrs()
             with self.subTest(cls=cls):
-                self.assertIn("x2", cls.__annotations__)
-                self.assertNotIn("x1", cls.__annotations__)
+                self.assertIn("x2", cls_attrs)
+                self.assertNotIn("x1", cls_attrs)
 
     def test_corgy_cls_inherits_annotations_from_ancestors(self):
         class C(Corgy):
@@ -297,15 +299,17 @@ class TestCorgyClassInheritance(unittest.TestCase):
         class E2(D, corgy_track_bases=False):
             x3: float
 
+        e1_attrs = E1.attrs()
         for _x, _type in zip(["x1", "x2", "x3"], [int, str, float]):
             with self.subTest(var=_x):
-                self.assertIn(_x, E1.__annotations__)
-                self.assertEqual(E1.__annotations__[_x], _type)
+                self.assertIn(_x, e1_attrs)
+                self.assertEqual(e1_attrs[_x], _type)
 
-        self.assertNotIn("x1", E2.__annotations__)
-        self.assertNotIn("x2", E2.__annotations__)
-        self.assertIn("x3", E2.__annotations__)
-        self.assertEqual(E2.__annotations__["x3"], float)
+        e2_attrs = E2.attrs()
+        self.assertNotIn("x1", e2_attrs)
+        self.assertNotIn("x2", e2_attrs)
+        self.assertIn("x3", e2_attrs)
+        self.assertEqual(e2_attrs["x3"], float)
 
     def test_corgy_cls_overrides_inherited_annotations(self):
         class C:
@@ -322,7 +326,7 @@ class TestCorgyClassInheritance(unittest.TestCase):
 
         for cls in (D, DCorgy):
             with self.subTest(cls=cls):
-                self.assertEqual(cls.x1.fget.__annotations__["return"], str)
+                self.assertEqual(cls.attrs()["x1"], str)
 
     def test_corgy_cls_subclass_works_without_annotations(self):
         class C(Corgy):
@@ -345,9 +349,10 @@ class TestCorgyClassInheritance(unittest.TestCase):
         class E(Corgy, C, D):
             ...
 
-        self.assertIn("x1", E.__annotations__)
-        self.assertIn("x2", E.__annotations__)
-        self.assertIn("x3", E.__annotations__)
+        e_attrs = E.attrs()
+        self.assertIn("x1", e_attrs)
+        self.assertIn("x2", e_attrs)
+        self.assertIn("x3", e_attrs)
 
     def test_corgy_cls_inherits_group_annotations(self):
         class C:
@@ -371,9 +376,10 @@ class TestCorgyClassInheritance(unittest.TestCase):
             ...
 
         for cls, ccls in zip((E, ECorgy), (C, CCorgy)):
+            cls_attrs = cls.attrs()
             with self.subTest(cls=cls):
-                self.assertIn("c", cls.__annotations__)
-                self.assertIs(cls.c.fget.__annotations__["return"], ccls)
+                self.assertIn("c", cls_attrs)
+                self.assertIs(cls_attrs["c"], ccls)
 
     def test_corgy_cls_inherits_defaults(self):
         class C:
@@ -731,6 +737,36 @@ class TestCorgyInit(unittest.TestCase):
         self.assertEqual(c.x1, 10)
         self.assertEqual(c.g.x1, 1)
         self.assertEqual(c.g.x2, "2")
+
+
+class TestCorgyAttrs(unittest.TestCase):
+    def test_corgy_cls_attrs_returns_dict_with_attr_types(self):
+        class A(Corgy):
+            x: int
+            y: Sequence[str]
+
+        self.assertDictEqual(A.attrs(), {"x": int, "y": Sequence[str]})
+
+    def test_corgy_cls_attrs_strips_annotated(self):
+        class A(Corgy):
+            x: Annotated[int, "x"]
+
+        self.assertDictEqual(A.attrs(), {"x": int})
+
+    def test_corgy_cls_attrs_returns_empty_dict_if_no_attrs(self):
+        class A(Corgy):
+            ...
+
+        self.assertDictEqual(A.attrs(), {})
+
+    def test_corgy_cls_attrs_returns_group_types(self):
+        class A(Corgy):
+            ...
+
+        class B(Corgy):
+            a: A
+
+        self.assertEqual(B.attrs(), {"a": A})
 
 
 class TestCorgyAsDict(unittest.TestCase):

@@ -960,7 +960,7 @@ class Corgy(metaclass=_CorgyMeta):
     def _str(self, f_str: Callable[..., str]) -> str:
         s = f"{self.__class__.__name__}("
         i = 0
-        for arg_name in getattr(self.__class__, "__annotations__"):
+        for arg_name in self.attrs():
             try:
                 _val_s = f_str(getattr(self, arg_name))
             except AttributeError:
@@ -981,6 +981,17 @@ class Corgy(metaclass=_CorgyMeta):
     def __str__(self) -> str:
         return self._str(str)
 
+    @classmethod
+    def attrs(cls) -> Dict[str, Type]:
+        """Return a dictionary mapping attributes of the class to their types.
+
+        `Annotated` annotations are stripped, and only the underlying type is returned.
+        """
+        return {
+            _attr: getattr(cls, _attr).fget.__annotations__["return"]
+            for _attr in cls.__annotations__
+        }
+
     def as_dict(self, recursive: bool = True, flatten: bool = False) -> Dict[str, Any]:
         """Return the object as a dictionary.
 
@@ -994,7 +1005,7 @@ class Corgy(metaclass=_CorgyMeta):
                 Only takes effect if `recursive` is `True`.
         """
         _dict = {}
-        for arg_name in getattr(self.__class__, "__annotations__"):
+        for arg_name in self.attrs():
             try:
                 _val = getattr(self, arg_name)
             except AttributeError:
@@ -1047,6 +1058,7 @@ class Corgy(metaclass=_CorgyMeta):
         """
         main_args_map = {}
         grp_args_map: Dict[str, Any] = defaultdict(dict)
+        cls_attrs = cls.attrs()
 
         for arg_name, arg_val in d.items():
             if ":" in arg_name:
@@ -1060,20 +1072,20 @@ class Corgy(metaclass=_CorgyMeta):
                     raise ValueError(
                         f"conflicting arguments: `{arg_name}` and `{grp_name}`"
                     )
-                grp_type = getattr(cls, grp_name).fget.__annotations__["return"]
+                grp_type = cls_attrs[grp_name]
                 if not isinstance(grp_type, _CorgyMeta):
                     raise ValueError(f"`{grp_name}` is not a `Corgy` class")
                 grp_args_map[grp_name][arg_name_base] = arg_val
 
             elif hasattr(cls, arg_name):
-                arg_type = getattr(cls, arg_name).fget.__annotations__["return"]
+                arg_type = cls_attrs[arg_name]
                 if isinstance(arg_type, _CorgyMeta) and isinstance(arg_val, dict):
                     grp_args_map[arg_name] = arg_val
                 else:
                     main_args_map[arg_name] = arg_val
 
         for grp_name, grp_args in grp_args_map.items():
-            grp_type = getattr(cls, grp_name).fget.__annotations__["return"]
+            grp_type = cls_attrs[grp_name]
             main_args_map[grp_name] = grp_type.from_dict(grp_args)
 
         return cls(**main_args_map)
