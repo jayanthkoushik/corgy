@@ -22,6 +22,8 @@ a = A()
 a.x = 1
 a.y  # AttributeError (y is not set)
 a.y = a.x + 1.1
+del a.x  # unset x
+a.x  # AttributeError
 ```
 
 Note that the class’s `__init__` method only accepts keyword arguments, and ignores

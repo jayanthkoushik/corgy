@@ -376,10 +376,13 @@ class _CorgyMeta(type):
             _check_val_type(val, var_type)
             setattr(self, f"_{cls_name.lstrip('_')}__{var_name}", val)
 
+        def var_fdel(self):
+            delattr(self, f"_{cls_name.lstrip('_')}__{var_name}")
+
         var_fget.__annotations__ = {"return": var_type}
         var_fset.__annotations__ = {"val": var_type}
 
-        return property(var_fget, var_fset, doc=var_doc)
+        return property(var_fget, var_fset, var_fdel, doc=var_doc)
 
 
 class Corgy(metaclass=_CorgyMeta):
@@ -398,6 +401,8 @@ class Corgy(metaclass=_CorgyMeta):
         a.x = 1
         a.y  # AttributeError (y is not set)
         a.y = a.x + 1.1
+        del a.x  # unset x
+        a.x  # AttributeError
 
     Note that the class's `__init__` method only accepts keyword arguments, and ignores
     arguments without a corresponding attribute. The following are all valid::

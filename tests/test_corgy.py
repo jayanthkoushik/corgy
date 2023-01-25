@@ -243,6 +243,29 @@ class TestCorgyMeta(unittest.TestCase):
                 with self.assertRaises(AttributeError):
                     _x_default = getattr(corgy_inst, _x)
 
+    def test_corgy_instance_attrs_can_be_unset_with_del(self):
+        corgy_inst = self._CorgyCls(x2=1)
+        self.assertEqual(corgy_inst.x2, 1)
+        del corgy_inst.x2
+        with self.assertRaises(AttributeError):
+            _ = corgy_inst.x2
+        self.assertIn("x2=<unset>", str(corgy_inst))
+
+    def test_corgy_instance_attr_unset_handles_defaults(self):
+        corgy_inst = self._CorgyCls()
+        self.assertEqual(corgy_inst.x3, 3)
+        corgy_inst.x3 = 4
+        self.assertEqual(corgy_inst.x3, 4)
+        del corgy_inst.x3
+        self.assertEqual(corgy_inst.x3, 3)
+
+    def test_corgy_instance_raises_on_del_of_unset_attr(self):
+        corgy_inst = self._CorgyCls()
+        with self.assertRaises(AttributeError):
+            del corgy_inst.x1
+        with self.assertRaises(AttributeError):
+            del corgy_inst.x3
+
 
 class TestCorgyClassInheritance(unittest.TestCase):
     def test_corgy_cls_inherits_annotations_by_default(self):
