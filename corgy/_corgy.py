@@ -979,7 +979,7 @@ class Corgy(metaclass=_CorgyMeta):
     def __str__(self) -> str:
         return self._str(str)
 
-    def as_dict(self, recursive: bool = True) -> Dict[str, Any]:
+    def as_dict(self, recursive: bool = True, flatten: bool = False) -> Dict[str, Any]:
         """Return the object as a dictionary.
 
         The returned dictionary maps attribute names to their values. Unset attributes
@@ -988,6 +988,8 @@ class Corgy(metaclass=_CorgyMeta):
         Args:
             recursive: whether to recursively call `as_dict` on attributes which are
                 `Corgy` instances. Otherwise, they are returned as is.
+            flatten: whether to flatten group arguments into `:` separated strings.
+                Only takes effect if `recursive` is `True`.
         """
         _dict = {}
         for arg_name in getattr(self.__class__, "__annotations__"):
@@ -996,7 +998,12 @@ class Corgy(metaclass=_CorgyMeta):
             except AttributeError:
                 continue
             if recursive and isinstance(_val.__class__, _CorgyMeta):
-                _val = _val.as_dict(recursive=True)
+                _val = _val.as_dict(recursive=True, flatten=flatten)
+                if flatten:
+                    for _k, _v in _val.items():
+                        _flat_key = f"{arg_name}:{_k}"
+                        _dict[_flat_key] = _v
+                    continue
             _dict[arg_name] = _val
         return _dict
 

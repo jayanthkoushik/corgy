@@ -765,6 +765,15 @@ class TestCorgyAsDict(unittest.TestCase):
         d = D(x=1, c=c)
         self.assertDictEqual(d.as_dict(recursive=False), {"x": 1, "c": c})
 
+    def test_as_dict_ignores_flatten_if_recursion_disabled(self):
+        class D(Corgy):
+            x: int
+            c: self._CorgyCls
+
+        c = self._CorgyCls()
+        d = D(x=1, c=c)
+        self.assertDictEqual(d.as_dict(recursive=False, flatten=True), {"x": 1, "c": c})
+
     def test_as_dict_add_groups_as_dicts_by_default(self):
         class C(Corgy):
             x: int
@@ -782,6 +791,44 @@ class TestCorgyAsDict(unittest.TestCase):
         self.assertDictEqual(
             e.as_dict(), {"x": 1, "d": {"x": 10, "c": {"x": 100, "y": "100"}}}
         )
+
+    def test_as_dict_flattens_groups_if_flatten_true(self):
+        class C(Corgy):
+            x: int
+            y: str
+
+        class D(Corgy):
+            x: int
+            c: C
+
+        class E(Corgy):
+            x: int
+            d: D
+
+        e = E(x=1, d=D(x=10, c=C(x=100, y="100")))
+        self.assertDictEqual(
+            e.as_dict(flatten=True), {"x": 1, "d:x": 10, "d:c:x": 100, "d:c:y": "100"}
+        )
+
+    def test_as_dict_with_flatten_is_inverted_by_from_dict(self):
+        class C(Corgy):
+            x: int
+            y: str
+
+        class D(Corgy):
+            x: int
+            c: C
+
+        class E(Corgy):
+            x: int
+            d: D
+
+        e1 = E(x=1, d=D(x=10, c=C(x=100, y="100")))
+        e2 = E.from_dict(e1.as_dict(flatten=True))
+        self.assertEqual(e2.x, e1.x)
+        self.assertEqual(e2.d.x, e1.d.x)
+        self.assertEqual(e2.d.c.x, e1.d.c.x)
+        self.assertEqual(e2.d.c.y, e1.d.c.y)
 
 
 class TestCorgyFromDict(unittest.TestCase):

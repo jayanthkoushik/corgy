@@ -427,7 +427,7 @@ attribute, in which case, it will be passed as is. To change the metavar for
 arguments with custom parsers, set the `metavar` argument of `corgyparser`.
 
 
-#### as_dict(recursive=True)
+#### as_dict(recursive=True, flatten=False)
 Return the object as a dictionary.
 
 The returned dictionary maps attribute names to their values. Unset attributes
@@ -436,8 +436,13 @@ are omitted, unless they have default values.
 
 * **Parameters**
 
-    **recursive** – whether to recursively call `as_dict` on attributes which are
+
+    * **recursive** – whether to recursively call `as_dict` on attributes which are
     `Corgy` instances. Otherwise, they are returned as is.
+
+
+    * **flatten** – whether to flatten group arguments into `:` separated strings.
+    Only takes effect if `recursive` is `True`.
 
 
 
