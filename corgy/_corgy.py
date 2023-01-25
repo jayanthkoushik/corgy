@@ -961,13 +961,15 @@ class Corgy(metaclass=_CorgyMeta):
         s = f"{self.__class__.__name__}("
         i = 0
         for arg_name in getattr(self.__class__, "__annotations__"):
-            if i != 0:
-                s = s + ", "
-            s = s + f"{arg_name}="
             try:
                 _val_s = f_str(getattr(self, arg_name))
             except AttributeError:
+                if f_str is repr:
+                    continue
                 _val_s = "<unset>"
+            if i != 0:
+                s = s + ", "
+            s = s + f"{arg_name}="
             s = s + _val_s
             i += 1
         s = s + ")"

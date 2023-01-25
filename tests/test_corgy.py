@@ -982,17 +982,34 @@ class TestCorgyPrinting(unittest.TestCase):
         self.assertEqual(repr(c), "_CorgyCls(x1=[0, 1], x2=2, x3=3, x4='8')")
         self.assertEqual(str(c), "_CorgyCls(x1=[0, 1], x2=2, x3=3, x4=8)")
 
-    def test_repr_handles_unset_values(self):
+    def test_corgy_instance_repr_str_handles_unset_values(self):
         c = self._CorgyCls()
-        self.assertEqual(repr(c), "_CorgyCls(x1=<unset>, x2=<unset>, x3=3, x4='4')")
+        self.assertEqual(repr(c), "_CorgyCls(x3=3, x4='4')")
+        self.assertEqual(str(c), "_CorgyCls(x1=<unset>, x2=<unset>, x3=3, x4=4)")
 
-    def test_repr_handles_groups(self):
+    def test_corgy_instance_repr_str_handles_groups(self):
         class D(Corgy):
             x: int
             c: self._CorgyCls
 
         d = D(x=1, c=self._CorgyCls(x1=[0, 1], x2=2, x4="8"))
         self.assertEqual(repr(d), "D(x=1, c=_CorgyCls(x1=[0, 1], x2=2, x3=3, x4='8'))")
+        self.assertEqual(str(d), "D(x=1, c=_CorgyCls(x1=[0, 1], x2=2, x3=3, x4=8))")
+
+    def test_corgy_instance_repr_eval_is_instance(self):
+        class C(Corgy):
+            x: Sequence[int]
+            y: str = "one"
+
+        class D(Corgy):
+            x: int
+            c: C
+
+        d1 = D(x=1, c=C(x=[0, 1]))
+        d2 = eval(repr(d1))  # pylint: disable=eval-used
+        self.assertEqual(d2.x, d1.x)
+        self.assertEqual(d2.c.y, d1.c.y)
+        self.assertListEqual(d2.c.x, d1.c.x)
 
 
 class TestCorgyAddArgsToParser(unittest.TestCase):
