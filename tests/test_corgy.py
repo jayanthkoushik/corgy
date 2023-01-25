@@ -791,6 +791,15 @@ class TestCorgyAttrs(unittest.TestCase):
 
         self.assertEqual(B.attrs(), {"a": A})
 
+    def test_corgy_cls_attrs_includes_inherited_attrs(self):
+        class A:
+            x: int
+
+        class B(Corgy, A):
+            y: str
+
+        self.assertEqual(B.attrs(), {"x": int, "y": str})
+
 
 class TestCorgyAsDict(unittest.TestCase):
     @classmethod
