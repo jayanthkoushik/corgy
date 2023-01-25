@@ -2700,3 +2700,115 @@ class TestCorgyTomlParsing(unittest.TestCase):
         f = BytesIO(b"x = [1, 2, 3]\n")
         c = C.parse_from_toml(f)
         self.assertEqual(c.x, 6)
+
+
+class TestCorgyEquality(unittest.TestCase):
+    def test_corgy_instance_is_equal_to_itself(self):
+        class A(Corgy):
+            x: int
+
+        a = A(x=1)
+        self.assertEqual(a, a)
+
+    def test_corgy_instances_are_equal_when_all_attrs_same(self):
+        class A(Corgy):
+            x: int
+
+        a1 = A(x=1)
+        a2 = A(x=1)
+        self.assertEqual(a1, a2)
+
+    def test_corgy_instances_are_equal_when_unset_attrs_match(self):
+        class A(Corgy):
+            x: int
+            y: str
+
+        a1 = A(x=1)
+        a2 = A(x=1)
+        self.assertEqual(a1, a2)
+
+    def test_corgy_instances_are_unequal_when_unset_attrs_dont_match(self):
+        class A(Corgy):
+            x: int
+            y: str
+
+        a1 = A(x=1)
+        a2 = A(x=1, y="2")
+        self.assertNotEqual(a1, a2)
+
+    def test_corgy_instances_are_equal_when_default_val_overwritten(self):
+        class A(Corgy):
+            x: int = 1
+
+        a1 = A()
+        a2 = A()
+        a2.x = 1
+        self.assertEqual(a1, a2)
+
+    def test_corgy_instance_equality_handles_groups(self):
+        class A(Corgy):
+            x: int
+
+        class B(Corgy):
+            x: str
+            a: A
+
+        b1 = B(x="1", a=A(x=1))
+        b2 = B(x="1", a=A(x=1))
+        b3 = B(x="1", a=A())
+        self.assertEqual(b1, b2)
+        self.assertNotEqual(b2, b3)
+
+    def test_corgy_instance_not_equal_to_sub_class(self):
+        class A(Corgy):
+            x: int
+
+        class B(A):
+            ...
+
+        a = A(x=1)
+        b = B(x=1)
+        self.assertNotEqual(a, b)
+
+    def test_corgy_instance_not_equal_to_non_corgy_type(self):
+        class A(Corgy):
+            x: int
+
+        class B:
+            ...
+
+        a = A(x=1)
+        b = B()
+        b.x = 1
+        self.assertNotEqual(a, b)
+        self.assertNotEqual(a, 1)
+
+    def test_corgy_instance_equality_ignores_extra_attrs(self):
+        class A(Corgy, corgy_make_slots=False):
+            x: int
+
+        a1 = A(x=1)
+        a1.y = "1"
+        a2 = A(x=1)
+        a2.y = "2"
+        self.assertEqual(a1, a2)
+
+    def test_corgy_instance_equality_handles_inherited_attrs(self):
+        class A:
+            x: int
+
+        class B(Corgy, A):
+            y: str
+
+        b1 = B(x=1, y="2")
+        b2 = B(x=1, y="2")
+        self.assertEqual(b1, b2)
+
+        class C(Corgy, A, corgy_track_bases=False):
+            y: str
+
+        c1 = C(y="2")
+        c1.x = 1
+        c2 = C(y="2")
+        c2.x = 2
+        self.assertEqual(c1, c2)

@@ -986,6 +986,23 @@ class Corgy(metaclass=_CorgyMeta):
     def __str__(self) -> str:
         return self._str(str)
 
+    def __eq__(self, other) -> bool:
+        if other is self:
+            return True
+        if self.__class__ is not other.__class__:
+            return False
+        for _attr in self.attrs():
+            _self_has, _other_has = hasattr(self, _attr), hasattr(other, _attr)
+            if _self_has != _other_has:
+                # One instance has `_attr` set; the other doesn't.
+                return False
+            if not _self_has:
+                # Both instances don't have `_attr` set.
+                continue
+            if getattr(self, _attr) != getattr(other, _attr):
+                return False
+        return True
+
     @classmethod
     def attrs(cls) -> Dict[str, Type]:
         """Return a dictionary mapping attributes of the class to their types.
