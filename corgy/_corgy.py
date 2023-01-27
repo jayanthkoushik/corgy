@@ -339,13 +339,13 @@ class Corgy(metaclass=_CorgyMeta):
         >>> a = A(x="1")
         Traceback (most recent call last):
             ...
-        ValueError: invalid value for type '<class 'int'>': ''1''
+        ValueError: invalid value for type '<class 'int'>': '1'
 
         >>> a = A()
         >>> a.x = "1"
         Traceback (most recent call last):
             ...
-        ValueError: invalid value for type '<class 'int'>': ''1''
+        ValueError: invalid value for type '<class 'int'>': '1'
 
         >>> class A(Corgy):
         ...     x: int = "1"
@@ -528,7 +528,7 @@ class Corgy(metaclass=_CorgyMeta):
         >>> a.x = [1, "2"]
         Traceback (most recent call last):
             ...
-        ValueError: invalid value for type '<class 'int'>': ''2''
+        ValueError: invalid value for type '<class 'int'>': '2'
 
         >>> a.x = (1, 2)      # `Sequence` accepts any sequence type
 
@@ -564,7 +564,7 @@ class Corgy(metaclass=_CorgyMeta):
         >>> a.x = (1, 1)
         Traceback (most recent call last):
             ...
-        ValueError: invalid value for type '<class 'str'>': '1'
+        ValueError: invalid value for type '<class 'str'>': 1
 
         >>> a.y = (1, 1)  # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
@@ -718,7 +718,7 @@ class Corgy(metaclass=_CorgyMeta):
             >>> a.y = None
             Traceback (most recent call last):
                 ...
-            ValueError: invalid value for type '<class 'int'>': 'None'
+            ValueError: invalid value for type '<class 'int'>': None
 
         Non-collection positional arguments marked optional will be added with `nargs`
         set to `?`, and will accept a single argument or none.
@@ -740,7 +740,7 @@ class Corgy(metaclass=_CorgyMeta):
             options:
               --arg/--no-arg  (required)
 
-        **Collection:**
+        *Collection*
         Collection types are added to the parser by setting `nargs`. The value for
         `nargs` is determined by the collection type. Plain collections, such as
         `Sequence[int]`, will be added with `nargs=*`; Non-empty collections, such as

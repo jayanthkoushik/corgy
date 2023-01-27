@@ -111,4 +111,4 @@ def _check_val_type(_val, _type):
         except TypeError:
             raise ValueError(f"invalid type: {_type}") from None
         if not _is_inst:
-            raise ValueError(f"invalid value for type '{_type}': '{_val!r}'")
+            raise ValueError(f"invalid value for type '{_type}': {_val!r}")

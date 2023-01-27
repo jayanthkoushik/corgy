@@ -61,13 +61,13 @@ Attribute values are type-checked, and `ValueError` is raised on type mismatch:
 >>> a = A(x="1")
 Traceback (most recent call last):
     ...
-ValueError: invalid value for type '<class 'int'>': ''1''
+ValueError: invalid value for type '<class 'int'>': '1'
 
 >>> a = A()
 >>> a.x = "1"
 Traceback (most recent call last):
     ...
-ValueError: invalid value for type '<class 'int'>': ''1''
+ValueError: invalid value for type '<class 'int'>': '1'
 
 >>> class A(Corgy):
 ...     x: int = "1"
@@ -270,7 +270,7 @@ A(x=[1, 2], y=('1', '2'))
 >>> a.x = [1, "2"]
 Traceback (most recent call last):
     ...
-ValueError: invalid value for type '<class 'int'>': ''2''
+ValueError: invalid value for type '<class 'int'>': '2'
 
 >>> a.x = (1, 2)      # `Sequence` accepts any sequence type
 
@@ -310,7 +310,7 @@ Collections can also be restricted to be of a fixed length:
 >>> a.x = (1, 1)
 Traceback (most recent call last):
     ...
-ValueError: invalid value for type '<class 'str'>': '1'
+ValueError: invalid value for type '<class 'str'>': 1
 
 >>> a.y = (1, 1)
 Traceback (most recent call last):
@@ -482,7 +482,7 @@ Note that the last two examples are not equivalent, since the type of `x` is
 >>> a.y = None
 Traceback (most recent call last):
     ...
-ValueError: invalid value for type '<class 'int'>': 'None'
+ValueError: invalid value for type '<class 'int'>': None
 ```
 
 Non-collection positional arguments marked optional will be added with `nargs`
@@ -507,7 +507,7 @@ options:
   --arg/--no-arg  (required)
 ```
 
-**Collection:**
+*Collection*
 Collection types are added to the parser by setting `nargs`. The value for
 `nargs` is determined by the collection type. Plain collections, such as
 `Sequence[int]`, will be added with `nargs=\*`; Non-empty collections, such as
