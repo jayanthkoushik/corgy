@@ -9,22 +9,35 @@ be converted to the desired type.
 Examples:
 
 ```python
-str_int_map: KeyValuePairs[str, int]
-str_int_map = KeyValuePairs[str, int]("a=1,b=2")
+>>> from corgy.types import KeyValuePairs
+>>> StrIntMapType = KeyValuePairs[str, int]
+>>> str_int_map = StrIntMapType("a=1,b=2")
+>>> print(str_int_map)
+{'a': 1, 'b': 2}
 
-class A: ...
-class B(A): ...
-class C(A): ...
+>>> class A: ...
+>>> class B(A): ...
+>>> class C(A): ...
 
-a_subcls: SubClass[A]
-a_subcls = SubClass[A]("B")
-a_subcls_obj = a_subcls()
+>>> from corgy.types import SubClass
+>>> ASubClsType = SubClass[A]
+>>> a_subcls = ASubClsType("B")
+>>> a_subcls_obj = a_subcls()
+>>> a_subcls_obj
+<B object at 0x106cd93d0>
 
-class Args(Corgy):
-    out_file: Annotated[OutputTextFile, "a text file opened for writing"]
-
-parser = ArgumentParser()
-parser.add_argument("--in-dir", type=InputDirectory, help="an existing directory")
+>>> from argparse import ArgumentParser, SUPPRESS
+>>> from corgy import CorgyHelpFormatter
+>>> from corgy.types import InputDirectory
+>>> parser = ArgumentParser(
+...     formatter_class=CorgyHelpFormatter,
+...     add_help=False,
+...     usage=SUPPRESS,
+... )
+>>> _ = parser.add_argument("--d", type=InputDirectory)
+>>> parser.print_help()
+options:
+  --d dir  (optional)
 ```
 
 
@@ -199,13 +212,17 @@ Type representing a sub-class of a given class.
 Example:
 
 ```python
-class Base: ...
-class Sub1(Base): ...
-class Sub2(Base): ...
+>>> from corgy.types import SubClass
 
-BaseSubType = SubClass[Base]  # type for a sub-class of `Base`
-BaseSub = BaseSubType("Sub1")  # sub-class of `Base` named `Sub1`
-base_sub = BaseSub()  # instance of a sub-class of `Base`
+>>> class Base: ...
+>>> class Sub1(Base): ...
+>>> class Sub2(Base): ...
+
+>>> BaseSubType = SubClass[Base]   # type for a sub-class of `Base`
+>>> BaseSub = BaseSubType("Sub1")  # sub-class of `Base` named `Sub1`
+>>> base_sub = BaseSub()           # instance of a sub-class of `Base`
+>>> base_sub
+<Sub1 object at 0x100ea40a0>
 ```
 
 This class cannot be called directly. It first needs to be associated with a base
@@ -220,10 +237,13 @@ This class is useful for creating objects of a generic class, where the concrete
 class is determined at runtime, e.g, by a command-line argument:
 
 ```python
-parser = ArgumentParser()
-parser.add_argument("--base-subcls", type=SubClass[Base])
-args = parser.parse_args()  # e.g. `--base-subcls Sub1`
-base_obj = args.base_subcls()  # an instance of a sub-class of `Base`
+>>> from argparse import ArgumentParser
+
+>>> parser = ArgumentParser()
+>>> _ = parser.add_argument("--base-subcls", type=SubClass[Base])
+
+>>> args = parser.parse_args(["--base-subcls", "Sub1"])
+>>> base_obj = args.base_subcls()  # an instance of a sub-class of `Base`
 ```
 
 For further convenience when parsing command-line arguments, the class provides a
@@ -245,37 +265,18 @@ attributes (preferably on the type returned by the `[...]` syntax).
 
     sub-class. The default is `False`. Example:
 
-    ```python
-    BaseSubType = SubClass[Base]
-    BaseSubType.allow_base = True
-    BaseSub = BaseSubType("Base")  # base class is allowed as a sub-class
-    ```
-
 
 * `use_full_names`: If `True`, the name passed to the constructor needs to be the
 
     full name of a sub-class, given by `cls.__module__ + "." + cls.__qualname__`. If
     `False` (the default), the name needs to just be `cls.__name__`. This is useful
-    if the sub-classes are not uniquely identified by just their names. Example:
-
-    ```python
-    BaseSubType = SubClass[Base]
-    BaseSubType.use_full_names = True
-    BaseSub = BaseSubType("corgy.types.Sub1")
-    ```
+    if the sub-classes are not uniquely identified by just their names.
 
 
 * `allow_indirect_subs`: If `True` (the default), indirect sub-classes, i.e.,
 
     sub-classes of the base through another sub-class, are allowed. If `False`,
     only direct sub-classes of the base are allowed. Example:
-
-    ```python
-    class SubSub1(Sub1): ...
-    BaseSubType = SubClass[Base]
-    BaseSubType.allow_indirect_subs = False
-    BaseSubType("SubSub1") # fails, `SubSub1` is not a direct sub-class
-    ```
 
 Note that the types returned by the `SubClass[...]` syntax are cached using the
 base class type. So all instances of `SubClass[Base]` will return the same type,
@@ -299,13 +300,16 @@ Return an instance of the sub-class associated with this type.
 Example:
 
 ```python
-class Base: ...
-class Sub1(Base): ...
+>>> class Base: ...
+>>> class Sub1(Base):
+...     def __init__(self, x):
+...         print(f"initializing `Sub1` with 'x={x}'")
 
-BaseSubType = SubClass[Base]
-BaseSub = BaseSubType("Sub1")  # an instance of the `SubClass` type
+>>> BaseSubType = SubClass[Base]
+>>> BaseSub = BaseSubType("Sub1")  # an instance of the `SubClass` type
 
-base_sub = BaseSub()  # an instance of `Sub1`
+>>> base_sub = BaseSub(1)
+initializing `Sub1` with 'x=1'
 ```
 
 
@@ -315,8 +319,9 @@ Dictionary sub-class that is initialized from a string of key-value pairs.
 Example:
 
 ```python
-MapType = KeyValuePairs[str, int]
-map = MapType("a=1,b=2")  # {'a': 1, 'b': 2}
+>>> MapType = KeyValuePairs[str, int]
+>>> print(MapType("a=1,b=2"))
+{'a': 1, 'b': 2}
 ```
 
 This class supports the class indexing syntax to specify the types for keys and
@@ -345,19 +350,16 @@ Note that types returned by the `KeyValuePairs[...]` syntax are cached using the
 key and value types:
 
 ```python
-MapType = KeyValuePairs[str, int]
-MapType.sequence_separator = ";"
-MapType2 = KeyValuePairs[str, int]  # same as `MapType`
-MapType2.sequence_separator  # ';'
+>>> MapType = KeyValuePairs[str, int]
+>>> MapType.sequence_separator = ";"
+>>> MapType2 = KeyValuePairs[str, int]  # same as `MapType`
+>>> MapType2.sequence_separator
+';'
+>>> MapType2.sequence_separator = ","
 ```
 
 `KeyValuePairs` instances can also be initialized with a dictionary. However, note
-that the dictionary is not type-checked and is used as-is:
-
-```python
-dic = KeyValuePairs[str, int]({"a": 1, "b": 2})
-print(repr(dic))  # KeyValuePairs[str, int]({'a': 1, 'b': 2})
-```
+that the dictionary is not type-checked and is used as-is.
 
 
 ### _class_ corgy.types.InitArgs(\*\*args)
@@ -366,17 +368,35 @@ Corgy wrapper around arguments of a class’s `__init__`.
 Example:
 
 ```python
-class Foo:
-    def __init__(
-        self,
-        a: Annotated[int, "a help"],
-        b: Annotated[Sequence[str], "b help"],
-        c: Annotated[float, "c help"] = 0.0,
-    ):
-        ...
-FooInitArgs = InitArgs[Foo]
-foo_init_args = FooInitArgs.parse_from_cmdline()
-foo = Foo(**foo_init_args.as_dict())
+>>> from argparse import ArgumentParser, SUPPRESS
+>>> from typing import Sequence
+>>> from corgy import CorgyHelpFormatter
+>>> from corgy.types import InitArgs
+
+>>> class Foo:
+...     def __init__(
+...         self,
+...         a: int,
+...         b: Sequence[str],
+...         c: float = 0.0,
+...     ):
+...         ...
+
+>>> FooInitArgs = InitArgs[Foo]
+>>> parser = ArgumentParser(
+...     formatter_class=CorgyHelpFormatter,
+...     add_help=False,
+...     usage=SUPPRESS,
+... )
+>>> FooInitArgs.add_args_to_parser(parser)
+>>> parser.print_help()
+options:
+  --a int        (required)
+  --b [str ...]  (required)
+  --c float      (default: 0.0)
+
+>>> args = parser.parse_args(["--a", "1", "--b", "one", "two"])
+>>> foo = Foo(args.a, args.b, args.c)
 ```
 
 This is a generic class, and on using the `InitArgs[Cls]` syntax, a concrete

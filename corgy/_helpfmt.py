@@ -138,9 +138,20 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     independently of `Corgy`. Simply pass it as the `formatter_class` argument to
     `argparse.ArgumentParser()`::
 
-        from argparse import ArgumentParser
-        from corgy import CorgyHelpFormatter
-        parser = ArgumentParser(formatter_class=CorgyHelpFormatter)
+        >>> from argparse import ArgumentParser, SUPPRESS
+        >>> from corgy import CorgyHelpFormatter
+
+        >>> parser = ArgumentParser(
+        ...     formatter_class=CorgyHelpFormatter,
+        ...     usage=SUPPRESS,
+        ... )
+        >>> _ = parser.add_argument("--x", type=int, required=True)
+        >>> _ = parser.add_argument("--y", type=str, nargs="*", required=True)
+        >>> parser.print_help()
+        options:
+          -h/--help      show this help message and exit
+          --x int        (required)
+          --y [str ...]  (required)
 
     To configure `CorgyHelpFormatter`, you can set a number of attributes on the class.
     Note that you do not need to create an instance of the class; that is done by the
@@ -190,16 +201,19 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     * `__metavar__`: This can be set to a string on the argument type to override the
         default metavar. Example::
 
-            class T:
-                __metavar__ = "METAVAR"
+            >>> class T:
+            ...     __metavar__ = "METAVAR"
 
-            p = ArgumentParser(formatter_class=CorgyHelpFormatter, add_help=False)
-            p.add_argument("--arg", type=T)
-            p.print_help()
+            >>> parser = ArgumentParser(
+            ...     formatter_class=CorgyHelpFormatter,
+            ...     add_help=False,
+            ...     usage=SUPPRESS,
+            ... )
+            >>> _ = parser.add_argument("--arg", type=T)
+            >>> parser.print_help()
+            options:
+              --arg METAVAR  (optional)
 
-            # Prints:
-            # options:
-            #   --arg METAVAR  (optional)
     """
 
     use_colors: Optional[bool] = None
@@ -829,6 +843,20 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 help message and exit"`.
             full_help_msg: String to describe the full help option. Default is `"show
                 full help message and exit"`.
+
+        Example::
+
+            >>> parser = ArgumentParser(
+            ...     formatter_class=CorgyHelpFormatter,
+            ...     add_help=False,
+            ...     usage=SUPPRESS,
+            ... )
+            >>> CorgyHelpFormatter.add_short_full_helps(parser)
+            >>> parser.print_help()
+            options:
+              -h/--help   show help message and exit
+              --helpfull  show full help message and exit
+
         """
         parser.add_argument(
             *short_help_flags, nargs=0, action=cls.ShortHelpAction, help=short_help_msg
