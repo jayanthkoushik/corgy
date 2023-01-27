@@ -22,7 +22,7 @@ from types import ModuleType
 from typing import Optional, Sequence, Tuple, Union
 from unittest.mock import patch
 
-import corgy._corgy  # pylint: disable=cyclic-import
+from ._utils import _get_concrete_collection_type, _is_optional_type
 
 __all__ = ("CorgyHelpFormatter",)
 
@@ -267,7 +267,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     def _stringify(obj, type_) -> str:
         if isinstance(obj, Collection) and not isinstance(obj, (str, bytes)):
             # `obj` is a collection: recursively apply `_stringify` on its elements.
-            _coll_type = corgy._corgy._get_concrete_collection_type(type_)
+            _coll_type = _get_concrete_collection_type(type_)
             if _coll_type is not None and isinstance(
                 getattr(type_, "__args__", None), AbstractSequence
             ):
@@ -290,7 +290,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             _seq_end = ")" if _seq_start == "(" else "]"
             return _seq_start + ", ".join(_part_strs) + _seq_end
 
-        if corgy._corgy._is_optional_type(type_):
+        if _is_optional_type(type_):
             # type_ is `Optional`; so unwrap to get the base type. This case happens
             # in cases like `Sequence[Optional[int]]`, where `Optional` is not the
             # outermost type.
@@ -375,7 +375,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 marker_metavars_end = _MARKER_METAVARS_END
                 marker_metavars_repeat = _MARKER_METAVARS_REPEAT
 
-            _coll_type = corgy._corgy._get_concrete_collection_type(type_)
+            _coll_type = _get_concrete_collection_type(type_)
             if _coll_type is not None and (
                 isinstance(getattr(type_, "__args__", None), AbstractSequence)
                 and type_ is not Sequence
@@ -412,7 +412,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 # '<base_type_1> <base_type_2> <...> <base_type_n>'.
                 return " ".join(_part_metavars)
 
-            if corgy._corgy._is_optional_type(type_):
+            if _is_optional_type(type_):
                 # `action.type` is optional. So, return '[<base metavar>]'.
                 _base_type = getattr(type_, "__args__")[0]
                 _s = (
