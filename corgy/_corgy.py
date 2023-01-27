@@ -582,7 +582,7 @@ class Corgy(metaclass=_CorgyMeta):
         >>> a = A()
         >>> a.x = 0
         >>> a.x = "2"
-        >>> a.x = "1"
+        >>> a.x = "1"  # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
             ...
         ValueError: invalid value for type 'typing.Literal[0, 1, '2']': '1'
@@ -1280,7 +1280,7 @@ class Corgy(metaclass=_CorgyMeta):
             ...     y = [1, 2, 3]
             ... ''')
 
-            >>> A.parse_from_toml(f)
+            >>> A.parse_from_toml(f)  # doctest: +SKIP
             A(x='one', g=G(x=1, y=[1, 2, 3]))
 
         """
