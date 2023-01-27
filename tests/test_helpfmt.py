@@ -29,10 +29,17 @@ _O = lambda s: _COLOR_HELPER.colorize(s, CorgyHelpFormatter.color_options)
 CorgyHelpFormatter.output_width = 80
 CorgyHelpFormatter.max_help_position = 80
 
-# The default choice list end markers, `{`, `}`, make f-strings messy, since they need
-# to be escaped. So, we  replace them with `[`, `]`.
-CorgyHelpFormatter.marker_choices_begin = "["
-CorgyHelpFormatter.marker_choices_end = "]"
+
+def setUpModule():
+    # The default choice list end markers, `{`, `}`, make f-strings messy, since they
+    # need to be escaped. So, we  replace them with `[`, `]`.
+    CorgyHelpFormatter.marker_choices_begin = "["
+    CorgyHelpFormatter.marker_choices_end = "]"
+
+
+def tearDownModule():
+    CorgyHelpFormatter.marker_choices_begin = "{"
+    CorgyHelpFormatter.marker_choices_end = "}"
 
 
 class TestCorgyHelpFormatterAPI(TestCase):
