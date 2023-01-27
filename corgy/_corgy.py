@@ -65,16 +65,22 @@ class BooleanOptionalAction(argparse.Action):
             setattr(namespace, self.dest, not option_string.startswith("--no-"))
 
 
-class MakeTupleAction(argparse.Action):
-    """Action to convert sequence to tuple.
+class CastCollectionAction(argparse.Action):
+    """Action to convert parsed sequence of values to a specific type.
 
-    This is used when adding tuple types to an argument parser, so that the parsed
-    sequence is converted to a tuple, and can be set as the value for the corresponding
-    attribute.
+    This is used when when adding non-list types to an argument parser, so that the
+    parsed sequence is converted to the correct type, and can be set as the value for
+    the corresponding attribute.
     """
 
+    coll_type: Type
+
     def __call__(self, parser, namespace, values, option_string=None):
-        setattr(namespace, self.dest, tuple(values))
+        setattr(namespace, self.dest, self.coll_type(values))
+
+
+class MakeTupleAction(CastCollectionAction):
+    coll_type = tuple
 
 
 class MakeBoolAction(argparse.Action):
@@ -107,24 +113,23 @@ def _is_optional_type(t) -> bool:
     return False
 
 
-def _is_tuple_type(t) -> bool:
-    """Check if the argument is a tuple type."""
-    if t is Tuple or t is tuple:
-        return True
-    if hasattr(t, "__origin__"):
-        if t.__origin__ is Tuple or t.__origin__ is tuple:
-            return True
-    return False
+def _get_concrete_collection_type(type_) -> Optional[type]:
+    """Get the base type for objects annotated with the given collection type."""
 
-
-def _is_sequence_type(t) -> bool:
-    """Check if the argument is a generic sequence type."""
-    if t is Sequence or t is AbstractSequence:
-        return True
-    if hasattr(t, "__origin__"):
-        if t.__origin__ is Sequence or t.__origin__ is AbstractSequence:
+    def _is_one_of(_t, *_targets) -> bool:
+        """Check if a type is any of the target types."""
+        if any(_t is _target for _target in _targets):
             return True
-    return False
+        if hasattr(_t, "__origin__"):
+            if any(_t.__origin__ is _target for _target in _targets):
+                return True
+        return False
+
+    if _is_one_of(type_, Tuple, tuple):
+        return tuple
+    if _is_one_of(type_, Sequence, AbstractSequence):
+        return AbstractSequence
+    return None
 
 
 def _is_literal_type(t) -> bool:
@@ -133,15 +138,15 @@ def _is_literal_type(t) -> bool:
 
 
 def _check_val_type(_val, _type):
-    _is_seq, _is_tup = _is_sequence_type(_type), _is_tuple_type(_type)
-    if _is_seq or _is_tup:
-        if (_is_seq and not isinstance(_val, AbstractSequence)) or (
-            _is_tup and not isinstance(_val, tuple)
-        ):
-            raise ValueError(f"invalid value for type '{_type}': {_val}")
+    _coll_type = _get_concrete_collection_type(_type)
+    if _coll_type is not None:
+        if not isinstance(_val, _coll_type):
+            raise ValueError(f"invalid value for type '{_type}': {_val!r}")
 
-        if _type is Sequence or not hasattr(_type, "__args__"):
-            # Untyped sequence, e.g., `x: Sequence`.
+        if not hasattr(_type, "__args__") or any(
+            _type is _bare_type for _bare_type in [Sequence, Tuple]
+        ):
+            # Untyped collection, e.g., `x: Sequence`.
             return
 
         _base_types = _type.__args__
@@ -153,7 +158,7 @@ def _check_val_type(_val, _type):
         elif len(_base_types) == 2 and _base_types[1] is Ellipsis:
             # Same as the previous condition, but `_val` must be non-empty.
             if not _val:
-                raise ValueError(f"expected non-empty sequence for type '{_type}'")
+                raise ValueError(f"expected non-empty collection for type '{_type}'")
             for _val_i in _val:
                 _check_val_type(_val_i, _base_types[0])
         else:
@@ -832,19 +837,18 @@ class Corgy(metaclass=_CorgyMeta):
                 var_base_type = var_type
                 var_required = var_name not in base_defaults
 
-            # Check if the variable is a sequence.
+            # Check if the variable is a collection.
             var_nargs: Union[int, Literal["+", "*", "?"], None]
             var_action: Optional[Type[argparse.Action]] = None
-            _is_sequence = _is_sequence_type(var_base_type)
-            _is_tuple = _is_tuple_type(var_base_type)
-            if _is_sequence or _is_tuple:
+            _col_type = _get_concrete_collection_type(var_base_type)
+            if _col_type is not None:
                 if (
                     not hasattr(var_base_type, "__args__")
                     or not var_base_type.__args__
                     or isinstance(var_base_type.__args__[0], TypeVar)
                 ):
                     raise TypeError(
-                        f"`{var_name}` is a sequence, but has no type arguments: "
+                        f"`{var_name}` is a collection, but has no type arguments: "
                         f"use `{var_base_type}[<types>]"
                     )
                 if len(var_base_type.__args__) == 1:
@@ -853,7 +857,7 @@ class Corgy(metaclass=_CorgyMeta):
                     len(var_base_type.__args__) == 2
                     and var_base_type.__args__[1] is Ellipsis
                 ):
-                    # `...` is used to represent non-empty collections, i.e.,
+                    # `...` is used to represent non-empty collections, e.g.,
                     # `Sequence[int, ...]`.
                     var_nargs = "+"
                 else:
@@ -864,12 +868,12 @@ class Corgy(metaclass=_CorgyMeta):
                     ):
                         raise TypeError(
                             f"`{var_name}` has unsupported type `{var_base_type}`: only"
-                            f" single-type sequences are supported"
+                            f" single-type collections are supported"
                         )
                     var_nargs = len(var_base_type.__args__)
                 var_base_type = var_base_type.__args__[0]
 
-                if _is_tuple:
+                if _col_type is tuple:
                     # Create a custom action to convert the parsed sequence to a tuple.
                     var_action = MakeTupleAction
             elif var_positional and not var_required:

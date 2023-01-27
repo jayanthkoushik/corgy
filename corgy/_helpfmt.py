@@ -15,7 +15,7 @@ from argparse import (
     SUPPRESS,
     ZERO_OR_MORE,
 )
-from collections.abc import Sequence as AbstractSequence
+from collections.abc import Collection, Sequence as AbstractSequence
 from functools import lru_cache, partial
 from itertools import cycle, zip_longest
 from types import ModuleType
@@ -251,14 +251,13 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
 
     @staticmethod
     def _stringify(obj, type_) -> str:
-        if isinstance(obj, AbstractSequence) and not isinstance(obj, (str, bytes)):
-            # `obj` is a sequence: recursively apply `_stringify` on its elements.
-            _is_seq = corgy._corgy._is_sequence_type(type_)
-            _is_tup = corgy._corgy._is_tuple_type(type_)
-            if (_is_seq or _is_tup) and isinstance(
+        if isinstance(obj, Collection) and not isinstance(obj, (str, bytes)):
+            # `obj` is a collection: recursively apply `_stringify` on its elements.
+            _coll_type = corgy._corgy._get_concrete_collection_type(type_)
+            if _coll_type is not None and isinstance(
                 getattr(type_, "__args__", None), AbstractSequence
             ):
-                # `type_` is also a sequence, so unwrap it to get the base type. This
+                # `type_` is also a collection, so unwrap it to get the base type. This
                 # happens in case of nested types like `Sequence[Sequence[int]]`.
                 _base_types = type_.__args__
                 if len(_base_types) == 2 and _base_types[1] is Ellipsis:
@@ -273,7 +272,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                     obj, _base_types, fillvalue=_base_types[-1]
                 )
             ]
-            _seq_start = "(" if _is_tup or isinstance(obj, tuple) else "["
+            _seq_start = "(" if _coll_type is tuple or isinstance(obj, tuple) else "["
             _seq_end = ")" if _seq_start == "(" else "]"
             return _seq_start + ", ".join(_part_strs) + _seq_end
 
@@ -299,7 +298,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         _stringify_type = action.type
         if isinstance(action.nargs, int) or action.nargs in (ZERO_OR_MORE, ONE_OR_MORE):
             # If the argument specifies nargs, and the default value is a,
-            # sequence, wrap the action type with the default sequence type.
+            # collection, wrap the action type with the default collection type.
             if isinstance(action.default, tuple):
                 _stringify_type = Tuple[action.type]  # type: ignore
             elif isinstance(action.default, AbstractSequence):
@@ -362,14 +361,12 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 marker_metavars_end = _MARKER_METAVARS_END
                 marker_metavars_repeat = _MARKER_METAVARS_REPEAT
 
-            if (
-                corgy._corgy._is_sequence_type(type_)
-                or corgy._corgy._is_tuple_type(type_)
-            ) and (
+            _coll_type = corgy._corgy._get_concrete_collection_type(type_)
+            if _coll_type is not None and (
                 isinstance(getattr(type_, "__args__", None), AbstractSequence)
                 and type_ is not Sequence
             ):
-                # `action.type` is a sequence. So, create a metavar list based on the
+                # `action.type` is a collection. So, create a metavar list based on the
                 # base type(s).
                 _type_args = getattr(type_, "__args__")
                 if len(_type_args) == 1 or (
