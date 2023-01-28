@@ -201,7 +201,7 @@ used, you can import them from `typing_extensions` (which is available on PyPI).
 
 *Annotations*
 `typing.Annotated` can be used to add additional metadata to attributes, akin to
-docstrings. It is primarily used to control how attributes are added to
+doc strings. It is primarily used to control how attributes are added to
 `ArgumentParser` instances. `typing.Annotated` is stripped on class creation,
 leaving only the base type:
 
