@@ -660,7 +660,7 @@ Examples:
 ```
 
 
-#### _classmethod_ from_dict(d)
+#### _classmethod_ from_dict(d, try_cast=False)
 Return a new instance of the class using a dictionary.
 
 This is roughly equivalent to `cls(\*\*d)`, with the main exception being that
@@ -670,7 +670,11 @@ recursively.
 
 * **Parameters**
 
-    **d** – Dictionary to create the instance from.
+
+    * **d** – Dictionary to create the instance from.
+
+
+    * **try_cast** – Whether to try and cast values which don’t match attribute types.
 
 
 Example:
@@ -686,6 +690,8 @@ Example:
 >>> A.from_dict({"x": "one", "g": G(x=1)})
 A(x='one', g=G(x=1))
 >>> A.from_dict({"x": "one", "g": {"x": 1}})
+A(x='one', g=G(x=1))
+>>> A.from_dict({"x": "one", "g": {"x": "1"}}, try_cast=True)
 A(x='one', g=G(x=1))
 ```
 

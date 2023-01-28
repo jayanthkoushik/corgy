@@ -1145,7 +1145,7 @@ class Corgy(metaclass=_CorgyMeta):
         return _dict
 
     @classmethod
-    def from_dict(cls: Type[_T], d: Mapping[str, Any]) -> _T:
+    def from_dict(cls: Type[_T], d: Mapping[str, Any], try_cast: bool = False) -> _T:
         """Return a new instance of the class using a dictionary.
 
         This is roughly equivalent to `cls(**d)`, with the main exception being that
@@ -1154,6 +1154,7 @@ class Corgy(metaclass=_CorgyMeta):
 
         Args:
             d: Dictionary to create the instance from.
+            try_cast: Whether to try and cast values which don't match attribute types.
 
         Example::
 
@@ -1167,6 +1168,8 @@ class Corgy(metaclass=_CorgyMeta):
             >>> A.from_dict({"x": "one", "g": G(x=1)})
             A(x='one', g=G(x=1))
             >>> A.from_dict({"x": "one", "g": {"x": 1}})
+            A(x='one', g=G(x=1))
+            >>> A.from_dict({"x": "one", "g": {"x": "1"}}, try_cast=True)
             A(x='one', g=G(x=1))
 
         Group attributes can also be passed directly in the dictionary by prefixing
@@ -1213,9 +1216,18 @@ class Corgy(metaclass=_CorgyMeta):
 
         for grp_name, grp_args in grp_args_map.items():
             grp_type = cls_attrs[grp_name]
-            main_args_map[grp_name] = grp_type.from_dict(grp_args)
+            main_args_map[grp_name] = grp_type.from_dict(grp_args, try_cast)
 
-        return cls(**main_args_map)
+        if not try_cast:
+            return cls(**main_args_map)
+
+        obj = cls()
+        cls_attrs = cls.attrs()
+        for arg_name, arg_val in main_args_map.items():
+            if arg_name in cls_attrs:
+                arg_val = _check_val_type(arg_val, cls_attrs[arg_name], try_cast=True)
+                setattr(obj, arg_name, arg_val)
+        return obj
 
     @classmethod
     def parse_from_cmdline(

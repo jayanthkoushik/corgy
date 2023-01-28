@@ -1030,6 +1030,34 @@ class TestCorgyFromDict(unittest.TestCase):
         except ValueError as e:
             self.fail(f"unexpected error: {e}")
 
+    def test_cls_from_dict_casts_values_when_try_cast_true(self):
+        class C(Corgy):
+            x: int
+
+        c = C.from_dict({"x": "1"}, try_cast=True)
+        self.assertEqual(c.x, 1)
+
+    def test_cls_from_dict_handles_casting_coll_type(self):
+        class C(Corgy):
+            x: Tuple[int]
+
+        c = C.from_dict({"x": [1, 2]}, try_cast=True)
+        self.assertTupleEqual(c.x, (1, 2))
+
+    def test_cls_from_dict_does_not_recast_sub_coll_type(self):
+        class C(Corgy):
+            x: Sequence[int]
+
+        c = C.from_dict({"x": (1, 2)}, try_cast=True)
+        self.assertTupleEqual(c.x, (1, 2))
+
+    def test_cls_from_dict_casts_recursively(self):
+        class C(Corgy):
+            x: Tuple[Sequence[Optional[int]], Tuple[Optional[Tuple[float, ...]]]]
+
+        c = C.from_dict({"x": [(1, "2", None), [None, ("1.0", 2.0)]]}, try_cast=True)
+        self.assertEqual(c.x, ((1, 2, None), (None, (1.0, 2.0))))
+
 
 class TestCorgyPrinting(unittest.TestCase):
     @classmethod
