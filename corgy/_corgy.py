@@ -12,10 +12,10 @@ from typing import (
     ClassVar,
     Dict,
     IO,
+    List,
     Mapping,
     NamedTuple,
     Optional,
-    Sequence,
     Type,
     TypeVar,
     Union,
@@ -28,16 +28,16 @@ else:
 
 from ._helpfmt import CorgyHelpFormatter
 from ._utils import (
-    _check_val_type,
-    _get_concrete_collection_type,
-    _is_literal_type,
-    _is_optional_type,
+    check_val_type,
+    get_concrete_collection_type,
+    is_literal_type,
+    is_optional_type,
 )
 
 # The main interface is the `Corgy` class. `_CorgyMeta` modifies creation of `Corgy`
 # (and its subclasses) by converting annotations to properties, and setting up utilities
 # for command line parsing. `corgyparser` is a decorator that allows custom parsers to
-# be defined for `Corgy` variables.
+# be defined for `Corgy` attributes.
 
 __all__ = ("Corgy", "corgyparser")
 _T = TypeVar("_T", bound="Corgy")
@@ -70,14 +70,14 @@ class _CorgyMeta(type):
     """Metaclass for `Corgy`.
 
     Modifies class creation by parsing type annotations, and creating properties for
-    each annotated variable. Default values and custom parsers are stored in the
+    each annotated attribute. Default values and custom parsers are stored in the
     `__defaults` and `__parsers` attributes. Custom flags, if present, are stored in
     the `__flags` attribute.
     """
 
     __slots__ = ()
 
-    def __new__(cls, name, bases, namespace, **kwds):
+    def __new__(cls, name, bases, namespace, **kwds) -> _CorgyMeta:
         try:
             _make_slots = kwds.pop("corgy_make_slots")
         except KeyError:
@@ -102,11 +102,9 @@ class _CorgyMeta(type):
 
         # See if `corgy_track_bases` is specified (default `True`).
         try:
-            _track_bases = kwds["corgy_track_bases"]
+            _track_bases = kwds.pop("corgy_track_bases")
         except KeyError:
             _track_bases = True
-        else:
-            del kwds["corgy_track_bases"]
         if _track_bases:
             for base in bases:
                 _base_annotations = getattr(base, "__annotations__", {})
@@ -180,6 +178,7 @@ class _CorgyMeta(type):
                         raise TypeError(f"class variable `{var_name}` has no value set")
                 del namespace["__annotations__"][var_name]
                 continue
+
             else:
                 # `<var_name>: <var_type>`.
                 var_type = var_ano
@@ -195,7 +194,7 @@ class _CorgyMeta(type):
             # Add default value to dedicated dict.
             if var_name in namespace:
                 try:
-                    _check_val_type(namespace[var_name], var_type)
+                    check_val_type(namespace[var_name], var_type)
                 except ValueError as e:
                     raise ValueError(
                         f"default value type mismatch for '{var_name}'"
@@ -246,7 +245,7 @@ class _CorgyMeta(type):
             raise AttributeError(f"no value available for attribute `{var_name}`")
 
         def var_fset(self, val):
-            _check_val_type(val, var_type)
+            check_val_type(val, var_type)
             setattr(self, f"_{cls_name.lstrip('_')}__{var_name}", val)
 
         def var_fdel(self):
@@ -819,7 +818,7 @@ class Corgy(metaclass=_CorgyMeta):
             elif _k not in cls.__annotations__:
                 raise ValueError(f"default value for unknown argument: `{_k}`")
 
-        for (var_name, var_type) in getattr(cls, "__annotations__").items():
+        for (var_name, var_type) in cls.attrs().items():
             var_flags = getattr(cls, "__flags").get(
                 var_name, [f"--{var_name.replace('_', '-')}"]
             )
@@ -871,7 +870,7 @@ class Corgy(metaclass=_CorgyMeta):
                 continue
 
             # Check if the variable is optional.
-            if _is_optional_type(var_type):
+            if is_optional_type(var_type):
                 var_base_type = var_type.__args__[0]
                 var_required = False
             else:
@@ -880,7 +879,7 @@ class Corgy(metaclass=_CorgyMeta):
 
             # Check if the variable is a collection.
             var_nargs: Union[int, Literal["+", "*", "?"], None]
-            _col_type = _get_concrete_collection_type(var_base_type)
+            _col_type = get_concrete_collection_type(var_base_type)
             if _col_type is not None:
                 if (
                     not hasattr(var_base_type, "__args__")
@@ -920,7 +919,7 @@ class Corgy(metaclass=_CorgyMeta):
                 var_nargs = None
 
             # Check if the variable has choices.
-            if _is_literal_type(var_base_type):
+            if is_literal_type(var_base_type):
                 # Determine if the first choice has `__bases__`, in which case
                 # the first base class is the type for the argument.
                 try:
@@ -1188,7 +1187,7 @@ class Corgy(metaclass=_CorgyMeta):
         cls_attrs = cls.attrs()
         for arg_name, arg_val in main_args_map.items():
             if arg_name in cls_attrs:
-                arg_val = _check_val_type(arg_val, cls_attrs[arg_name], try_cast=True)
+                arg_val = check_val_type(arg_val, cls_attrs[arg_name], try_cast=True)
                 setattr(obj, arg_name, arg_val)
         return obj
 
@@ -1282,7 +1281,7 @@ class _CorgyParser(NamedTuple):
     keep track of parsers.
     """
 
-    var_names: Sequence[str]
+    var_names: List[str]
     fparse: Callable[[str], Any]
     nargs: Union[None, Literal["*", "+"], int]
 
@@ -1406,9 +1405,9 @@ def corgyparser(
             corgy_parser = _CorgyParser(list(var_names), fparse, nargs)
 
         if metavar is not None:
-            corgy_parser.fparse.__metavar__ = metavar
+            setattr(corgy_parser.fparse, "__metavar__", metavar)
         if nargs is not None:
-            corgy_parser.fparse.__nargs__ = nargs
+            setattr(corgy_parser.fparse, "__nargs__", nargs)
         return corgy_parser
 
     return partial(wrapper, var_names, metavar)

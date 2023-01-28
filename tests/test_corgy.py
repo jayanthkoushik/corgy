@@ -27,7 +27,7 @@ else:
 import corgy
 from corgy import Corgy, CorgyHelpFormatter, corgyparser
 from corgy._corgy import BooleanOptionalAction, CorgyParserAction
-from corgy._utils import _get_concrete_collection_type
+from corgy._utils import get_concrete_collection_type
 
 if sys.version_info >= (3, 11):
     import tomllib as tomli
@@ -44,7 +44,7 @@ if sys.version_info >= (3, 9):
 
 
 def _get_collection_cast_type(_type) -> type:
-    _cast_type = _get_concrete_collection_type(_type)
+    _cast_type = get_concrete_collection_type(_type)
     if _cast_type is AbstractSequence:
         return list
     return _cast_type  # type: ignore
@@ -113,7 +113,7 @@ class TestCorgyMeta(unittest.TestCase):
             class _(Corgy):
                 x: Annotated[int, "x help", []]
 
-    def test_corgy_cls_allows_dunder_defaults_as_var_name(self):
+    def test_corgy_cls_allows_dunder_defaults_as_attr_name(self):
         class C(Corgy):
             __defaults: int  # pylint: disable=unused-private-member
             x: int = 0
@@ -124,7 +124,7 @@ class TestCorgyMeta(unittest.TestCase):
         self.assertIsInstance(getattr(C, "_C__defaults"), property)
         self.assertEqual(C().x, 0)
 
-    def test_corgy_cls_raises_if_var_name_is_dunder_another_var(self):
+    def test_corgy_cls_raises_if_attr_name_is_dunder_another_attr(self):
         with self.assertRaises(TypeError):
 
             class _C(Corgy):  # pylint: disable=unused-variable
@@ -162,7 +162,7 @@ class TestCorgyMeta(unittest.TestCase):
         c.y = 1
         self.assertEqual(c.y, 1)
 
-    def test_corgy_cls_raises_on_slot_clash_with_var(self):
+    def test_corgy_cls_raises_on_slot_clash_with_attr(self):
         with self.assertRaises(TypeError):
 
             class _(Corgy):
@@ -199,7 +199,7 @@ class TestCorgyMeta(unittest.TestCase):
         with self.assertRaises(AttributeError):
             c.z = 3
 
-    def test_corgy_cls_does_not_add_classvar(self):
+    def test_corgy_cls_does_not_track_classvar(self):
         class C(Corgy):
             x: ClassVar[int] = 0
 
@@ -1750,14 +1750,14 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
             any_order=True,
         )
 
-    def test_add_args_raises_if_passed_defaults_for_unknown_var(self):
+    def test_add_args_raises_if_passed_defaults_for_unknown_attr(self):
         class C(Corgy):
             x: int
 
         with self.assertRaises(ValueError):
             C.add_args_to_parser(self.parser, defaults={"y": 42})
 
-    def test_add_args_raises_if_passed_defaults_for_unknown_group_var(self):
+    def test_add_args_raises_if_passed_defaults_for_unknown_group_attr(self):
         class G(Corgy):
             x: int
 

@@ -730,7 +730,9 @@ class _KeyValuePairsMeta(type):
         return cls._metavar()
 
 
-class KeyValuePairs(dict, Generic[_KT, _VT], metaclass=_KeyValuePairsMeta):
+class KeyValuePairs(  # type: ignore[misc]
+    dict, Generic[_KT, _VT], metaclass=_KeyValuePairsMeta
+):
     """Dictionary sub-class that is initialized from a string of key-value pairs.
 
     Example::

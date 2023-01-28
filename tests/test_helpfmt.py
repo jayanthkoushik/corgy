@@ -59,7 +59,7 @@ class TestCorgyHelpFormatterAPI(TestCase):
             try:
                 ArgumentParser(formatter_class=CorgyHelpFormatter)
             except ImportError:
-                self.fail()
+                self.fail("unexpected import error")
 
     def test_corgy_help_formatter_raises_if_setting_new_attribute(self):
         with self.assertRaises(AttributeError):
