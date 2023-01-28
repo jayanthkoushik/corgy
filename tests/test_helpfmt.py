@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 from corgy import Corgy, CorgyHelpFormatter
 from corgy._corgy import BooleanOptionalAction
 from corgy._helpfmt import _ColorHelper
+from corgy.types import KeyValuePairs
 
 if sys.version_info < (3, 9):
     from typing import Sequence, Tuple
@@ -655,6 +656,43 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
             self._get_arg_help("--arg", type=A, choices=[A(1), A("a")]),
             f"  {_O('--arg')} {_M('A')}  ([{_C('A:1')}/{_C('A:a')}] "
             f"{_K('optional')})",
+        )
+
+    def test_corgy_help_formatter_handles_dict_default(self):
+        class T(KeyValuePairs[str, int]):  # type: ignore[misc]
+            @classmethod
+            def _metavar(cls) -> str:
+                return "T"
+
+        self.assertEqual(
+            self._get_arg_help("--x", type=T, default=T("a=1,b=2")),
+            f"  {_O('--x')} {_M('T')}  ({_K('default')}: " f"{_D({'a': 1, 'b': 2})})",
+        )
+
+    def test_corgy_help_formatter_handles_dict_choices(self):
+        class T(KeyValuePairs[str, int]):  # type: ignore[misc]
+            @classmethod
+            def _metavar(cls) -> str:
+                return "T"
+
+        _choices_str = "".join(
+            (
+                _C("{'a':"),
+                " ",
+                _C("1}"),
+                "/",
+                _C("{'b':"),
+                " ",
+                _C("2,"),
+                " ",
+                _C("'c':"),
+                " ",
+                _C("3}"),
+            )
+        )
+        self.assertEqual(
+            self._get_arg_help("--x", type=T, choices=(T("a=1"), T("b=2,c=3"))),
+            f"  {_O('--x')} {_M('T')}  ([{_choices_str}] {_K('optional')})",
         )
 
 

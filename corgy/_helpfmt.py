@@ -15,7 +15,7 @@ from argparse import (
     SUPPRESS,
     ZERO_OR_MORE,
 )
-from collections.abc import Collection, Sequence as AbstractSequence
+from collections.abc import Sequence as AbstractSequence
 from functools import lru_cache, partial
 from itertools import cycle, zip_longest
 from types import ModuleType
@@ -265,8 +265,12 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
 
     @staticmethod
     def _stringify(obj, type_) -> str:
-        if isinstance(obj, Collection) and not isinstance(obj, (str, bytes)):
+        if isinstance(obj, (AbstractSequence, set)) and not isinstance(
+            obj, (str, bytes)
+        ):
             # `obj` is a collection: recursively apply `_stringify` on its elements.
+            # `obj` has to be checked before `type_`, because the type may not be a
+            # collection type when `nargs` is used to get multiple arguments.
             _coll_type = get_concrete_collection_type(type_)
             if _coll_type is not None and isinstance(
                 getattr(type_, "__args__", None), AbstractSequence
