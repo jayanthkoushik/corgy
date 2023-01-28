@@ -66,36 +66,6 @@ class BooleanOptionalAction(argparse.Action):
             setattr(namespace, self.dest, not option_string.startswith("--no-"))
 
 
-class CastCollectionAction(argparse.Action):
-    """Action to convert parsed sequence of values to a specific type.
-
-    This is used when when adding non-list types to an argument parser, so that the
-    parsed sequence is converted to the correct type, and can be set as the value for
-    the corresponding attribute.
-    """
-
-    coll_type: Type
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        setattr(namespace, self.dest, self.coll_type(values))
-
-
-class MakeTupleAction(CastCollectionAction):
-    coll_type = tuple
-
-
-class MakeBoolAction(argparse.Action):
-    """Action to convert int to bool.
-
-    This action is used when adding nested bool types (e.g., `Sequence[bool]`) to an
-    argument parser. Arguments are added as `int`, and converted to `bool` after
-    parsing.
-    """
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        setattr(namespace, self.dest, tuple(map(bool, values)))
-
-
 class _CorgyMeta(type):
     """Metaclass for `Corgy`.
 
@@ -508,22 +478,28 @@ class Corgy(metaclass=_CorgyMeta):
 
     1. `collections.abc.Sequence` (`typing.Sequence` on Python < 3.9)
     2. `tuple` (`typing.Tuple` on Python < 3.9)
+    3. `list` (`typing.List` on Python < 3.9)
+    4. `set` (`typing.Set` on Python < 3.9)
 
     There are a few different ways to use these types, each resulting in different
     validation conditions. The simplest case is a plain (possibly empty) collection of a
     single type::
 
-        >>> from typing import Sequence, Tuple
+        >>> from typing import List, Sequence, Set, Tuple
 
         >>> class A(Corgy):
         ...     x: Sequence[int]
         ...     y: Tuple[str]
+        ...     z: Set[float]
+        ...     w: List[int]
 
         >>> a = A()
         >>> a.x = [1, 2]
         >>> a.y = ("1", "2")
+        >>> a.z = {1.0, 2.0}
+        >>> a.w = [1, 2]
         >>> a
-        A(x=[1, 2], y=('1', '2'))
+        A(x=[1, 2], y=('1', '2'), z={1.0, 2.0}, w=[1, 2])
 
         >>> a.x = [1, "2"]
         Traceback (most recent call last):
@@ -538,9 +514,10 @@ class Corgy(metaclass=_CorgyMeta):
         ValueError: invalid value for type 'typing.Tuple[str]': ['1', '2']
 
     The collection length can be controlled by the arguments of the type annotation.
-    Note, however, that `typing.Sequence` does not accept multiple arguments, and so,
-    cannot be used if collection length has to be specified. Instead, use
-    `collections.abc.Sequence`, if on Python >= 3.9, or `typing.Tuple` otherwise.
+    Note, however, that other than `typing.Sequence/typing.List/typing.Set` do not
+    accept multiple arguments, and so, cannot be used if collection length has to be
+    specified. On Python < 3.9, only `typing.Tuple` can be used for controlling
+    collection lengths.
 
     To specify that a collection must be non-empty, use ellipsis (`...`) as the second
     argument of the type::
@@ -753,10 +730,6 @@ class Corgy(metaclass=_CorgyMeta):
         and will raise `ValueError`. Untyped collections (e.g., `x: Sequence`), also
         cannot be added.
 
-        Collection types other than `Sequence` (like `Tuple`) will be added with a
-        custom action, which will convert parsed values to the appropriate collection
-        type.
-
         *Literal*
         For `Literal` types, the provided values are passed to the `choices` argument
         of `ArgumentParser.add_argument`. All values must be of the same type, which
@@ -907,7 +880,6 @@ class Corgy(metaclass=_CorgyMeta):
 
             # Check if the variable is a collection.
             var_nargs: Union[int, Literal["+", "*", "?"], None]
-            var_action: Optional[Type[argparse.Action]] = None
             _col_type = _get_concrete_collection_type(var_base_type)
             if _col_type is not None:
                 if (
@@ -941,9 +913,6 @@ class Corgy(metaclass=_CorgyMeta):
                     var_nargs = len(var_base_type.__args__)
                 var_base_type = var_base_type.__args__[0]
 
-                if _col_type is tuple:
-                    # Create a custom action to convert the parsed sequence to a tuple.
-                    var_action = MakeTupleAction
             elif var_positional and not var_required:
                 # "Optional" positional argument: set `nargs` to `?`.
                 var_nargs = "?"
@@ -983,15 +952,9 @@ class Corgy(metaclass=_CorgyMeta):
 
             # Check if the variable is boolean. Boolean variables are converted to
             # `--<var-name>`/`--no-<var-name>` arguments.
+            var_action: Optional[Type[argparse.Action]] = None
             if var_base_type is bool and var_nargs is None:
-                assert var_action is None
                 var_action = BooleanOptionalAction
-            elif var_base_type is bool:
-                # Nested bool type: add to the parser as `int`, and convert to `bool`
-                # after parsing.
-                var_action = MakeBoolAction
-                var_base_type = int
-                var_type_metavar = "bool"
 
             # Check if the variable has a custom parser.
             _parsers = getattr(cls, "__parsers")
@@ -1256,7 +1219,7 @@ class Corgy(metaclass=_CorgyMeta):
             parser = argparse.ArgumentParser(**parser_args)
         cls.add_args_to_parser(parser, defaults=defaults)
         args = vars(parser.parse_args())
-        return cls.from_dict(args)
+        return cls.from_dict(args, try_cast=True)
 
     @classmethod
     def parse_from_toml(
@@ -1309,7 +1272,7 @@ class Corgy(metaclass=_CorgyMeta):
         for _k, _v in toml_data.items():
             if _k in _parsers:
                 toml_data[_k] = _parsers[_k](_v)
-        return cls.from_dict(toml_data)
+        return cls.from_dict(toml_data, try_cast=True)
 
 
 class _CorgyParser(NamedTuple):

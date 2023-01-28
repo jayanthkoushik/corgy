@@ -44,6 +44,10 @@ def _get_concrete_collection_type(type_) -> Optional[type]:
 
     if _is_one_of(type_, Tuple, tuple):
         return tuple
+    if _is_one_of(type_, List, list):
+        return list
+    if _is_one_of(type_, Set, set):
+        return set
     if _is_one_of(type_, Sequence, AbstractSequence):
         return AbstractSequence
     return None

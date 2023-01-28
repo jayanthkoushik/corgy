@@ -250,22 +250,32 @@ supported:
 
 2. `tuple` (`typing.Tuple` on Python < 3.9)
 
+
+3. `list` (`typing.List` on Python < 3.9)
+
+
+4. `set` (`typing.Set` on Python < 3.9)
+
 There are a few different ways to use these types, each resulting in different
 validation conditions. The simplest case is a plain (possibly empty) collection of a
 single type:
 
 ```python
->>> from typing import Sequence, Tuple
+>>> from typing import List, Sequence, Set, Tuple
 
 >>> class A(Corgy):
 ...     x: Sequence[int]
 ...     y: Tuple[str]
+...     z: Set[float]
+...     w: List[int]
 
 >>> a = A()
 >>> a.x = [1, 2]
 >>> a.y = ("1", "2")
+>>> a.z = {1.0, 2.0}
+>>> a.w = [1, 2]
 >>> a
-A(x=[1, 2], y=('1', '2'))
+A(x=[1, 2], y=('1', '2'), z={1.0, 2.0}, w=[1, 2])
 
 >>> a.x = [1, "2"]
 Traceback (most recent call last):
@@ -281,9 +291,10 @@ ValueError: invalid value for type 'typing.Tuple[str]': ['1', '2']
 ```
 
 The collection length can be controlled by the arguments of the type annotation.
-Note, however, that `typing.Sequence` does not accept multiple arguments, and so,
-cannot be used if collection length has to be specified. Instead, use
-`collections.abc.Sequence`, if on Python >= 3.9, or `typing.Tuple` otherwise.
+Note, however, that other than `typing.Sequence/typing.List/typing.Set` do not
+accept multiple arguments, and so, cannot be used if collection length has to be
+specified. On Python < 3.9, only `typing.Tuple` can be used for controlling
+collection lengths.
 
 To specify that a collection must be non-empty, use ellipsis (`...`) as the second
 argument of the type:
@@ -519,10 +530,6 @@ In all cases, collection types can only be added to a parser if they are single
 type. Heterogenous collections, such as `Sequence[int, str]` cannot be added,
 and will raise `ValueError`. Untyped collections (e.g., `x: Sequence`), also
 cannot be added.
-
-Collection types other than `Sequence` (like `Tuple`) will be added with a
-custom action, which will convert parsed values to the appropriate collection
-type.
 
 *Literal*
 For `Literal` types, the provided values are passed to the `choices` argument
