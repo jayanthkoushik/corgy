@@ -1107,6 +1107,20 @@ class TestCorgyFromDict(unittest.TestCase):
         c = C.from_dict({"x": [(1, "2", None), [None, ("1.0", 2.0)]]}, try_cast=True)
         self.assertEqual(c.x, ((1, 2, None), (None, (1.0, 2.0))))
 
+    def test_cls_from_dict_cast_handles_bad_type(self):
+        class T:
+            def __init__(self):
+                raise TypeError
+
+        class C(Corgy):
+            x: T
+            y: Sequence[T]
+
+        with self.assertRaises(ValueError):
+            C.from_dict({"x": 1})
+        with self.assertRaises(ValueError):
+            C.from_dict({"x": [1]})
+
 
 class TestCorgyPrinting(unittest.TestCase):
     @classmethod
