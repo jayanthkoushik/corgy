@@ -1188,6 +1188,55 @@ class TestCorgyFromDict(unittest.TestCase):
         with self.assertRaises(ValueError):
             C.from_dict({"x": [1]})
 
+    def test_cls_from_dict_handles_groups_in_collections(self):
+        class G(Corgy):
+            x: int
+
+        for _type in COLLECTION_TYPES:
+            if _type in (Set, SetType):
+                continue
+
+            _cast_type = _get_collection_cast_type(_type)
+            with self.subTest(type=_type):
+
+                class C(Corgy):
+                    x: _type[G]
+
+                self.assertEqual(
+                    C.from_dict({"x": _cast_type([G(x=1), G(x=2)])}),
+                    C(x=_cast_type([G(x=1), G(x=2)])),
+                )
+
+                self.assertEqual(
+                    C.from_dict({"x": _cast_type([{"x": 1}, {"x": 2}])}),
+                    C(x=_cast_type([G(x=1), G(x=2)])),
+                )
+
+    def test_from_dict_handles_nested_groups_in_collections(self):
+        class G1(Corgy):
+            x: int
+
+        class G2(Corgy):
+            x: Tuple[float, Sequence[G1], int]
+
+        class C(Corgy):
+            x: Tuple[G1, G2]
+
+        c = C()
+        c.x = (G1(), G2())
+        c.x[0].x = 1
+        c.x[1].x = (1.1, [G1(), G1(), G1()], 2)
+        c.x[1].x[1][0].x = 10
+        c.x[1].x[1][1].x = 20
+        c.x[1].x[1][2].x = 30
+
+        self.assertEqual(
+            c,
+            C.from_dict(
+                {"x": ({"x": 1}, {"x": (1.1, [{"x": 10}, {"x": 20}, {"x": 30}], 2)})}
+            ),
+        )
+
 
 class TestCorgyPrinting(unittest.TestCase):
     @classmethod

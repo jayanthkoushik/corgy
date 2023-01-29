@@ -11,6 +11,8 @@ if sys.version_info >= (3, 9):
 else:
     from typing_extensions import Literal
 
+import corgy._corgy  # pylint: disable=cyclic-import
+
 
 def is_union_type(t) -> bool:
     """Check if the argument is a union type."""
@@ -58,7 +60,7 @@ def is_literal_type(t) -> bool:
     return hasattr(t, "__origin__") and t.__origin__ is Literal
 
 
-def check_val_type(_val, _type, try_cast=False):
+def check_val_type(_val, _type, try_cast=False, try_load_corgy_dicts=False):
     _coll_type = get_concrete_collection_type(_type)
     if _coll_type is not None:
         if not isinstance(_val, _coll_type):
@@ -88,13 +90,21 @@ def check_val_type(_val, _type, try_cast=False):
         if len(_base_types) == 1:
             # All items in `_val` should match the base type.
             for _val_i in _val:
-                _cast_val_is.append(check_val_type(_val_i, _base_types[0], try_cast))
+                _cast_val_is.append(
+                    check_val_type(
+                        _val_i, _base_types[0], try_cast, try_load_corgy_dicts
+                    )
+                )
         elif len(_base_types) == 2 and _base_types[1] is Ellipsis:
             # Same as the previous condition, but `_val` must be non-empty.
             if not _val:
                 raise ValueError(f"expected non-empty collection for type '{_type}'")
             for _val_i in _val:
-                _cast_val_is.append(check_val_type(_val_i, _base_types[0], try_cast))
+                _cast_val_is.append(
+                    check_val_type(
+                        _val_i, _base_types[0], try_cast, try_load_corgy_dicts
+                    )
+                )
         else:
             # There should be a one-to-one correspondence between items in `_val` and
             # items in `_type`.
@@ -104,7 +114,9 @@ def check_val_type(_val, _type, try_cast=False):
                     f"expected exactly '{len(_base_types)}' elements"
                 )
             for _val_i, _base_type_i in zip(_val, _base_types):
-                _cast_val_is.append(check_val_type(_val_i, _base_type_i, try_cast))
+                _cast_val_is.append(
+                    check_val_type(_val_i, _base_type_i, try_cast, try_load_corgy_dicts)
+                )
 
         _val = _cast_type(_cast_val_is)
         return _val
@@ -113,7 +125,7 @@ def check_val_type(_val, _type, try_cast=False):
         if _val is None:
             return None
         _base_type = _type.__args__[0]
-        return check_val_type(_val, _base_type, try_cast)
+        return check_val_type(_val, _base_type, try_cast, try_load_corgy_dicts)
 
     if is_literal_type(_type):
         if not hasattr(_type, "__args__") or _val not in _type.__args__:
@@ -127,6 +139,13 @@ def check_val_type(_val, _type, try_cast=False):
                 f"expected one of: {_type.__choices__}"
             )
         return _val
+
+    if (
+        try_load_corgy_dicts
+        and isinstance(_val, dict)
+        and isinstance(_type, corgy._corgy._CorgyMeta)
+    ):
+        return _type.from_dict(_val, try_cast)
 
     try:
         _is_inst = isinstance(_val, _type)

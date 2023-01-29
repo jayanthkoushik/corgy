@@ -1196,14 +1196,13 @@ class Corgy(metaclass=_CorgyMeta):
             grp_type = cls_attrs[grp_name]
             main_args_map[grp_name] = grp_type.from_dict(grp_args, try_cast)
 
-        if not try_cast:
-            return cls(**main_args_map)
-
         obj = cls()
         cls_attrs = cls.attrs()
         for arg_name, arg_val in main_args_map.items():
             if arg_name in cls_attrs:
-                arg_val = check_val_type(arg_val, cls_attrs[arg_name], try_cast=True)
+                arg_val = check_val_type(
+                    arg_val, cls_attrs[arg_name], try_cast, try_load_corgy_dicts=True
+                )
                 setattr(obj, arg_name, arg_val)
         return obj
 
