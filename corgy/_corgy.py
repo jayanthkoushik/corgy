@@ -4,6 +4,7 @@ import argparse
 import importlib
 import sys
 from collections import defaultdict
+from collections.abc import Sequence as AbstractSequence
 from contextlib import suppress
 from functools import partial
 from typing import (
@@ -1090,21 +1091,36 @@ class Corgy(metaclass=_CorgyMeta):
             {'x': 'one', 'g:x': 1}
 
         """
-        _dict = {}
-        for arg_name in self.attrs():
+
+        def dictify_corgys(_val):
+            _coll_type = get_concrete_collection_type(type(_val))
+            if _coll_type is not None:
+                _cast_type = _coll_type if _coll_type is not AbstractSequence else list
+                return _cast_type(  # pylint: disable=abstract-class-instantiated
+                    [dictify_corgys(_val_part) for _val_part in _val]
+                )
+            if isinstance(_val.__class__, _CorgyMeta):
+                return _val.as_dict(recursive=True, flatten=flatten)
+            return _val
+
+        self_dict = {}
+        for attr_name, attr_type in self.attrs().items():
             try:
-                _val = getattr(self, arg_name)
+                attr_val = getattr(self, attr_name)
             except AttributeError:
                 continue
-            if recursive and isinstance(_val.__class__, _CorgyMeta):
-                _val = _val.as_dict(recursive=True, flatten=flatten)
-                if flatten:
-                    for _k, _v in _val.items():
-                        _flat_key = f"{arg_name}:{_k}"
-                        _dict[_flat_key] = _v
+
+            if recursive:
+                attr_val = dictify_corgys(attr_val)
+                if flatten and isinstance(attr_type, _CorgyMeta):
+                    for _k, _v in attr_val.items():
+                        _flat_key = f"{attr_name}:{_k}"
+                        self_dict[_flat_key] = _v
                     continue
-            _dict[arg_name] = _val
-        return _dict
+
+            self_dict[attr_name] = attr_val
+
+        return self_dict
 
     @classmethod
     def from_dict(cls: Type[_T], d: Mapping[str, Any], try_cast: bool = False) -> _T:

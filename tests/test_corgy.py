@@ -947,6 +947,73 @@ class TestCorgyAsDict(unittest.TestCase):
         self.assertEqual(e2.d.c.x, e1.d.c.x)
         self.assertEqual(e2.d.c.y, e1.d.c.y)
 
+    def test_as_dict_handles_groups_in_collections(self):
+        class G(Corgy):
+            x: int
+
+        for _type in COLLECTION_TYPES:
+            if _type in (Set, SetType):
+                continue
+
+            _cast_type = _get_collection_cast_type(_type)
+            with self.subTest(type=_type):
+
+                class C(Corgy):
+                    x: _type[G]
+
+                gs = _cast_type([G(x=1), G(x=2)])
+                c = C(x=gs)
+                c_dict = c.as_dict(recursive=True)
+                self.assertIs(type(c_dict["x"]), _cast_type)
+                self.assertEqual(len(c_dict["x"]), 2)
+                self.assertDictEqual(c_dict["x"][0], {"x": 1})
+                self.assertDictEqual(c_dict["x"][1], {"x": 2})
+
+                c = C(x=_cast_type())
+                c_dict = c.as_dict(recursive=True)
+                self.assertIs(type(c_dict["x"]), _cast_type)
+                self.assertEqual(len(c_dict["x"]), 0)
+
+    def test_as_dict_handles_flatten_in_nested_groups(self):
+        class G1(Corgy):
+            x: int
+
+        class G2(Corgy):
+            x: float
+            g: G1
+
+        class C(Corgy):
+            g: Tuple[G2, ...]
+
+        c = C(g=(G2(x=1.1, g=G1(x=11)), G2(x=2.2, g=G1(x=22))))
+        self.assertEqual(
+            c.as_dict(recursive=True, flatten=True),
+            {"g": ({"x": 1.1, "g:x": 11}, {"x": 2.2, "g:x": 22})},
+        )
+
+    def test_as_dict_handles_nested_groups_in_collections(self):
+        class G1(Corgy):
+            x: int
+
+        class G2(Corgy):
+            x: Tuple[float, Sequence[G1], int]
+
+        class C(Corgy):
+            x: Tuple[G1, G2]
+
+        c = C()
+        c.x = (G1(), G2())
+        c.x[0].x = 1
+        c.x[1].x = (1.1, [G1(), G1(), G1()], 2)
+        c.x[1].x[1][0].x = 10
+        c.x[1].x[1][1].x = 20
+        c.x[1].x[1][2].x = 30
+
+        self.assertEqual(
+            c.as_dict(recursive=True),
+            {"x": ({"x": 1}, {"x": (1.1, [{"x": 10}, {"x": 20}, {"x": 30}], 2)})},
+        )
+
 
 class TestCorgyFromDict(unittest.TestCase):
     def test_cls_from_dict_creates_instance_from_dict(self):
