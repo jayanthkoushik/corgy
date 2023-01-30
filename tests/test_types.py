@@ -1,4 +1,5 @@
 import os
+import pickle
 import stat
 import sys
 from io import BufferedReader, BufferedWriter, TextIOWrapper
@@ -287,6 +288,25 @@ class TestIODirectory(_TestDirectory):
     )
 
 
+class _GlobalTestA:
+    def __init__(self, x: int):
+        self.x = x
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and other.x == self.x
+
+    def __hash__(self):
+        return hash(self.x)
+
+
+class _GlobalTestB(_GlobalTestA):
+    ...
+
+
+class _GlobalTestC(_GlobalTestA):
+    ...
+
+
 class TestSubClass(TestCase):
     def test_subclass_raises_if_called_without_init(self):
         with self.assertRaises(TypeError):
@@ -539,6 +559,30 @@ class TestSubClass(TestCase):
         self.assertEqual(init_b.which, B)
         self.assertEqual(init_c.which, C)
 
+    def test_subclass_inst_pickleable(self):
+        with TemporaryDirectory() as _tmpdir:
+            _pkl_path = Path(_tmpdir) / "tmp.pkl"
+
+            with _pkl_path.open("wb") as _f:
+                pickle.dump(SubClass[_GlobalTestA]("_GlobalTestB"), _f)
+
+            with _pkl_path.open("rb") as _f:
+                _AT = pickle.load(_f)
+
+            self.assertEqual(_AT, SubClass[_GlobalTestA]("_GlobalTestB"))
+
+            _type = SubClass[_GlobalTestA]
+            _type.use_full_names = True
+            b_full_name = _GlobalTestB.__module__ + "." + _GlobalTestB.__qualname__
+
+            with _pkl_path.open("wb") as _f:
+                pickle.dump(_type(b_full_name), _f)
+
+            with _pkl_path.open("rb") as _f:
+                _AT = pickle.load(_f)
+
+            self.assertEqual(_AT, _type(b_full_name))
+
 
 class TestKeyValuePairs(TestCase):
     def test_key_value_pairs_init_returns_unique_class(self):
@@ -638,19 +682,36 @@ class TestKeyValuePairs(TestCase):
     def test_key_value_pairs_repr_str(self):
         type_ = KeyValuePairs[str, int]
         dic = type_("foo=1,bar=2")
-        self.assertEqual(repr(dic), "KeyValuePairs[str, int]('foo=1,bar=2')")
+        self.assertEqual(repr(dic), "KeyValuePairs[str,int]('foo=1,bar=2')")
         self.assertEqual(str(dic), "{'foo': 1, 'bar': 2}")
 
     def test_key_value_pairs_repr_str_with_custom_separators(self):
         with patch.multiple(KeyValuePairs, sequence_separator=";", item_separator=":"):
             dic = KeyValuePairs("foo:1;bar:2")
-            self.assertEqual(repr(dic), "KeyValuePairs[str, str]('foo:1;bar:2')")
+            self.assertEqual(repr(dic), "KeyValuePairs('foo:1;bar:2')")
             self.assertEqual(str(dic), "{'foo': '1', 'bar': '2'}")
 
     def test_key_value_pairs_accepts_dict(self):
         dic = KeyValuePairs[str, int]({"foo": 1, "bar": 2})
         self.assertDictEqual(dic, {"foo": 1, "bar": 2})
-        self.assertEqual(repr(dic), "KeyValuePairs[str, int]({'foo': 1, 'bar': 2})")
+        self.assertEqual(repr(dic), "KeyValuePairs[str,int]({'foo': 1, 'bar': 2})")
+
+    def test_key_value_pairs_pickleable(self):
+        with TemporaryDirectory() as _tmpdir:
+            _pkl_path = Path(_tmpdir) / "tmp.pkl"
+
+            _KVT = KeyValuePairs[_GlobalTestB, _GlobalTestC]
+            _b1, _b2 = _GlobalTestB(1), _GlobalTestB(2)
+            _c1, _c2 = _GlobalTestC(1), _GlobalTestC(2)
+            _kv = _KVT({_b1: _c1, _b2: _c2})
+
+            with _pkl_path.open("wb") as _f:
+                pickle.dump(_kv, _f)
+
+            with _pkl_path.open("rb") as _f:
+                _pkv = pickle.load(_f)
+
+            self.assertDictEqual(_kv, _pkv)
 
 
 class TestInitArgs(TestCase):
@@ -716,6 +777,21 @@ class TestInitArgs(TestCase):
             globals(),
             locals(),
         )
+
+    def test_init_args_pickleable(self):
+        with TemporaryDirectory() as _tmpdir:
+            _pkl_path = Path(_tmpdir) / "tmp.pkl"
+
+            _IAT = InitArgs[_GlobalTestA]
+            _iat = _IAT(x=1)
+
+            with _pkl_path.open("wb") as _f:
+                pickle.dump(_iat, _f)
+
+            with _pkl_path.open("rb") as _f:
+                _iat = pickle.load(_f)
+
+            self.assertEqual(_iat, _IAT(x=1))
 
 
 del _TestFile, _TestOutputFile, _TestLazyOutputFile, _TestInputFile, _TestDirectory

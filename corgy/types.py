@@ -581,7 +581,7 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
             ret_type = cls._type_cache[item]
         except (KeyError, TypeError) as e:
             ret_type = type(
-                cls.__name__,
+                f"{cls.__name__}[{item.__name__}]",
                 (cls,),
                 {
                     "allow_base": cls._default_allow_base,
@@ -595,7 +595,11 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
             if not isinstance(e, TypeError):
                 # `TypeError` is raised if `item` is not hashable.
                 cls._type_cache[item] = ret_type
+            sys.modules[ret_type.__module__].__dict__[ret_type.__name__] = ret_type
         return ret_type
+
+    def __getnewargs__(self):
+        return (self._subclass_name(self._subcls),)
 
     @classmethod
     def _ensure_base_set(cls):
@@ -705,10 +709,7 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
         return hash(self._subcls)
 
     def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__}[{self._base.__name__}]"
-            f"({self._subclass_name(self._subcls)!r})"
-        )
+        return f"{self.__class__.__name__}({self._subclass_name(self._subcls)!r})"
 
     def __str__(self) -> str:
         return self._subclass_name(self._subcls)
@@ -797,7 +798,7 @@ class KeyValuePairs(  # type: ignore[misc]
         except (KeyError, TypeError) as e:
             kt, vt = item
             ret_type = type(
-                cls.__name__,
+                f"{cls.__name__}[{kt.__name__},{vt.__name__}]",
                 (cls,),
                 {
                     "_kt": kt,
@@ -810,6 +811,7 @@ class KeyValuePairs(  # type: ignore[misc]
             if not isinstance(e, TypeError):
                 # `TypeError` is raised if the item is not hashable.
                 cls._type_cache[item] = ret_type
+            sys.modules[ret_type.__module__].__dict__[ret_type.__name__] = ret_type
         return ret_type
 
     @classmethod  # type: ignore
@@ -860,9 +862,7 @@ class KeyValuePairs(  # type: ignore[misc]
         super().__init__(dic)
 
     def __repr__(self) -> str:
-        kt: Type[_KT] = getattr(self, "_kt", typing.cast(Type[_KT], str))
-        vt: Type[_VT] = getattr(self, "_vt", typing.cast(Type[_VT], str))
-        return f"{self.__class__.__name__}[{kt.__name__}, {vt.__name__}]({self._src!r})"
+        return f"{self.__class__.__name__}({self._src!r})"
 
     def __str__(self) -> str:
         return super().__repr__()
@@ -941,7 +941,7 @@ class InitArgs(Corgy, Generic[_T]):
                 f"cannot further sub-script `{newcls.__name__}[{_item.__name__}]`"
             )
 
-        return type(
+        ret_type = type(
             f"{cls.__name__}[{item.__name__}]",
             (cls,),
             {
@@ -951,3 +951,5 @@ class InitArgs(Corgy, Generic[_T]):
                 **item_defaults,
             },
         )
+        sys.modules[ret_type.__module__].__dict__[ret_type.__name__] = ret_type
+        return ret_type
