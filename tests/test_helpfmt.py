@@ -1177,7 +1177,7 @@ class TestCorgyHelpFormatterUsage(TestCase):
 class _NoColorTestMeta(type):
     """Metaclass to create versions of test classes that don't use colors."""
 
-    def __new__(cls, name, bases, namespace, **kwds):
+    def __new__(cls, name, bases, namespace, **kwds):  # pylint: disable=duplicate-code
         for _item in dir(bases[0]):
             if not _item.startswith("test_"):
                 continue
