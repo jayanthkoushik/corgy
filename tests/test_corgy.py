@@ -577,10 +577,7 @@ class TestCorgyTypeChecking(unittest.TestCase):
         c = C()
         for _val in [[1], (1,), (1, 2)]:
             with self.subTest(val=_val):
-                try:
-                    c.x = _val
-                except ValueError as _e:
-                    self.fail(f"unexpected value error: {_e}")
+                c.x = _val
 
     def test_corgy_instance_allows_arbitrary_coll_for_empty_coll_type(self):
         for _type in COLLECTION_TYPES:
@@ -593,10 +590,7 @@ class TestCorgyTypeChecking(unittest.TestCase):
                 _conc_type = _get_collection_cast_type(_type)
                 for _val in [[1], ["1"], [1, "two", 3.0], []]:
                     _val = _conc_type(_val)
-                    try:
-                        c.x = _val
-                    except ValueError as _e:
-                        self.fail(f"unexpected value error: {_e}")
+                    c.x = _val
 
     def test_corgy_instance_raises_on_coll_item_type_mismatch(self):
         for _type in COLLECTION_TYPES:
@@ -621,10 +615,7 @@ class TestCorgyTypeChecking(unittest.TestCase):
 
                 c = C()
                 _conc_type = _get_collection_cast_type(_type)
-                try:
-                    c.x = _conc_type()
-                except ValueError as _e:
-                    self.fail(f"unexpected value error: {_e}")
+                c.x = _conc_type()
 
     def test_corgy_instance_raises_on_empty_coll_with_ellipsis(self):
         for _type in COLLECTION_TYPES:
@@ -704,10 +695,7 @@ class TestCorgyTypeChecking(unittest.TestCase):
             x: Optional[int]
 
         c = C()
-        try:
-            c.x = None
-        except ValueError as _e:
-            self.fail(f"unexpected value error: {_e}")
+        c.x = None
 
     def test_corgy_instance_allows_value_of_sub_type(self):
         class T:
@@ -720,10 +708,7 @@ class TestCorgyTypeChecking(unittest.TestCase):
             x: T
 
         c = C()
-        try:
-            c.x = Q()
-        except ValueError as _e:
-            self.fail(f"unexpected value error: {_e}")
+        c.x = Q()
 
     def test_corgy_instance_raises_on_assigning_out_of_set_to_literal(self):
         class C(Corgy):
@@ -743,10 +728,7 @@ class TestCorgyTypeChecking(unittest.TestCase):
         c = C()
         for _val in [1, "2"]:
             with self.subTest(val=_val):
-                try:
-                    c.x = _val
-                except ValueError as _e:
-                    self.fail(f"unexpected value error: {_e}")
+                c.x = _val
 
     def test_corgy_instance_raises_on_assigning_out_of_set_to_type_with_choices(self):
         class T:
@@ -1141,10 +1123,7 @@ class TestCorgyFromDict(unittest.TestCase):
         class C(Corgy):
             x: int
 
-        try:
-            C.from_dict({"x": 1, "y": {"x": 1}})
-        except ValueError as e:
-            self.fail(f"unexpected error: {e}")
+        C.from_dict({"x": 1, "y": {"x": 1}})
 
     def test_cls_from_dict_casts_values_when_try_cast_true(self):
         class C(Corgy):
@@ -1176,7 +1155,7 @@ class TestCorgyFromDict(unittest.TestCase):
 
     def test_cls_from_dict_cast_handles_bad_type(self):
         class T:
-            def __init__(self):
+            def __init__(self, _):
                 raise TypeError
 
         class C(Corgy):
@@ -1184,9 +1163,9 @@ class TestCorgyFromDict(unittest.TestCase):
             y: Sequence[T]
 
         with self.assertRaises(ValueError):
-            C.from_dict({"x": 1})
+            C.from_dict({"x": 1}, try_cast=True)
         with self.assertRaises(ValueError):
-            C.from_dict({"x": [1]})
+            C.from_dict({"y": 1}, try_cast=True)
 
     def test_cls_from_dict_handles_groups_in_collections(self):
         class G(Corgy):
@@ -1283,6 +1262,9 @@ class TestCorgyLoadDict(unittest.TestCase):
             y: str
 
         c = C(x=1)
+        c.load_dict({"y": "two"}, strict=True)
+        self.assertEqual(c, C(y="two"))
+        c = C()
         c.load_dict({"y": "two"}, strict=True)
         self.assertEqual(c, C(y="two"))
 

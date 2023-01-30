@@ -762,9 +762,8 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
 
     def start_section(self, heading: Optional[str] = None):
         #: :meta private:
-        if heading == "optional arguments":
-            # This was made the default in Python 3.10.
-            heading = "options"
+        # 'optional arguments' was changed to 'options' in Python 3.10.
+        heading = "options" if heading == "optional arguments" else heading
         super().start_section(heading)
 
     def add_usage(self, *args, **kwargs):
@@ -787,9 +786,6 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         with patch.object(self._color_helper, "crayons", None):
             # Disable colors for usage string.
             fmt = super()._format_usage(usage, *args, **kwargs)
-
-        if not fmt:
-            return fmt
 
         output_width = self.output_width or shutil.get_terminal_size().columns
         # Wrap usage to output width.

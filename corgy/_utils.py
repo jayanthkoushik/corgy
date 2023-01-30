@@ -16,11 +16,8 @@ import corgy._corgy  # pylint: disable=cyclic-import
 
 def is_union_type(t) -> bool:
     """Check if the argument is a union type."""
-    if sys.version_info >= (3, 10):
-        # This checks for the `|` based syntax introduced in Python 3.10.
-        p310_check = t.__class__ is UnionType
-    else:
-        p310_check = False
+    # This checks for the `|` based syntax introduced in Python 3.10.
+    p310_check = sys.version_info >= (3, 10) and t.__class__ is UnionType
     return p310_check or (hasattr(t, "__origin__") and t.__origin__ is Union)
 
 

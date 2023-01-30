@@ -1354,10 +1354,9 @@ class Corgy(metaclass=_CorgyMeta):
             A(x='one', g=G(x=1, y=[1, 2, 3]))
 
         """
-        if sys.version_info >= (3, 11):
-            tomli = importlib.import_module("tomllib")
-        else:
-            tomli = importlib.import_module("tomli")
+        tomli = importlib.import_module(
+            "tomllib" if sys.version_info >= (3, 11) else "tomli"
+        )
         toml_data = tomli.load(toml_file)
         if defaults is not None:
             for _k, _v in defaults.items():

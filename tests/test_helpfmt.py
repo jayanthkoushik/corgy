@@ -57,10 +57,7 @@ class TestCorgyHelpFormatterAPI(TestCase):
         with patch(
             "corgy._helpfmt.importlib.import_module", Mock(side_effect=ImportError)
         ):
-            try:
-                ArgumentParser(formatter_class=CorgyHelpFormatter)
-            except ImportError:
-                self.fail("unexpected import error")
+            ArgumentParser(formatter_class=CorgyHelpFormatter)
 
     def test_corgy_help_formatter_raises_if_setting_new_attribute(self):
         with self.assertRaises(AttributeError):
@@ -410,6 +407,12 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
             f"  {_O('--x')} [{_M('str')} ...]  ({_K('optional')})",
         )
 
+    def test_corgy_help_formatter_handles_nargs_star_with_tuple_metavar(self):
+        self.assertEqual(
+            self._get_arg_help("--x", nargs="*", type=str, metavar=("a", "b")),
+            f"  {_O('--x')} [{_M('a')} [{_M('b')} ...]]  ({_K('optional')})",
+        )
+
     def test_corgy_help_formatter_handles_nargs_const(self):
         self.assertEqual(
             self._get_arg_help("--x", nargs=3, type=str),
@@ -473,6 +476,20 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
             self._get_arg_help("--x", type=None),
             #   --x  (optional)
             f"  {_O('--x')}  ({_K('optional')})",
+        )
+
+    def test_corgy_help_formatter_handles_bad_type(self):
+        class T:
+            def __call__(self):
+                ...
+
+            def __str__(self):
+                return "BAD"
+
+        self.assertEqual(
+            self._get_arg_help("--x", type=T()),
+            #   --x BAD  (optional)
+            f"  {_O('--x')} {_M('BAD')}  ({_K('optional')})",
         )
 
     def test_corgy_help_formatter_handles_long_metavar(self):
@@ -915,9 +932,6 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
             def __init__(self, s):
                 self.s = s
 
-            def __repr__(self):
-                return f"T('{self.s}')"
-
             def __str__(self):
                 return "T" + self.s
 
@@ -934,9 +948,6 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
         class T:
             def __init__(self, s):
                 self.s = s
-
-            def __repr__(self):
-                return f"T('{self.s}')"
 
             def __str__(self):
                 return "T" + self.s
@@ -964,9 +975,6 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
             def __init__(self, s):
                 self.s = s
 
-            def __repr__(self):
-                return f"T('{self.s}')"
-
             def __str__(self):
                 return "T" + self.s
 
@@ -983,9 +991,6 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
         class T:
             def __init__(self, s):
                 self.s = s
-
-            def __repr__(self):
-                return f"T('{self.s}')"
 
             def __str__(self):
                 return "T" + self.s
@@ -1004,9 +1009,6 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
         class T:
             def __init__(self, s):
                 self.s = s
-
-            def __repr__(self):
-                return f"T('{self.s}')"
 
             def __str__(self):
                 return "T" + self.s
@@ -1091,9 +1093,6 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
         class T:
             def __init__(self, s):
                 self.s = s
-
-            def __repr__(self):
-                return f"T('{self.s}')"
 
             def __str__(self):
                 return "T" + self.s

@@ -441,11 +441,10 @@ class TestSubClass(TestCase):
 
     def test_subclass_call_with_params(self):
         class A:
-            def __init__(self, x):
-                ...
+            ...
 
         class B(A):  # pylint: disable=unused-variable
-            def __init__(self, x):  # pylint: disable=super-init-not-called
+            def __init__(self, x):
                 self.x = f"B{x}"
 
         type_ = SubClass[A]
