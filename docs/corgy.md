@@ -718,6 +718,49 @@ B(x=1.1, a=A(x='one', g=G(x=1)))
 ```
 
 
+#### load_dict(d, try_cast=False, strict=False)
+Load a dictionary into an instance of the class.
+
+Previous attributes are overwritten. Sub-dictionaries will be parsed
+recursively if the corresponding attribute already exists, else will be parsed
+using `from_dict`. As with `from_dict`, items in the dictionary without
+corresponding attributes are ignored.
+
+
+* **Parameters**
+
+
+    * **d** – Dictionary to load.
+
+
+    * **try_cast** – Whether to try and cast values which don’t match attribute types.
+
+
+    * **strict** – If `True`, attributes with existing values that are not in the
+    dictionary will be unset.
+
+
+Example:
+
+```python
+>>> class A(Corgy):
+...     x: int
+...     y: str
+>>> a = A(x=1)
+>>> _i = id(a)
+>>> a.load_dict({"y": "two"})
+>>> a
+A(x=1, y='two')
+>>> _i == id(a)
+True
+>>> a.load_dict({"y": "three"}, strict=True)
+>>> a
+A(y='three')
+>>> _i == id(a)
+True
+```
+
+
 #### _classmethod_ parse_from_cmdline(parser=None, defaults=None, \*\*parser_args)
 Return an instance of the class parsed from command line arguments.
 

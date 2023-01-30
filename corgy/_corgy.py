@@ -1206,6 +1206,87 @@ class Corgy(metaclass=_CorgyMeta):
                 setattr(obj, arg_name, arg_val)
         return obj
 
+    def load_dict(
+        self, d: Dict[str, Any], try_cast: bool = False, strict: bool = False
+    ) -> None:
+        """Load a dictionary into an instance of the class.
+
+        Previous attributes are overwritten. Sub-dictionaries will be parsed
+        recursively if the corresponding attribute already exists, else will be parsed
+        using `from_dict`. As with `from_dict`, items in the dictionary without
+        corresponding attributes are ignored.
+
+        Args:
+            d: Dictionary to load.
+            try_cast: Whether to try and cast values which don't match attribute types.
+            strict: If `True`, attributes with existing values that are not in the
+                dictionary will be unset.
+
+        Example::
+
+            >>> class A(Corgy):
+            ...     x: int
+            ...     y: str
+            >>> a = A(x=1)
+            >>> _i = id(a)
+            >>> a.load_dict({"y": "two"})
+            >>> a
+            A(x=1, y='two')
+            >>> _i == id(a)
+            True
+            >>> a.load_dict({"y": "three"}, strict=True)
+            >>> a
+            A(y='three')
+            >>> _i == id(a)
+            True
+
+        """
+        main_args_map: Dict[str, Any] = defaultdict(dict)
+        cls_attrs = self.attrs()
+
+        for arg_name, arg_val in d.items():
+            if ":" in arg_name:
+                grp_name, arg_name_base = arg_name.split(":", maxsplit=1)
+                if grp_name not in cls_attrs:
+                    raise ValueError(
+                        f"invalid argument `{arg_name}`: "
+                        f"`{self.__class__}` has no group named `{grp_name}`"
+                    )
+                if grp_name in d:
+                    raise ValueError(
+                        f"conflicting arguments: `{arg_name}` and `{grp_name}`"
+                    )
+                grp_type = cls_attrs[grp_name]
+                if not isinstance(grp_type, _CorgyMeta):
+                    raise ValueError(f"`{grp_name}` is not a `Corgy` class")
+                main_args_map[grp_name][arg_name_base] = arg_val
+
+            elif arg_name in cls_attrs:
+                main_args_map[arg_name] = arg_val
+
+        for arg_name, arg_type in cls_attrs.items():
+            if arg_name not in main_args_map:
+                if strict:
+                    try:
+                        delattr(self, arg_name)
+                    except AttributeError:
+                        pass
+                continue
+
+            arg_new_val = main_args_map[arg_name]
+            if isinstance(arg_type, _CorgyMeta) and isinstance(arg_new_val, dict):
+                try:
+                    arg_obj = getattr(self, arg_name)
+                except AttributeError:
+                    setattr(self, arg_name, arg_type.from_dict(arg_new_val))
+                else:
+                    arg_obj.load_dict(arg_new_val, try_cast, strict)
+            else:
+                arg_new_val = check_val_type(
+                    arg_new_val, arg_type, try_cast, try_load_corgy_dicts=True
+                )
+                setattr(self, arg_name, arg_new_val)
+
     @classmethod
     def parse_from_cmdline(
         cls: Type[_T],

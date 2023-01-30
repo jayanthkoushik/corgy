@@ -1238,6 +1238,127 @@ class TestCorgyFromDict(unittest.TestCase):
         )
 
 
+class _LoadDictAsFromDictMeta(type):
+    """Metaclass to create a version of `TestCorgyFromDict` for `load_dict`."""
+
+    def __new__(cls, name, bases, namespace, **kwds):
+        for _item in dir(bases[0]):
+            if not _item.startswith("test_"):
+                continue
+            test_fn = getattr(bases[0], _item)
+            new_test_fn_name = _item.replace("from_dict", "load_dict")
+            namespace[new_test_fn_name] = test_fn
+
+        bases = (unittest.TestCase,)  # to prevent duplication of tests
+        return super().__new__(cls, name, bases, namespace, **kwds)
+
+
+class TestCorgyLoadDictIndirect(TestCorgyFromDict, metaclass=_LoadDictAsFromDictMeta):
+    def setUp(self):
+        def _load_as_from(cls, *args, **kwargs):
+            c = cls()
+            c.load_dict(*args, **kwargs)
+            return c
+
+        self._old_from_dict = Corgy.from_dict.__func__
+        Corgy.from_dict = classmethod(_load_as_from)
+
+    def tearDown(self):
+        Corgy.from_dict = classmethod(self._old_from_dict)
+
+
+class TestCorgyLoadDict(unittest.TestCase):
+    def test_load_dict_preserves_existing_values(self):
+        class C(Corgy):
+            x: int
+            y: str
+
+        c = C(x=1)
+        c.load_dict({"y": "two"})
+        self.assertEqual(c, C(x=1, y="two"))
+
+    def test_load_dict_unsets_existing_values_if_strict(self):
+        class C(Corgy):
+            x: int
+            y: str
+
+        c = C(x=1)
+        c.load_dict({"y": "two"}, strict=True)
+        self.assertEqual(c, C(y="two"))
+
+    def test_load_dict_loads_group_dicts(self):
+        class G(Corgy):
+            x: int
+
+        class C(Corgy):
+            x: int
+            g: G
+
+        g = G(x=10)
+        c = C(x=1, g=g)
+        c.load_dict({"g": {"x": 20}})
+        self.assertIs(c.g, g)
+        self.assertEqual(c, C(x=1, g=G(x=20)))
+
+    def test_load_dict_loads_flat_groups(self):
+        class G(Corgy):
+            x: int
+
+        class C(Corgy):
+            x: int
+            g: G
+
+        g = G(x=10)
+        c = C(x=1, g=g)
+        c.load_dict({"g:x": 20})
+        self.assertIs(c.g, g)
+        self.assertEqual(c, C(x=1, g=G(x=20)))
+
+    def test_load_dict_raises_on_group_clash(self):
+        class G(Corgy):
+            x: int
+
+        class C(Corgy):
+            x: int
+            g: G
+
+        g = G(x=10)
+        c = C(x=1, g=g)
+        with self.assertRaises(ValueError):
+            c.load_dict({"g": {"x": 20}, "g:x": 20})
+        with self.assertRaises(ValueError):
+            c.load_dict({"gee:x": 10})
+        with self.assertRaises(ValueError):
+            c.load_dict({"x:x": 10})
+
+    def test_load_dict_loads_groups_directly(self):
+        class G(Corgy):
+            x: int
+
+        class C(Corgy):
+            x: int
+            g: G
+
+        g = G(x=10)
+        c = C(x=1, g=g)
+        c.load_dict({"g": G(x=20)})
+        self.assertIsNot(c.g, g)
+        self.assertEqual(c, C(x=1, g=G(x=20)))
+
+    def test_load_dict_unsets_group_if_strict(self):
+        class G(Corgy):
+            x: int
+
+        class C(Corgy):
+            x: int
+            g: G
+
+        g = G(x=10)
+        c = C(x=1, g=g)
+        c.load_dict({"x": 2}, strict=True)
+        self.assertEqual(c, C(x=2))
+
+
 class TestCorgyPrinting(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
