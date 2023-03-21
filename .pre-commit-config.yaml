@@ -61,4 +61,4 @@ repos:
     name: spell check docs
     language: system
     files: "docs/.*\\.md"
-    entry: "npx cspell --no-summary --no-progress --no-must-find-files --file-list stdin"
+    entry: "npx cspell"
