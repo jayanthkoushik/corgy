@@ -240,8 +240,8 @@ class _CorgyMeta(type):
         def var_fget(self):
             with suppress(AttributeError):
                 return getattr(self, f"_{cls_name.lstrip('_')}__{var_name}")
-            with suppress(KeyError):
-                return getattr(self, "__defaults")[var_name]
+            # with suppress(KeyError):
+            #     return getattr(self, "__defaults")[var_name]
             raise AttributeError(f"no value available for attribute `{var_name}`")
 
         def var_fset(self, val):
@@ -992,9 +992,13 @@ class Corgy(metaclass=_CorgyMeta):
         if self.__class__ is Corgy:
             raise TypeError("`Corgy` is an abstract class and cannot be instantiated")
 
-        for arg_name, arg_val in args.items():
-            if arg_name in getattr(self, "__annotations__"):
-                setattr(self, arg_name, arg_val)
+        cls_attrs = self.attrs()
+        cls_defaults = getattr(self, "__defaults")
+        for attr_name in cls_attrs:
+            if attr_name in args:
+                setattr(self, attr_name, args[attr_name])
+            elif attr_name in cls_defaults:
+                setattr(self, attr_name, cls_defaults[attr_name])
 
     def _str(self, f_str: Callable[..., str]) -> str:
         s = f"{self.__class__.__name__}("
