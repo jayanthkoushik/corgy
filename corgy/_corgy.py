@@ -49,7 +49,6 @@ class BooleanOptionalAction(argparse.Action):
     # Backport of `argparse.BooleanOptionalAction` from Python 3.9.
     # Taken almost verbatim from `CPython/Lib/argparse.py`.
     def __init__(self, option_strings, dest, *args, **kwargs):
-
         _option_strings = []
         for option_string in option_strings:
             _option_strings.append(option_string)
@@ -819,7 +818,7 @@ class Corgy(metaclass=_CorgyMeta):
             elif _k not in cls.__annotations__:
                 raise ValueError(f"default value for unknown argument: `{_k}`")
 
-        for (var_name, var_type) in cls.attrs().items():
+        for var_name, var_type in cls.attrs().items():
             var_flags = getattr(cls, "__flags").get(
                 var_name, [f"--{var_name.replace('_', '-')}"]
             )

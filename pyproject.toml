@@ -38,11 +38,11 @@ colors = ["crayons"]
 toml = ["tomli"]
 
 [tool.poetry.dev-dependencies]
-black = { version = ">=20.8b0", allow-prereleases = true }
-pylint = "^2.9"
+black = "^23.0"
+pylint = "~2.13.0"
 pre-commit = "^2.0"
 isort = "^5.1"
-mypy = ">=0.9"
+mypy = "~1.1.0"
 pydocstyle = "^6.1"
 sphinx = "^4.2"
 sphinx-markdown-builder = { git = "https://github.com/clayrisser/sphinx-markdown-builder" }

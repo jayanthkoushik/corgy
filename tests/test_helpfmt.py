@@ -570,7 +570,6 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
         )
 
     def test_corgy_help_formatter_handles_conflicting_text_in_choice(self):
-
         with patch.object(CorgyHelpFormatter, "output_width", 200):
             self.assertEqual(
                 self._get_arg_help(

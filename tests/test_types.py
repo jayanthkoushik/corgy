@@ -107,7 +107,7 @@ class TestOutputBinFile(_TestOutputFile):
 
 
 class _TestLazyOutputFile(_TestFile):
-    type: Union[Type[LazyOutputTextFile], Type[LazyOutputBinFile],]
+    type: Union[Type[LazyOutputTextFile], Type[LazyOutputBinFile]]
 
     def test_lazy_output_file_does_not_auto_create_file(self):
         fname = os.path.join(self.tmp_dir.name, "foo.file")
