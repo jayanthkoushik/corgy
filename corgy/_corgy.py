@@ -169,9 +169,14 @@ class _CorgyMeta(type):
                         )
                 else:
                     var_flags = None
-            elif hasattr(var_ano, "__origin__") and var_ano.__origin__ is ClassVar:
-                # `<var_name>: ClassVar[<var_type>]`
-                # Make sure the class variable has an associated value.
+            else:
+                # `<var_name>: <var_type>`.
+                var_type = var_ano
+                var_help = namespace["__helps"].get(var_name, None)
+                var_flags = namespace["__flags"].get(var_name, None)
+
+            if hasattr(var_type, "__origin__") and var_type.__origin__ is ClassVar:
+                # Class variable: make sure it has an associated value.
                 if var_name not in namespace:
                     if var_name in namespace["__defaults"]:
                         del namespace["__defaults"][var_name]
@@ -180,11 +185,6 @@ class _CorgyMeta(type):
                 del namespace["__annotations__"][var_name]
                 continue
 
-            else:
-                # `<var_name>: <var_type>`.
-                var_type = var_ano
-                var_help = namespace["__helps"].get(var_name, None)
-                var_flags = namespace["__flags"].get(var_name, None)
             namespace["__annotations__"][var_name] = var_type
 
             if var_help is not None:
