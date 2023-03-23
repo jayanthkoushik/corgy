@@ -33,6 +33,7 @@ from ._utils import (
     get_concrete_collection_type,
     is_literal_type,
     is_optional_type,
+    OptionalTypeAction,
 )
 
 # The main interface is the `Corgy` class. `_CorgyMeta` modifies creation of `Corgy`
@@ -513,7 +514,7 @@ class Corgy(metaclass=_CorgyMeta):
         ValueError: invalid value for type 'typing.Tuple[str]': ['1', '2']
 
     The collection length can be controlled by the arguments of the type annotation.
-    Note, however, that other than `typing.Sequence/typing.List/typing.Set` do not
+    Note, however, that `typing.Sequence/typing.List/typing.Set` do not
     accept multiple arguments, and so, cannot be used if collection length has to be
     specified. On Python < 3.9, only `typing.Tuple` can be used for controlling
     collection lengths.
@@ -669,35 +670,15 @@ class Corgy(metaclass=_CorgyMeta):
             `Annotated` should always be the outermost annotation for an attribute.
 
         *Optional*
-        By default, all attributes without default values are added as required
-        arguments. `typing.Optional` can be used to mark an argument as optional::
+        Attributes marked with `typing.Optional` are allowed to be `None`. The
+        arguments for these attributes can be passed with no values (i.e. `--x`
+        instead of `--x=1` or `--x 1`) to indicate that the value should be `None`.
 
-            >>> x: Optional[int]  # or x: int | None in Python >= 3.10
-
-        Another way to mark an argument as optional is to provide a default value::
-
-            >>> x: int = 0
-
-        Default values can be used in conjunction with `Optional`::
-
-            >>> x: Optional[int] = 0
-
-        Note that the last two examples are not equivalent, since the type of `x` is
-        `Optional[int]` in the last example, so it is allowed to be `None`::
-
-            >>> class A(Corgy):
-            ...     x: Optional[int]
-            ...     y: int = 0
-
-            >>> a = A()
-            >>> a.x = None
-            >>> a.y = None
-            Traceback (most recent call last):
-                ...
-            ValueError: invalid value for type '<class 'int'>': None
-
-        Non-collection positional arguments marked optional will be added with `nargs`
-        set to `?`, and will accept a single argument or none.
+        Note: Attributes with default values are also "optional" in the sense that
+        they can be omitted from the command line. However, they are not the same as
+        attributes marked with `Optional`, since the former are not allowed to be
+        `None`. Furthermore, required `Optional` attributes without default values
+        _will_ need to be passed on the command line (possibly with no values).
 
         *Boolean*
         `bool` types (when not in a collection) are converted to a pair of options::
@@ -728,6 +709,19 @@ class Corgy(metaclass=_CorgyMeta):
         type. Heterogenous collections, such as `Sequence[int, str]` cannot be added,
         and will raise `ValueError`. Untyped collections (e.g., `x: Sequence`), also
         cannot be added.
+
+        Arguments for optional collections will also accept no values to indicate
+        `None`. Due to this, it is not possible to parse an empty collection for
+        an optional collection argument::
+
+            >>> class A(Corgy):
+            ...     x: Optional[Sequence[int]]
+            ...     y: Sequence[int]
+
+            >>> parser = ArgumentParser()
+            >>> A.add_args_to_parser(parser)
+            >>> parser.parse_args(["--x", "--y"])
+            Namespace(x=None, y=[])
 
         *Literal*
         For `Literal` types, the provided values are passed to the `choices` argument
@@ -869,16 +863,20 @@ class Corgy(metaclass=_CorgyMeta):
                 var_type.add_args_to_parser(grp_parser, var_dest, True, grp_defaults)
                 continue
 
-            # Check if the variable is optional.
+            var_action: Optional[Type[argparse.Action]] = None
+
+            # Check if the variable is required on the command line.
+            var_required = var_name not in base_defaults
+
+            # Check if the variable can be `None`.
             if is_optional_type(var_type):
                 var_base_type = var_type.__args__[0]
-                var_required = False
+                var_action = OptionalTypeAction
             else:
                 var_base_type = var_type
-                var_required = var_name not in base_defaults
 
             # Check if the variable is a collection.
-            var_nargs: Union[int, Literal["+", "*", "?"], None]
+            var_nargs: Union[int, Literal["+", "*", "?"], None] = None
             _col_type = get_concrete_collection_type(var_base_type)
             if _col_type is not None:
                 if (
@@ -911,12 +909,6 @@ class Corgy(metaclass=_CorgyMeta):
                         )
                     var_nargs = len(var_base_type.__args__)
                 var_base_type = var_base_type.__args__[0]
-
-            elif var_positional and not var_required:
-                # "Optional" positional argument: set `nargs` to `?`.
-                var_nargs = "?"
-            else:
-                var_nargs = None
 
             # Check if the variable has choices.
             if is_literal_type(var_base_type):
@@ -951,8 +943,7 @@ class Corgy(metaclass=_CorgyMeta):
 
             # Check if the variable is boolean. Boolean variables are converted to
             # `--<var-name>`/`--no-<var-name>` arguments.
-            var_action: Optional[Type[argparse.Action]] = None
-            if var_base_type is bool and var_nargs is None:
+            if var_base_type is bool and var_nargs is None and var_action is None:
                 var_action = BooleanOptionalAction
 
             # Check if the variable has a custom parser.

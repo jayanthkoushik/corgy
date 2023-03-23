@@ -1,4 +1,5 @@
 # pylint: disable=abstract-class-instantiated
+import argparse
 import sys
 from collections.abc import Sequence as AbstractSequence
 from typing import List, Optional, Sequence, Set, Tuple, Union
@@ -163,3 +164,40 @@ def check_val_type(_val, _type, try_cast=False, try_load_corgy_dicts=False):
     if not _cast:
         raise ValueError(f"invalid value for type '{_type}': {_val!r}")
     return _val
+
+
+class OptionalTypeAction(argparse.Action):
+    """Action for parsing types wrapped in `Optional`."""
+
+    def __init__(self, option_strings, dest, nargs=None, **kwargs):
+        self._base_nargs = nargs
+        if nargs is None or nargs == 1 or nargs == "?":
+            nargs = "?"
+        else:
+            nargs = "*"
+        super().__init__(option_strings, dest, nargs, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        # `values` can be `None`, a single value, or a list of values.
+        if values is None:
+            setattr(namespace, self.dest, None)
+            return
+
+        if isinstance(values, list):
+            if not values:
+                # Empty list: set to `None`.
+                setattr(namespace, self.dest, None)
+                return
+
+            # If not empty, check that the list matches the base nargs.
+            _len_matches = True
+            if self._base_nargs in (None, 1, "?"):
+                _len_matches = len(values) == 1
+                _err_msg = "expected at most one argument"
+            elif isinstance(self._base_nargs, int):
+                _len_matches = len(values) == self._base_nargs
+                _err_msg = f"expected zero arguments or exactly {self._base_nargs}"
+            if not _len_matches:
+                raise argparse.ArgumentError(self, _err_msg)
+
+        setattr(namespace, self.dest, values)

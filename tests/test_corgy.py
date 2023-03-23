@@ -27,7 +27,7 @@ else:
 import corgy
 from corgy import Corgy, CorgyHelpFormatter, corgyparser
 from corgy._corgy import BooleanOptionalAction, CorgyParserAction
-from corgy._utils import get_concrete_collection_type
+from corgy._utils import get_concrete_collection_type, OptionalTypeAction
 
 if sys.version_info >= (3, 11):
     import tomllib as tomli
@@ -1457,7 +1457,9 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
             x: Optional[int]
 
         C.add_args_to_parser(self.parser)
-        self.parser.add_argument.assert_called_once_with("--x", type=int)
+        self.parser.add_argument.assert_called_once_with(
+            "--x", type=int, action=OptionalTypeAction, required=True
+        )
 
     @skipIf(sys.version_info < (3, 10), "`|` syntax needs Python 3.10 or higher")
     def test_add_args_handles_annotated_new_style_optional(self):
@@ -1465,14 +1467,18 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
             x: int | None  # type: ignore # pylint: disable=unsupported-binary-operation
 
         C.add_args_to_parser(self.parser)
-        self.parser.add_argument.assert_called_once_with("--x", type=int)
+        self.parser.add_argument.assert_called_once_with(
+            "--x", type=int, action=OptionalTypeAction, required=True
+        )
 
     def test_add_args_handles_annotated_optional_with_default(self):
         class C(Corgy):
             x: Optional[int] = 0
 
         C.add_args_to_parser(self.parser)
-        self.parser.add_argument.assert_called_once_with("--x", type=int, default=0)
+        self.parser.add_argument.assert_called_once_with(
+            "--x", type=int, action=OptionalTypeAction, default=0
+        )
 
     def test_add_args_uses_metadata_as_help(self):
         class C(Corgy):
@@ -1522,7 +1528,7 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
-            "the_x_arg", type=int, help="x help", nargs="?"
+            "the_x_arg", type=int, help="x help", action=OptionalTypeAction
         )
 
     def test_add_args_converts_literal_to_choices(self):
@@ -1677,7 +1683,7 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
                 self.setUp()
                 C.add_args_to_parser(self.parser)
                 self.parser.add_argument.assert_called_once_with(
-                    "--x", type=int, nargs="*"
+                    "--x", type=int, nargs="*", action=OptionalTypeAction, required=True
                 )
 
     def test_add_args_sets_nargs_to_plus_for_non_empty_sequence_type(self):
@@ -1909,7 +1915,12 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
 
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with(
-            "--x", type=str, help="x", nargs="*"
+            "--x",
+            type=str,
+            help="x",
+            nargs="*",
+            action=OptionalTypeAction,
+            required=True,
         )
 
     def test_add_args_allows_function_base_type(self):
@@ -2105,7 +2116,7 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
 
 class TestCorgyCmdlineParsing(unittest.TestCase):
     def setUp(self):
-        self.parser = argparse.ArgumentParser()
+        self.parser = argparse.ArgumentParser(exit_on_error=False)
         self.orig_parse_args = argparse.ArgumentParser.parse_args
 
     def test_cmdline_args_are_parsed_to_corgy_cls_properties(self):
@@ -2344,6 +2355,59 @@ class TestCorgyCmdlineParsing(unittest.TestCase):
                     self.assertSetEqual(c.x, {1, 2})
                 else:
                     self.assertListEqual(c.x, [1, 2])
+
+    def test_parse_from_cmdline_allows_empty_arg_for_optional(self):
+        class C(Corgy):
+            x: Optional[int]
+
+        self.parser.parse_args = lambda: self.orig_parse_args(self.parser, ["--x"])
+        c = C.parse_from_cmdline(self.parser, add_help=False)
+        self.assertEqual(c.x, None)
+
+    def test_parse_from_cmdline_handles_positional_optional(self):
+        class C(Corgy):
+            x: Annotated[Optional[int], "x help", ["x"]]
+
+        self.parser.parse_args = lambda: self.orig_parse_args(self.parser, [])
+        c = C.parse_from_cmdline(self.parser, add_help=False)
+        self.assertEqual(c.x, None)
+
+    def test_parse_from_cmdline_allows_empty_arg_for_optional_collection(self):
+        for _type in COLLECTION_TYPES:
+            _core_types = [_type[int]]
+            if _type not in (SequenceType, ListType, SetType):
+                _core_types += [_type[int, ...], _type[int, int, int]]
+
+            for _core_type in _core_types:
+                with self.subTest(type=_core_type):
+
+                    class C(Corgy):
+                        x: Optional[_core_type]
+
+                    self.setUp()
+                    self.parser.parse_args = lambda: self.orig_parse_args(
+                        self.parser, ["--x"]
+                    )
+                    c = C.parse_from_cmdline(self.parser, add_help=False)
+                    self.assertEqual(c.x, None)
+
+    def test_parse_from_cmdline_length_checks_optional_collection(self):
+        for _type in COLLECTION_TYPES:
+            if _type in (SequenceType, ListType, SetType):
+                continue
+
+            class C(Corgy):
+                x: Optional[_type[int, int, int]]
+
+            for _args in [["1"], ["1", "2"], ["1", "2", "3", "4"]]:
+                with self.subTest(type=_type, args=_args):
+                    self.setUp()
+                    self.parser.parse_args = lambda: self.orig_parse_args(
+                        self.parser,
+                        ["--x", *_args],  # pylint: disable=cell-var-from-loop
+                    )
+                    with self.assertRaises(argparse.ArgumentError):
+                        C.parse_from_cmdline(self.parser, add_help=False)
 
 
 class TestCorgyCustomParsers(unittest.TestCase):
@@ -2741,7 +2805,7 @@ class TestCorgyCustomParsers(unittest.TestCase):
         with patch("corgy._corgy.partial", MagicMock(return_value=_parser_action)):
             C.add_args_to_parser(parser)
         parser.add_argument.assert_called_once_with(
-            "--x", type=str, action=_parser_action
+            "--x", type=str, action=_parser_action, required=True
         )
 
     def test_cmdline_parsing_of_complex_nested_types_works_with_custom_parser(self):
