@@ -1089,7 +1089,12 @@ class Corgy(metaclass=_CorgyMeta):
 
             # Check if the variable is boolean. Boolean variables are converted to
             # `--<var-name>`/`--no-<var-name>` arguments.
-            if var_base_type is bool and var_nargs is None and var_action is None:
+            if (
+                var_base_type is bool
+                and var_nargs is None
+                and var_action is None
+                and var_choices is None
+            ):
                 var_action = BooleanOptionalAction
 
             # Check if the variable has a custom parser.

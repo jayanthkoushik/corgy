@@ -1793,6 +1793,15 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
                     "--x", type=bool, required=True, nargs="*"
                 )
 
+    def test_add_args_does_not_convert_bool_choices_to_action(self):
+        class C(Corgy):
+            x: Literal[True, False]
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with(
+            "--x", type=bool, required=True, choices=(True, False)
+        )
+
     def test_add_args_raises_if_coll_has_no_types(self):
         for _type in COLLECTION_TYPES:
             with self.subTest(type=_type):
