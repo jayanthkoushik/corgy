@@ -16,6 +16,11 @@ else:
 
     Tuple = tuple  # type: ignore
 
+if sys.version_info >= (3, 11):
+    from typing import NotRequired, Required
+else:
+    from typing_extensions import NotRequired, Required
+
 _COLOR_HELPER = _ColorHelper(skip_tty_check=True)
 _CRAYONS = _COLOR_HELPER.crayons
 
@@ -866,7 +871,7 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
 
         self.assertEqual(
             self._get_help_for_corgy_cls(C),
-            f"  {_O('--x')} [{_M('int')}] [[{_M('int')}] ...]  ({_K('required')})",
+            f"  {_O('--x')} [{_M('int')}] [[{_M('int')}] ...]  ({_K('optional')})",
         )
 
     def test_corgy_help_formatter_handles_sequence_of_strings(self):
@@ -886,7 +891,7 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
         self.assertEqual(
             self._get_help_for_corgy_cls(C),
             f"  {_O('--x')} {_M('int')} [{_M('int')} ...] "
-            f"[{_M('int')} [{_M('int')} ...] ...]  ({_K('required')})",
+            f"[{_M('int')} [{_M('int')} ...] ...]  ({_K('optional')})",
         )
 
     def test_corgy_help_formatter_handles_zero_or_more_sequences(self):
@@ -895,7 +900,7 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
 
         self.assertEqual(
             self._get_help_for_corgy_cls(C),
-            f"  {_O('--x')} [[{_M('int')} ...] ...]  ({_K('required')})",
+            f"  {_O('--x')} [[{_M('int')} ...] ...]  ({_K('optional')})",
         )
 
     def test_corgy_help_formatter_handles_fixed_sequence_of_sequences(self):
@@ -910,7 +915,7 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
             self._get_help_for_corgy_cls(C),
             f"  {_O('--x')} [{_M('int')}] [[{_M('int')}] ...] "
             f"[{_M('int')}] [[{_M('int')}] ...] [{_M('int')}] [[{_M('int')}] ...]  "
-            f"({_K('required')})",
+            f"({_K('optional')})",
         )
 
     def test_corgy_help_formatter_handles_nested_sequence_of_custom_types(self):
@@ -923,7 +928,7 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
         self.assertEqual(
             self._get_help_for_corgy_cls(C),
             f"  {_O('--x')} {_M('custom')} {_M('type')} "
-            f"[{_M('custom')} {_M('type')} ...]  ({_K('required')})",
+            f"[{_M('custom')} {_M('type')} ...]  ({_K('optional')})",
         )
 
     def test_corgy_help_formatter_handles_custom_type_sequence_default_value(self):
@@ -1106,6 +1111,28 @@ class TestCorgyHelpFormatterWithCorgyAnnotations(TestCase):
 
         self.assertEqual(
             _help, f"  {_O('--x')} {_M('T')}  ({_K('default')}: {_D('[T1, T2]')})"
+        )
+
+    def test_corgy_help_formatter_handles_required_attrs(self):
+        class C(Corgy):
+            x: Required[int]
+            y: Required[int] = 1
+
+        self.assertEqual(
+            self._get_help_for_corgy_cls(C),
+            f"  {_O('--x')} {_M('int')}  ({_K('required')})\n"
+            f"  {_O('--y')} {_M('int')}  ({_K('default')}: {_D('1')})",
+        )
+
+    def test_corgy_help_formatter_handles_not_required_attrs(self):
+        class C(Corgy):
+            x: NotRequired[int]
+            y: NotRequired[int] = 1
+
+        self.assertEqual(
+            self._get_help_for_corgy_cls(C),
+            f"  {_O('--x')} {_M('int')}  ({_K('optional')})\n"
+            f"  {_O('--y')} {_M('int')}  ({_K('default')}: {_D('1')})",
         )
 
 

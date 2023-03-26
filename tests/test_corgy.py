@@ -26,12 +26,15 @@ else:
 
 import corgy
 from corgy import Corgy, CorgyHelpFormatter, corgyparser
-from corgy._corgy import BooleanOptionalAction, CorgyParserAction
+from corgy._corgy import _CorgyMeta, BooleanOptionalAction, CorgyParserAction
 from corgy._utils import get_concrete_collection_type, OptionalTypeAction
 
 if sys.version_info >= (3, 11):
     import tomllib as tomli
+    from typing import NotRequired, Required
 else:
+    from typing_extensions import NotRequired, Required
+
     try:
         import tomli
     except ImportError:
@@ -282,6 +285,40 @@ class TestCorgyMeta(unittest.TestCase):
         corgy_inst = self._CorgyCls()
         with self.assertRaises(AttributeError):
             del corgy_inst.x1
+
+    def test_corgy_instance_raises_on_del_of_required_attr(self):
+        class C(Corgy):
+            x: Required[int]
+            y: Required[int] = 2
+
+        c = C(x=1, y=3)
+        with self.assertRaises(TypeError):
+            del c.x
+        with self.assertRaises(TypeError):
+            del c.y
+
+    def test_corgy_cls_stores_required_attrs(self):
+        class C(Corgy):
+            x: Required[int]
+            y: Required[int] = 1
+            z: NotRequired[int]
+
+        self.assertSetEqual(getattr(C, "__required"), {"x", "y"})
+
+    def test_corgy_cls_handles_default_required(self):
+        class C(Corgy, corgy_required_by_default=True):
+            x: int
+            y: Required[int]
+            z: NotRequired[int]
+
+        self.assertSetEqual(getattr(C, "__required"), {"x", "y"})
+
+        class D(Corgy, corgy_required_by_default=False):
+            x: int
+            y: Required[int]
+            z: NotRequired[int]
+
+        self.assertSetEqual(getattr(D, "__required"), {"y"})
 
 
 class TestCorgyClassInheritance(unittest.TestCase):
@@ -537,6 +574,56 @@ class TestCorgyClassInheritance(unittest.TestCase):
             self.assertEqual(d.x, 1)
             self.assertEqual(d.y, 2)
             self.assertEqual(d.z, 3)
+
+    def test_corgy_cls_inherits_required_attrs(self):
+        class C(Corgy):
+            x: Required[int]
+            y: NotRequired[int]
+
+        class D(C):
+            w: Required[int]
+
+        self.assertSetEqual(getattr(D, "__required"), {"x", "w"})
+
+    def test_corgy_cls_overrides_inherited_required_attrs(self):
+        class C(Corgy):
+            x: Required[int]
+            y: NotRequired[int]
+
+        class D(C):
+            x: NotRequired[int]
+
+        self.assertSetEqual(getattr(D, "__required"), set())
+
+    def test_corgy_cls_overrides_inherited_required_attr_with_default(self):
+        class C(Corgy):
+            x: Required[int]
+
+        class D(C):
+            x: int
+
+        self.assertSetEqual(getattr(D, "__required"), set())
+
+    def test_corgy_cls_handles_required_inheritance_from_non_corgy_cls(self):
+        class C:
+            x: Required[int]
+            y: int
+
+        class D1(C, Corgy, corgy_required_by_default=False):
+            ...
+
+        self.assertSetEqual(getattr(D1, "__required"), {"x"})
+
+        class D2(C, Corgy, corgy_required_by_default=True):
+            ...
+
+        self.assertSetEqual(getattr(D2, "__required"), {"x", "y"})
+
+        class D3(C, Corgy):
+            x: NotRequired[int]
+            y: Required[int]
+
+        self.assertSetEqual(getattr(D3, "__required"), {"y"})
 
 
 class TestCorgyTypeChecking(unittest.TestCase):
@@ -794,6 +881,23 @@ class TestCorgyInit(unittest.TestCase):
         self.assertEqual(c.x1, 10)
         self.assertEqual(c.g.x1, 1)
         self.assertEqual(c.g.x2, "2")
+
+    def test_corgy_cls_init_raises_if_required_attr_missing(self):
+        class C(Corgy):
+            x: Required[int]
+
+        with self.assertRaises(ValueError):
+            C()
+
+    def test_corgy_cls_init_raises_if_required_group_missing(self):
+        class G(Corgy):
+            x: Required[int]
+
+        class C(Corgy):
+            g: Required[G]
+
+        with self.assertRaises(ValueError):
+            C()
 
 
 class TestCorgyAttrs(unittest.TestCase):
@@ -1219,13 +1323,30 @@ class TestCorgyFromDict(unittest.TestCase):
             ),
         )
 
+    def test_from_dict_raises_if_attr_missing_required(self):
+        class C(Corgy):
+            x: Required[int]
+
+        with self.assertRaises(ValueError):
+            C.from_dict({})
+
+    def test_from_dict_handles_flat_groups_required(self):
+        class G(Corgy):
+            x: Required[int]
+
+        class C(Corgy):
+            x: Required[int]
+            g: G
+
+        self.assertEqual(C.from_dict({"x": 1, "g:x": 2}), C(x=1, g=G(x=2)))
+
 
 class _LoadDictAsFromDictMeta(type):
     """Metaclass to create a version of `TestCorgyFromDict` for `load_dict`."""
 
     def __new__(cls, name, bases, namespace, **kwds):
         for _item in dir(bases[0]):
-            if not _item.startswith("test_"):
+            if not _item.startswith("test_") or _item.endswith("_required"):
                 continue
             test_fn = getattr(bases[0], _item)
             new_test_fn_name = _item.replace("from_dict", "load_dict")
@@ -1343,6 +1464,14 @@ class TestCorgyLoadDict(unittest.TestCase):
         c.load_dict({"x": 2}, strict=True)
         self.assertEqual(c, C(x=2))
 
+    def test_load_dict_raises_if_unsetting_required_attr(self):
+        class C(Corgy):
+            x: Required[int]
+
+        c = C(x=1)
+        with self.assertRaises(TypeError):
+            c.load_dict({}, strict=True)
+
 
 class TestCorgyPrinting(unittest.TestCase):
     @classmethod
@@ -1398,6 +1527,24 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
         self.parser = argparse.ArgumentParser()
         self.parser.add_argument = MagicMock()
         self.parser.add_argument_group = MagicMock()
+
+    @classmethod
+    def setUpClass(cls):
+        # Patch `CorgyMeta.__new__` to make `corgy_required_by_default` `True` if
+        # not specified.
+        _old_new = _CorgyMeta.__new__
+
+        def _new(cls, name, bases, namespace, **kwargs):
+            if "corgy_required_by_default" not in kwargs:
+                kwargs["corgy_required_by_default"] = True
+            return _old_new(cls, name, bases, namespace, **kwargs)
+
+        cls._new_patcher = patch.object(_CorgyMeta, "__new__", _new)
+        cls._new_patcher.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._new_patcher.stop()
 
     def test_add_args_raises_if_custom_flags_on_group(self):
         with self.assertRaises(TypeError):
@@ -1960,13 +2107,13 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
         grp_parser = MagicMock()
         self.parser.add_argument_group.return_value = grp_parser
 
-        C.add_args_to_parser(self.parser, defaults={"g": G(x=42, y="foo")})
+        C.add_args_to_parser(self.parser, defaults={"g": G(x=42, y="foo", w=-1)})
         grp_parser.add_argument.assert_has_calls(
             [
                 (("--g:x",), {"type": int, "default": 42}),
                 (("--g:y",), {"type": str, "default": "foo"}),
                 (("--g:z",), {"type": float, "default": 2.0}),
-                (("--g:w",), {"type": int, "required": True}),
+                (("--g:w",), {"type": int, "default": -1}),
             ],
             any_order=True,
         )
@@ -1985,7 +2132,7 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
         self.parser.add_argument_group.return_value = grp_parser
 
         C.add_args_to_parser(
-            self.parser, defaults={"g": G(x=42, y="foo"), "g:x": 43, "g:w": 44}
+            self.parser, defaults={"g": G(x=42, y="foo", w=-1), "g:x": 43, "g:w": 44}
         )
         grp_parser.add_argument.assert_has_calls(
             [
@@ -2112,6 +2259,43 @@ class TestCorgyAddArgsToParser(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             C.add_args_to_parser(self.parser)
+
+
+class TestCorgyAddRequiredArgsToParser(unittest.TestCase):
+    def setUp(self):
+        self.parser = argparse.ArgumentParser()
+        self.parser.add_argument = MagicMock()
+        self.parser.add_argument_group = MagicMock()
+
+    def test_add_args_sets_required_true_for_required_attrs(self):
+        class C(Corgy):
+            x: Required[int]
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with("--x", type=int, required=True)
+
+    def test_add_args_doesnt_set_default_suppress_for_optional_attrs(self):
+        class C(Corgy):
+            x: NotRequired[int]
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with(
+            "--x", type=int, default=argparse.SUPPRESS
+        )
+
+    def test_add_args_handles_defaults_for_required_attrs(self):
+        class C(Corgy):
+            x: Required[int] = 1
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with("--x", type=int, default=1)
+
+    def test_add_args_handles_defaults_for_optional_attrs(self):
+        class C(Corgy):
+            x: NotRequired[int] = 1
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with("--x", type=int, default=1)
 
 
 class TestCorgyCmdlineParsing(unittest.TestCase):
@@ -2409,6 +2593,20 @@ class TestCorgyCmdlineParsing(unittest.TestCase):
                     with self.assertRaises(argparse.ArgumentError):
                         C.parse_from_cmdline(self.parser, add_help=False)
 
+    def test_parse_from_cmdline_raises_on_missing_required_attrs(self):
+        class C(Corgy):
+            x: Required[int]
+
+        self.parser.parse_args = lambda: self.orig_parse_args(self.parser, [])
+
+        def _raise_error(msg):
+            raise argparse.ArgumentError(None, msg)
+
+        self.parser.error = _raise_error
+
+        with self.assertRaises(argparse.ArgumentError):
+            C.parse_from_cmdline(self.parser, add_help=False)
+
 
 class TestCorgyCustomParsers(unittest.TestCase):
     def test_corgyparser_raises_if_not_passed_name(self):
@@ -2490,7 +2688,7 @@ class TestCorgyCustomParsers(unittest.TestCase):
         with patch("corgy._corgy.partial", MagicMock(return_value=_parser_action)):
             C.add_args_to_parser(parser)
         parser.add_argument.assert_called_once_with(
-            "--x", type=str, required=True, help="x", action=_parser_action
+            "--x", type=str, help="x", action=_parser_action, default=argparse.SUPPRESS
         )
 
     def test_add_args_with_custom_parser_respects_default_value(self):
@@ -2663,7 +2861,11 @@ class TestCorgyCustomParsers(unittest.TestCase):
         with patch("corgy._corgy.partial", MagicMock(return_value=_parser_action)):
             C.add_args_to_parser(parser)
         parser.add_argument.assert_called_once_with(
-            "--x", type=str, action=_parser_action, required=True, metavar="custom"
+            "--x",
+            type=str,
+            action=_parser_action,
+            default=argparse.SUPPRESS,
+            metavar="custom",
         )
 
     def test_corgyparser_handles_setting_metavar_with_chaining(self):
@@ -2701,7 +2903,11 @@ class TestCorgyCustomParsers(unittest.TestCase):
         with patch("corgy._corgy.partial", MagicMock(return_value=_parser_action)):
             C.add_args_to_parser(parser)
         parser.add_argument.assert_called_once_with(
-            "--x", type=str, action=_parser_action, required=True, metavar="T"
+            "--x",
+            type=str,
+            action=_parser_action,
+            default=argparse.SUPPRESS,
+            metavar="T",
         )
 
     def test_corgyparser_metavar_overrides_type_metavar(self):
@@ -2722,7 +2928,11 @@ class TestCorgyCustomParsers(unittest.TestCase):
         with patch("corgy._corgy.partial", MagicMock(return_value=_parser_action)):
             C.add_args_to_parser(parser)
         parser.add_argument.assert_called_once_with(
-            "--x", type=str, action=_parser_action, required=True, metavar="custom"
+            "--x",
+            type=str,
+            action=_parser_action,
+            default=argparse.SUPPRESS,
+            metavar="custom",
         )
 
     def test_corgy_cls_inherits_custom_parser(self):
@@ -2769,7 +2979,7 @@ class TestCorgyCustomParsers(unittest.TestCase):
                 ):
                     C.add_args_to_parser(parser)
                 parser.add_argument.assert_called_once_with(
-                    "--x", type=str, required=True, action=_parser_action
+                    "--x", type=str, default=argparse.SUPPRESS, action=_parser_action
                 )
 
     def test_corgy_cls_respects_choices_with_custom_parser(self):
@@ -2787,7 +2997,11 @@ class TestCorgyCustomParsers(unittest.TestCase):
         with patch("corgy._corgy.partial", MagicMock(return_value=_parser_action)):
             C.add_args_to_parser(parser)
         parser.add_argument.assert_called_once_with(
-            "--x", type=str, required=True, action=_parser_action, choices=(1, 2, 3)
+            "--x",
+            type=str,
+            default=argparse.SUPPRESS,
+            action=_parser_action,
+            choices=(1, 2, 3),
         )
 
     def test_corgy_cls_respects_optional_with_custom_parser(self):
@@ -2805,7 +3019,7 @@ class TestCorgyCustomParsers(unittest.TestCase):
         with patch("corgy._corgy.partial", MagicMock(return_value=_parser_action)):
             C.add_args_to_parser(parser)
         parser.add_argument.assert_called_once_with(
-            "--x", type=str, action=_parser_action, required=True
+            "--x", type=str, action=_parser_action, default=argparse.SUPPRESS
         )
 
     def test_cmdline_parsing_of_complex_nested_types_works_with_custom_parser(self):
@@ -2847,6 +3061,24 @@ class TestCorgyCustomParsers(unittest.TestCase):
             _run_with_args("1", "2.1", "3")
         with self.assertRaises(argparse.ArgumentTypeError):
             _run_with_args()
+
+    def test_custom_parsers_handle_required_attrs(self):
+        class C(Corgy):
+            x: Required[int]
+
+            @corgyparser("x")
+            @staticmethod
+            def parsex(s):
+                return int(s)
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument = MagicMock()
+        _parser_action = partial(CorgyParserAction, C.parsex)
+        with patch("corgy._corgy.partial", MagicMock(return_value=_parser_action)):
+            C.add_args_to_parser(parser)
+        parser.add_argument.assert_called_once_with(
+            "--x", type=str, action=_parser_action, required=True
+        )
 
 
 @skipIf(tomli is None, "`tomli` package not found")

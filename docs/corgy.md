@@ -219,8 +219,56 @@ leaving only the base type:
 {'x': <class 'int'>}
 ```
 
-Refer to the docs for `Corgy.add_args_to_parser` for details on how to use this
-annotation.
+`Annotated` should always be the outermost type annotation for an attribute.
+Refer to the docs for `Corgy.add_args_to_parser` for details on usage.
+
+*Required/NotRequired*
+By default, `Corgy` attributes are not required, and can be unset. This can be
+changed by setting `corgy_required_by_default` to `True` in the class definition:
+
+```python
+>>> class A(Corgy, corgy_required_by_default=True):
+...     x: int
+
+>>> A()
+Traceback (most recent call last):
+    ...
+ValueError: missing required attribute: `x`
+>>> a = A(x=1)
+>>> del a.x
+Traceback (most recent call last):
+    ...
+TypeError: attribute `x` cannot be unset
+```
+
+Attributes can also explicitly be marked as required/not-required using the
+`Required` and `NotRequired` annotations:
+
+```python
+>>> import sys
+>>> if sys.version_info >= (3, 11):
+...     from typing import Required, NotRequired
+... else:
+...     from typing_extensions import Required, NotRequired
+
+>>> class A(Corgy):
+...     x: Required[int]
+...     y: NotRequired[int]
+...     z: int  # not required by default
+
+>>> a = A(x=1)
+>>> print(a)
+A(x=1, y=<unset>, z=<unset>)
+
+>>> class B(Corgy, corgy_required_by_default=True):
+...     x: Required[int]
+...     y: NotRequired[int]
+...     z: int
+
+>>> b = B(x=1, z=2)
+>>> print(b)
+B(x=1, y=<unset>, z=2)
+```
 
 *Optional*
 Annotating an attribute with `typing.Optional` allows it to be `None`:
@@ -237,6 +285,23 @@ Annotating an attribute with `typing.Optional` allows it to be `None`:
 
 In Python >= 3.10, instead of using `typing.Annotated`, `| None` can be used, i.e.,
 `x: int | None` for example.
+
+Note that `Optional` is not the same as `NotRequired`. `Optional` allows an
+attribute to be `None`, while `NotRequired` allows an attribute to be unset.
+A `Required` `Optional` attribute will need a value (which can be `None`):
+
+```python
+>>> class A(Corgy):
+...     x: Required[Optional[int]]
+
+>>> A()
+Traceback (most recent call last):
+    ...
+ValueError: missing required attribute: `x`
+>>> a = A(x=None)
+>>> print(a)
+A(x=None)
+```
 
 *Collections*
 Several collection types can be used to annotate attributes, which will restrict the
@@ -426,7 +491,7 @@ annotations are described below.
 >>> A.add_args_to_parser(parser)
 >>> parser.print_help()
 options:
-  --x int  help for x (required)
+  --x int  help for x (optional)
 ```
 
 This annotation can also be used to modify the parser flags for the argument. By
@@ -451,14 +516,46 @@ positional arguments:
   y int        help for y
 
 options:
-  -x/--ex int  help for x (required)
+  -x/--ex int  help for x (optional)
 ```
 
 `Annotated` can accept multiple arguments, but only the first three are used
 by `Corgy`. The first argument is the attribute type, the second is the help
 message (which must be a string), and the third is a sequence of flags.
 
-**NOTE**: `Annotated` should always be the outermost annotation for an attribute.
+*Required/NotRequired*
+Every corgy attribute is either required or not required. The default status
+depends on the class parameter `corgy_required_by_default` (`False` by default).
+Attributes can also be explicitly marked as required or not required, and will
+control whether the argument will be added with `required=True`:
+
+```python
+>>> class A(Corgy):
+...     x: Required[int]
+...     y: NotRequired[int]
+...     z: int
+
+>>> parser = ArgumentParser(
+...     formatter_class=CorgyHelpFormatter,
+...     add_help=False,
+...     usage=SUPPRESS,
+... )
+
+>>> A.add_args_to_parser(parser)
+>>> parser.print_help()
+options:
+  --x int  (required)
+  --y int  (optional)
+  --z int  (optional)
+```
+
+Attributes which are not required, and don’t have a default value are added
+with `default=SUPPRESS`, and so will not be included in the parsed namespace:
+
+```python
+>>> parser.parse_args(["--x", "1", "--y", "2"])
+Namespace(x=1, y=2)
+```
 
 *Optional*
 Attributes marked with `typing.Optional` are allowed to be `None`. The
@@ -468,8 +565,20 @@ instead of `--x=1` or `--x 1`) to indicate that the value should be `None`.
 Note: Attributes with default values are also “optional” in the sense that
 they can be omitted from the command line. However, they are not the same as
 attributes marked with `Optional`, since the former are not allowed to be
-`None`. Furthermore, required `Optional` attributes without default values
+`None`. Furthermore, `Required` `Optional` attributes without default values
 _will_ need to be passed on the command line (possibly with no values).
+
+```python
+>>> class A(Corgy):
+...     x: Required[Optional[int]]
+```
+
+```python
+>>> parser = ArgumentParser()
+>>> A.add_args_to_parser(parser)
+>>> parser.parse_args(["--x"])
+Namespace(x=None)
+```
 
 *Boolean*
 `bool` types (when not in a collection) are converted to a pair of options:
@@ -487,7 +596,7 @@ _will_ need to be passed on the command line (possibly with no values).
 >>> A.add_args_to_parser(parser)
 >>> parser.print_help()
 options:
-  --arg/--no-arg  (required)
+  --arg/--no-arg
 ```
 
 *Collection*
@@ -542,7 +651,7 @@ all other choices must be subclasses of that type:
 >>> A.add_args_to_parser(parser)
 >>> parser.print_help()
 options:
-  --x T  ({T1/T2} required)
+  --x T  ({T1/T2} optional)
 ```
 
 For types which specify choices by defining `__choices__`, the values are
@@ -576,11 +685,11 @@ Example:
 >>> A.add_args_to_parser(parser)
 >>> parser.print_help()
 options:
-  --x int      (required)
+  --x int      (optional)
 
 g:
   --g:x int    (default: 0)
-  --g:y float  (required)
+  --g:y float  (optional)
 ```
 
 **Custom parsers**

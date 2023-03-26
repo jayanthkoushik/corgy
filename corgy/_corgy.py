@@ -27,6 +27,11 @@ if sys.version_info >= (3, 9):
 else:
     from typing_extensions import get_type_hints, Literal
 
+if sys.version_info >= (3, 11):
+    from typing import NotRequired, Required
+else:
+    from typing_extensions import Required, NotRequired
+
 from ._helpfmt import CorgyHelpFormatter
 from ._utils import (
     check_val_type,
@@ -73,7 +78,8 @@ class _CorgyMeta(type):
     Modifies class creation by parsing type annotations, and creating properties for
     each annotated attribute. Default values and custom parsers are stored in the
     `__defaults` and `__parsers` attributes. Custom flags, if present, are stored in
-    the `__flags` attribute.
+    the `__flags` attribute. `Required` and `NotRequired` annotations are extracted,
+    and required attributes are stored in `__required`.
     """
 
     __slots__ = ()
@@ -100,6 +106,11 @@ class _CorgyMeta(type):
         namespace["__flags"] = {}
         namespace["__parsers"] = {}
         namespace["__helps"] = {}
+        namespace["__required"] = set()
+
+        # Temp set of not required attributes--to handle inheritance from
+        # non-`Corgy` classes.
+        _not_required = set()
 
         # See if `corgy_track_bases` is specified (default `True`).
         try:
@@ -116,6 +127,12 @@ class _CorgyMeta(type):
                     namespace["__flags"].update(getattr(base, "__flags"))
                     namespace["__parsers"].update(getattr(base, "__parsers"))
                     namespace["__helps"].update(getattr(base, "__helps"))
+                    namespace["__required"].update(getattr(base, "__required"))
+                    # Add not required attributes to temp set.
+                    _base_required = getattr(base, "__required")
+                    for _var_name in _base_annotations:
+                        if _var_name not in _base_required:
+                            _not_required.add(_var_name)
                 else:
                     # Fetch default values directly from the base.
                     for _var_name in _base_annotations:
@@ -128,6 +145,12 @@ class _CorgyMeta(type):
 
         # Add current annotations last, so that they override base values.
         namespace["__annotations__"].update(cls_annotations)
+
+        # See if `corgy_required_by_default` is specified (default `False`).
+        try:
+            _required_by_default = kwds.pop("corgy_required_by_default")
+        except KeyError:
+            _required_by_default = False
 
         tempnew = super().__new__(cls, name, bases, namespace)
         type_hints = get_type_hints(tempnew, include_extras=True)
@@ -184,6 +207,31 @@ class _CorgyMeta(type):
                         raise TypeError(f"class variable `{var_name}` has no value set")
                 del namespace["__annotations__"][var_name]
                 continue
+
+            # Determine if variable is required or not.
+            if hasattr(var_type, "__origin__") and var_type.__origin__ in (
+                Required,
+                NotRequired,
+            ):
+                _var_required = var_type.__origin__ is Required
+                var_type = var_type.__args__[0]
+            elif var_name not in cls_annotations:
+                # Variable was defined in a base class, and is not redefined.
+                if var_name in namespace["__required"]:
+                    _var_required = True
+                elif var_name in _not_required:
+                    _var_required = False
+                else:
+                    # Variable inherited from a non-`Corgy` class.
+                    _var_required = _required_by_default
+            else:
+                _var_required = _required_by_default
+
+            if _var_required:
+                namespace["__required"].add(var_name)
+            else:
+                # Remove from `__required`, in case it was required in a base class.
+                namespace["__required"].discard(var_name)
 
             namespace["__annotations__"][var_name] = var_type
 
@@ -250,6 +298,8 @@ class _CorgyMeta(type):
             setattr(self, f"_{cls_name.lstrip('_')}__{var_name}", val)
 
         def var_fdel(self):
+            if var_name in getattr(self, "__required"):
+                raise TypeError(f"attribute `{var_name}` cannot be unset")
             delattr(self, f"_{cls_name.lstrip('_')}__{var_name}")
 
         var_fget.__annotations__ = {"return": var_type}
@@ -453,8 +503,52 @@ class Corgy(metaclass=_CorgyMeta):
         >>> A.attrs()
         {'x': <class 'int'>}
 
-    Refer to the docs for `Corgy.add_args_to_parser` for details on how to use this
-    annotation.
+    `Annotated` should always be the outermost type annotation for an attribute.
+    Refer to the docs for `Corgy.add_args_to_parser` for details on usage.
+
+    *Required/NotRequired*
+    By default, `Corgy` attributes are not required, and can be unset. This can be
+    changed by setting `corgy_required_by_default` to `True` in the class definition::
+
+        >>> class A(Corgy, corgy_required_by_default=True):
+        ...     x: int
+
+        >>> A()
+        Traceback (most recent call last):
+            ...
+        ValueError: missing required attribute: `x`
+        >>> a = A(x=1)
+        >>> del a.x
+        Traceback (most recent call last):
+            ...
+        TypeError: attribute `x` cannot be unset
+
+    Attributes can also explicitly be marked as required/not-required using the
+    `Required` and `NotRequired` annotations::
+
+        >>> import sys
+        >>> if sys.version_info >= (3, 11):
+        ...     from typing import Required, NotRequired
+        ... else:
+        ...     from typing_extensions import Required, NotRequired
+
+        >>> class A(Corgy):
+        ...     x: Required[int]
+        ...     y: NotRequired[int]
+        ...     z: int  # not required by default
+
+        >>> a = A(x=1)
+        >>> print(a)
+        A(x=1, y=<unset>, z=<unset>)
+
+        >>> class B(Corgy, corgy_required_by_default=True):
+        ...     x: Required[int]
+        ...     y: NotRequired[int]
+        ...     z: int
+
+        >>> b = B(x=1, z=2)
+        >>> print(b)
+        B(x=1, y=<unset>, z=2)
 
     *Optional*
     Annotating an attribute with `typing.Optional` allows it to be `None`::
@@ -469,6 +563,21 @@ class Corgy(metaclass=_CorgyMeta):
 
     In Python >= 3.10, instead of using `typing.Annotated`, `| None` can be used, i.e.,
     `x: int | None` for example.
+
+    Note that `Optional` is not the same as `NotRequired`. `Optional` allows an
+    attribute to be `None`, while `NotRequired` allows an attribute to be unset.
+    A `Required` `Optional` attribute will need a value (which can be `None`)::
+
+        >>> class A(Corgy):
+        ...     x: Required[Optional[int]]
+
+        >>> A()
+        Traceback (most recent call last):
+            ...
+        ValueError: missing required attribute: `x`
+        >>> a = A(x=None)
+        >>> print(a)
+        A(x=None)
 
     *Collections*
     Several collection types can be used to annotate attributes, which will restrict the
@@ -637,7 +746,7 @@ class Corgy(metaclass=_CorgyMeta):
             >>> A.add_args_to_parser(parser)
             >>> parser.print_help()
             options:
-              --x int  help for x (required)
+              --x int  help for x (optional)
 
         This annotation can also be used to modify the parser flags for the argument. By
         default, the attribute name is used, prefixed with `--`, and with `_` replaced
@@ -660,14 +769,41 @@ class Corgy(metaclass=_CorgyMeta):
               y int        help for y
             <BLANKLINE>
             options:
-              -x/--ex int  help for x (required)
+              -x/--ex int  help for x (optional)
 
         `Annotated` can accept multiple arguments, but only the first three are used
         by `Corgy`. The first argument is the attribute type, the second is the help
         message (which must be a string), and the third is a sequence of flags.
 
-        Note:
-            `Annotated` should always be the outermost annotation for an attribute.
+        *Required/NotRequired*
+        Every corgy attribute is either required or not required. The default status
+        depends on the class parameter `corgy_required_by_default` (`False` by default).
+        Attributes can also be explicitly marked as required or not required, and will
+        control whether the argument will be added with `required=True`::
+
+            >>> class A(Corgy):
+            ...     x: Required[int]
+            ...     y: NotRequired[int]
+            ...     z: int
+
+            >>> parser = ArgumentParser(
+            ...     formatter_class=CorgyHelpFormatter,
+            ...     add_help=False,
+            ...     usage=SUPPRESS,
+            ... )
+
+            >>> A.add_args_to_parser(parser)
+            >>> parser.print_help()
+            options:
+              --x int  (required)
+              --y int  (optional)
+              --z int  (optional)
+
+        Attributes which are not required, and don't have a default value are added
+        with `default=SUPPRESS`, and so will not be included in the parsed namespace::
+
+            >>> parser.parse_args(["--x", "1", "--y", "2"])
+            Namespace(x=1, y=2)
 
         *Optional*
         Attributes marked with `typing.Optional` are allowed to be `None`. The
@@ -677,8 +813,16 @@ class Corgy(metaclass=_CorgyMeta):
         Note: Attributes with default values are also "optional" in the sense that
         they can be omitted from the command line. However, they are not the same as
         attributes marked with `Optional`, since the former are not allowed to be
-        `None`. Furthermore, required `Optional` attributes without default values
+        `None`. Furthermore, `Required` `Optional` attributes without default values
         _will_ need to be passed on the command line (possibly with no values).
+
+            >>> class A(Corgy):
+            ...     x: Required[Optional[int]]
+
+            >>> parser = ArgumentParser()
+            >>> A.add_args_to_parser(parser)
+            >>> parser.parse_args(["--x"])
+            Namespace(x=None)
 
         *Boolean*
         `bool` types (when not in a collection) are converted to a pair of options::
@@ -695,7 +839,7 @@ class Corgy(metaclass=_CorgyMeta):
             >>> A.add_args_to_parser(parser)
             >>> parser.print_help()
             options:
-              --arg/--no-arg  (required)
+              --arg/--no-arg
 
         *Collection*
         Collection types are added to the parser by setting `nargs`. The value for
@@ -746,7 +890,7 @@ class Corgy(metaclass=_CorgyMeta):
             >>> A.add_args_to_parser(parser)
             >>> parser.print_help()
             options:
-              --x T  ({T1/T2} required)
+              --x T  ({T1/T2} optional)
 
         For types which specify choices by defining `__choices__`, the values are
         passed to the `choices` argument as with `Literal`, but no type inference is
@@ -778,11 +922,11 @@ class Corgy(metaclass=_CorgyMeta):
             >>> A.add_args_to_parser(parser)
             >>> parser.print_help()
             options:
-              --x int      (required)
+              --x int      (optional)
             <BLANKLINE>
             g:
               --g:x int    (default: 0)
-              --g:y float  (required)
+              --g:y float  (optional)
 
         **Custom parsers**
 
@@ -811,6 +955,8 @@ class Corgy(metaclass=_CorgyMeta):
                 group_arg_defaults[_grp_name][_var_name] = _v
             elif _k not in cls.__annotations__:
                 raise ValueError(f"default value for unknown argument: `{_k}`")
+
+        required_attrs = getattr(cls, "__required")
 
         for var_name, var_type in cls.attrs().items():
             var_flags = getattr(cls, "__flags").get(
@@ -866,7 +1012,7 @@ class Corgy(metaclass=_CorgyMeta):
             var_action: Optional[Type[argparse.Action]] = None
 
             # Check if the variable is required on the command line.
-            var_required = var_name not in base_defaults
+            var_required = var_name not in base_defaults and var_name in required_attrs
 
             # Check if the variable can be `None`.
             if is_optional_type(var_type):
@@ -971,10 +1117,14 @@ class Corgy(metaclass=_CorgyMeta):
                 _kwargs["action"] = var_action
             if var_choices is not None:
                 _kwargs["choices"] = var_choices
+
             if var_name in base_defaults:
                 _kwargs["default"] = base_defaults[var_name]
-            if var_required and not var_positional:
+            elif var_required and not var_positional:
                 _kwargs["required"] = True
+            elif not var_positional:
+                _kwargs["default"] = argparse.SUPPRESS
+
             if var_type_metavar is not None:
                 _kwargs["metavar"] = var_type_metavar
             parser.add_argument(*var_flags, type=var_add_type, **_kwargs)
@@ -990,6 +1140,8 @@ class Corgy(metaclass=_CorgyMeta):
                 setattr(self, attr_name, args[attr_name])
             elif attr_name in cls_defaults:
                 setattr(self, attr_name, cls_defaults[attr_name])
+            elif attr_name in getattr(self, "__required"):
+                raise ValueError(f"missing required attribute: `{attr_name}`")
 
     def _str(self, f_str: Callable[..., str]) -> str:
         s = f"{self.__class__.__name__}("
@@ -1258,11 +1410,8 @@ class Corgy(metaclass=_CorgyMeta):
 
         for arg_name, arg_type in cls_attrs.items():
             if arg_name not in main_args_map:
-                if strict:
-                    try:
-                        delattr(self, arg_name)
-                    except AttributeError:
-                        pass
+                if strict and hasattr(self, arg_name):
+                    delattr(self, arg_name)
                 continue
 
             arg_new_val = main_args_map[arg_name]
