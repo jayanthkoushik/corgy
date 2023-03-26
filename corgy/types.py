@@ -532,6 +532,16 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
     * `allow_base`: If `True`, the base class itself will be allowed as a valid
         sub-class. The default is `False`. Example::
 
+            >>> class Base: ...
+            >>> class Sub1(Base): ...
+            >>> class Sub2(Base): ...
+            >>> T = SubClass[Base]
+            >>> T.__choices__
+            (SubClass[Base]('Sub1'), SubClass[Base]('Sub2'))
+            >>> T.allow_base = True
+            >>> T.__choices__
+            (SubClass[Base]('Base'), SubClass[Base]('Sub1'), SubClass[Base]('Sub2'))
+
     * `use_full_names`: If `True`, the name passed to the constructor needs to be the
         full name of a sub-class, given by `cls.__module__ + "." + cls.__qualname__`. If
         `False` (the default), the name needs to just be `cls.__name__`. This is useful
@@ -540,6 +550,16 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
     * `allow_indirect_subs`: If `True` (the default), indirect sub-classes, i.e.,
         sub-classes of the base through another sub-class, are allowed. If `False`,
         only direct sub-classes of the base are allowed. Example::
+
+            >>> class Base: ...
+            >>> class Sub1(Base): ...
+            >>> class Sub2(Sub1): ...
+            >>> T = SubClass[Base]
+            >>> T.__choices__
+            (SubClass[Base]('Sub1'), SubClass[Base]('Sub2'))
+            >>> T.allow_indirect_subs = False
+            >>> T.__choices__
+            (SubClass[Base]('Sub1'),)
 
     Note that the types returned by the `SubClass[...]` syntax are cached using the
     base class type. So all instances of `SubClass[Base]` will return the same type,
