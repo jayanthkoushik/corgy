@@ -193,6 +193,21 @@ standard inheritance rules, but `Corgy` will ignore them:
 B(y=1.0, z=<unset>)
 ```
 
+`Corgy` instances can be frozen (preventing any further changes) using the `freeze`
+method. This method can be called automatically after `__init__` by by setting
+`corgy_freeze_after_init` to `True` in the class definition:
+
+```python
+>>> class A(Corgy, corgy_freeze_after_init=True):
+...    x: int
+
+>>> a = A(x=1)
+>>> a.x = 2
+Traceback (most recent call last):
+    ...
+TypeError: cannot set `x`: object is frozen
+```
+
 `Corgy` recognizes a number of special annotations, which are used to control how
 attribute values are processed.
 

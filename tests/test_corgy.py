@@ -3373,3 +3373,16 @@ class TestCorgyFreeze(unittest.TestCase):
         a.freeze()
         with self.assertRaises(TypeError):
             a.x = 2
+
+    def test_setting_corgy_freeze_after_init_freezes_instance(self):
+        class A(Corgy, corgy_freeze_after_init=True):
+            x: int
+
+        a = A(x=1)
+        with self.assertRaises(TypeError):
+            a.x = 2
+
+        a = A(x=1)
+        a.freeze()
+        with self.assertRaises(TypeError):
+            a.x = 2

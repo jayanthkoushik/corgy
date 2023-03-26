@@ -113,6 +113,12 @@ class _CorgyMeta(type):
         # non-`Corgy` classes.
         _not_required = set()
 
+        # Extract `corgy_freeze_after_init` (default `False`).
+        try:
+            namespace["__freeze_after_init"] = kwds.pop("corgy_freeze_after_init")
+        except KeyError:
+            namespace["__freeze_after_init"] = False
+
         # See if `corgy_track_bases` is specified (default `True`).
         try:
             _track_bases = kwds.pop("corgy_track_bases")
@@ -480,6 +486,19 @@ class Corgy(metaclass=_CorgyMeta):
         >>> b = B()
         >>> print(b)
         B(y=1.0, z=<unset>)
+
+    `Corgy` instances can be frozen (preventing any further changes) using the `freeze`
+    method. This method can be called automatically after `__init__` by by setting
+    `corgy_freeze_after_init` to `True` in the class definition::
+
+        >>> class A(Corgy, corgy_freeze_after_init=True):
+        ...    x: int
+
+        >>> a = A(x=1)
+        >>> a.x = 2
+        Traceback (most recent call last):
+            ...
+        TypeError: cannot set `x`: object is frozen
 
     `Corgy` recognizes a number of special annotations, which are used to control how
     attribute values are processed.
@@ -1152,6 +1171,9 @@ class Corgy(metaclass=_CorgyMeta):
                 setattr(self, attr_name, cls_defaults[attr_name])
             elif attr_name in getattr(self, "__required"):
                 raise ValueError(f"missing required attribute: `{attr_name}`")
+
+        if getattr(self.__class__, "__freeze_after_init"):
+            self.freeze()
 
     def _str(self, f_str: Callable[..., str]) -> str:
         s = f"{self.__class__.__name__}("
