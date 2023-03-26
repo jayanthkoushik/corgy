@@ -928,6 +928,30 @@ A(x='one', g=G(x=1, y=[1, 2, 3]))
 ```
 
 
+#### freeze()
+Freeze the object, preventing any further changes to attributes.
+
+Example:
+
+```python
+>>> class A(Corgy):
+...     x: int
+...     y: int
+
+>>> a = A(x=1, y=2)
+>>> a.x = 2
+>>> a.freeze()
+>>> a.x = 3
+Traceback (most recent call last):
+    ...
+TypeError: cannot set `x`: object is frozen
+>>> del a.y
+Traceback (most recent call last):
+    ...
+TypeError: cannot delete `y`: object is frozen
+```
+
+
 ### corgy.corgyparser(\*var_names, metavar=None, nargs=None)
 Decorate a function as a custom parser for one or more attributes.
 

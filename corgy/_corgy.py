@@ -95,6 +95,7 @@ class _CorgyMeta(type):
                 namespace["__slots__"] = []
             else:
                 namespace["__slots__"] = list(namespace["__slots__"])
+            namespace["__slots__"].append("__frozen")
         elif "__slots__" in namespace:
             raise TypeError(
                 "`__slots__` cannot be defined if `corgy_make_slots` is `False`"
@@ -292,10 +293,14 @@ class _CorgyMeta(type):
             raise AttributeError(f"no value available for attribute `{var_name}`")
 
         def var_fset(self, val):
+            if getattr(self, f"_{cls_name.lstrip('_')}__frozen"):
+                raise TypeError(f"cannot set `{var_name}`: object is frozen")
             check_val_type(val, var_type)
             setattr(self, f"_{cls_name.lstrip('_')}__{var_name}", val)
 
         def var_fdel(self):
+            if getattr(self, f"_{cls_name.lstrip('_')}__frozen"):
+                raise TypeError(f"cannot delete `{var_name}`: object is frozen")
             if var_name in getattr(self, "__required"):
                 raise TypeError(f"attribute `{var_name}` cannot be unset")
             delattr(self, f"_{cls_name.lstrip('_')}__{var_name}")
@@ -1136,6 +1141,8 @@ class Corgy(metaclass=_CorgyMeta):
         if self.__class__ is Corgy:
             raise TypeError("`Corgy` is an abstract class and cannot be instantiated")
 
+        setattr(self, f"_{self.__class__.__name__.lstrip('_')}__frozen", False)
+
         cls_attrs = self.attrs()
         cls_defaults = getattr(self, "__defaults")
         for attr_name in cls_attrs:
@@ -1511,6 +1518,30 @@ class Corgy(metaclass=_CorgyMeta):
             if _k in _parsers:
                 toml_data[_k] = _parsers[_k](_v)
         return cls.from_dict(toml_data, try_cast=True)
+
+    def freeze(self):
+        """Freeze the object, preventing any further changes to attributes.
+
+        Example::
+
+            >>> class A(Corgy):
+            ...     x: int
+            ...     y: int
+
+            >>> a = A(x=1, y=2)
+            >>> a.x = 2
+            >>> a.freeze()
+            >>> a.x = 3
+            Traceback (most recent call last):
+                ...
+            TypeError: cannot set `x`: object is frozen
+            >>> del a.y
+            Traceback (most recent call last):
+                ...
+            TypeError: cannot delete `y`: object is frozen
+
+        """
+        setattr(self, f"_{self.__class__.__name__.lstrip('_')}__frozen", True)
 
 
 class _CorgyParser(NamedTuple):

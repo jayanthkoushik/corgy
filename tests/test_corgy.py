@@ -3336,3 +3336,40 @@ class TestCorgyEquality(unittest.TestCase):
         c2 = C(y="2")
         c2.x = 2
         self.assertEqual(c1, c2)
+
+
+class TestCorgyFreeze(unittest.TestCase):
+    def test_corgy_attrs_cannot_be_set_after_freeze(self):
+        class A(Corgy):
+            x: int
+
+        a = A()
+        a.freeze()
+        with self.assertRaises(TypeError):
+            a.x = 2
+
+        a = A(x=1)
+        a.freeze()
+        with self.assertRaises(TypeError):
+            a.x = 2
+
+    def test_corgy_attrs_cannot_be_deleted_after_freeze(self):
+        class A(Corgy):
+            x: int
+
+        a = A(x=1)
+        a.freeze()
+        with self.assertRaises(TypeError):
+            del a.x
+
+    def test_double_freeze_is_noop(self):
+        class A(Corgy):
+            x: int
+
+        a = A(x=1)
+        a.freeze()
+        with self.assertRaises(TypeError):
+            a.x = 2
+        a.freeze()
+        with self.assertRaises(TypeError):
+            a.x = 2
