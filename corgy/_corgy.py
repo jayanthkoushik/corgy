@@ -289,8 +289,6 @@ class _CorgyMeta(type):
         def var_fget(self):
             with suppress(AttributeError):
                 return getattr(self, f"_{cls_name.lstrip('_')}__{var_name}")
-            # with suppress(KeyError):
-            #     return getattr(self, "__defaults")[var_name]
             raise AttributeError(f"no value available for attribute `{var_name}`")
 
         def var_fset(self, val):
