@@ -1,6 +1,6 @@
 # corgy package
 
-Corgy package for elegant command line parsing.
+Corgy package for elegant data classes.
 
 
 ### _class_ corgy.Corgy(\*\*args)

@@ -1,57 +1,137 @@
 # corgy
 
-Elegant command line parsing for Python.
+Corgy is a Python library that allows you to create feature rich data
+classes using intuitive type annotations.
 
-Corgy allows you to create a command line interface in Python, without worrying about boilerplate code. This results in cleaner, more modular code.
+```pycon
+>>> from typing import Literal, List
+>>> from corgy import Corgy
+>>> from corgy.types import KeyValuePairs
 
-```python
-from typing import Annotated, Optional, Sequence
-from corgy import Corgy
-from corgy.types import KeyValuePairs
+>>> class G(Corgy):
+...     x: int
+...     y: Literal["y1", "y2", "y3"]
 
-class ArgGroup(Corgy):
-    arg1: Annotated[Optional[int], "optional number"]
-    arg2: Annotated[bool, "a boolean"]
+>>> class C(Corgy):
+...     x: List[float] = [1.0, 2.0]
+...     y: KeyValuePairs[str, int]
+...     g: G
 
-class MyArgs(Corgy):
-    arg1: Annotated[int, "a number"] = 1
-    arg2: Annotated[Sequence[float], "at least one float"]
-    arg3: Annotated[KeyValuePairs[str, int], "str to int map"]
-    grp1: Annotated[ArgGroup, "group 1"]
-
-args = MyArgs.parse_from_cmdline()
 ```
 
-Compare this to the equivalent code which uses argparse:
+## Features
 
-```python
-from argparse import ArgumentParser, ArgumentTypeError, BooleanOptionalAction
+* **Type checking**: `Corgy` instances are type-checked, and support a
+  number of type modifiers.
 
-def map_type(s):
-    kvs = {}
-    try:
-        for kv in s.split(","):
-            k, v = kv.split("=")
-            kvs[k] = int(v)
-    except Exception as e:
-        raise ArgumentTypeError(e) from None
-    return kvs
+  ```pycon
+  >>> from typing import Tuple
 
-parser = ArgumentParser()
-parser.add_argument("--arg1", type=int, help="a number", default=1)
-parser.add_argument("--arg2", type=float, nargs="+", help="at least one float", required=True)
-parser.add_argument("--arg3", type=map_type, help="str to int map", required=True)
+  >>> class C(Corgy):
+  ...     x: int
+  ...     y: Tuple[int, int]
 
-grp_parser = parser.add_argument_group("group 1")
-grp_parser.add_argument("--grp1:arg1", type=int, help="optional number")
-grp_parser.add_argument("--grp1:arg2", help="a boolean", action=BooleanOptionalAction)
+  >>> C(x="1")
+  Traceback (most recent call last):
+      ...
+  ValueError: invalid value for type '<class 'int'>': '1'
 
-args = parser.parse_args()
-```
+  >>> C(y=(1, 2, 3))
+  Traceback (most recent call last):
+      ...
+  ValueError: invalid value for type 'typing.Tuple[int, int]': (1, 2, 3): expected exactly '2' elements
 
-Corgy also provides support for more informative help messages from `argparse`, and colorized output. Compare:
+  ```
 
-![Sample output with and without Corgy](https://raw.githubusercontent.com/jayanthkoushik/corgy/27a73630528d03ab1ca9563a8139d08cf8e92a08/example.svg)
+* **Dictionary interface**: `Corgy` instances can be converted to/from
+  dictionaries.
+
+  ```pycon
+  >>> class G(Corgy):
+  ...     x: int
+
+  >>> class C(Corgy):
+  ...     x: int
+  ...     g: G
+
+  >>> g = G.from_dict({"x": 1})
+  >>> g
+  G(x=1)
+
+  >>> c = C(x=2, g=g)
+  >>> c.as_dict()
+  {'x': 2, 'g': {'x': 1}}
+
+  ```
+
+* **Command-line parsing**: `Corgy` class attributes can be added to an
+  `ArgumentParser` instance, and parsed from the command-line. Help
+  messages can be added to attributes with `Annotated`, and will be
+  passed to the command line parser.
+
+  ```pycon
+  >>> from argparse import ArgumentParser
+  >>> from typing import Optional
+  >>> from typing_extensions import Annotated
+
+  >>> class ArgGroup(Corgy):
+  ...     arg1: Annotated[Optional[int], "optional number"]
+  ...     arg2: Annotated[bool, "a boolean"]
+
+  >>> class MyArgs(Corgy):
+  ...     arg1: Annotated[int, "a number"] = 1
+  ...     arg2: Annotated[List[float], "at least one float"]
+  ...     grp1: Annotated[ArgGroup, "group 1"]
+
+  >>> parser = ArgumentParser(usage="")
+  >>> MyArgs.add_args_to_parser(parser)
+  >>> parser.print_help()  # doctest: +NORMALIZE_WHITESPACE
+  usage:
+  <BLANKLINE>
+  optional arguments:
+    -h, --help            show this help message and exit
+    --arg1 ARG1           a number
+    --arg2 [ARG2 ...]     at least one float
+  <BLANKLINE>
+  grp1:
+    group 1
+  <BLANKLINE>
+    --grp1:arg1 [GRP1:ARG1]
+                          optional number
+    --grp1:arg2, --no-grp1:arg2
+                          a boolean
+
+  ```
+
+* **Enhanced argparse formatting**: The `corgy` package provides
+  `CorgyHelpFormatter`, a formatter class for `argparse`, with support
+  for colorized output. It can also be used independent of `Corgy`
+  classes.
+
+  ```pycon
+  >>> from corgy import CorgyHelpFormatter
+
+  >>> # `ArgGroup` and `MyArgs` as defined above
+  >>> parser = ArgumentParser(usage="", formatter_class=CorgyHelpFormatter)
+  >>> MyArgs.add_args_to_parser(parser)
+  >>> parser.print_help()  # doctest: +SKIP
+  ```
+
+    ![Sample argparse output with `CorgyHelpFormatter`](https://raw.githubusercontent.com/jayanthkoushik/corgy/master/example.svg)
+
+* **Convenience types**: `corgy.types` provides a number of types for
+  converting strings into objects like paths, dictionaries, classes,
+  etc. These can be used standalone, but are especially useful for
+  parsing from command line arguments. Refer to the docs for details on
+  all available types. A small example is shown below.
+
+  ```pycon
+  >>> T = KeyValuePairs[str, int]
+  >>> m = T("x=1,y=2")
+  >>> print(m)
+  {'x': 1, 'y': 2}
+
+  ```
 
 # Install
 `corgy` is available on PyPI, and can be installed with pip:
@@ -60,13 +140,17 @@ Corgy also provides support for more informative help messages from `argparse`, 
 pip install corgy
 ```
 
-Support for colorized output requires the `crayons` package, also available on PyPI. You can pull it as a dependency for `corgy` by installing with the `colors` extra:
+Support for colorized output requires the `crayons` package, also
+available on PyPI. You can pull it as a dependency for `corgy` by
+installing with the `colors` extra:
 
 ```bash
 pip install corgy[colors]
 ```
 
-Parsing `Corgy` objects from `toml` files requires the `tomli` package on Python versions below 3.11. This can be installed automatically with the `toml` extra:
+Parsing `Corgy` objects from `toml` files requires the `tomli` package
+on Python versions below 3.11. This can be installed automatically with
+the `toml` extra:
 
 ```bash
 pip install corgy[toml]

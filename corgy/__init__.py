@@ -1,4 +1,4 @@
-"""Corgy package for elegant command line parsing."""
+"""Corgy package for elegant data classes."""
 
 from ._corgy import *
 from ._helpfmt import *
