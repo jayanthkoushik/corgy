@@ -4,7 +4,8 @@ Corgy is a Python library that allows you to create feature rich data
 classes using intuitive type annotations.
 
 ```pycon
->>> from typing import Literal, List
+>>> from typing import List
+>>> from typing_extensions import Literal
 >>> from corgy import Corgy
 >>> from corgy.types import KeyValuePairs
 
