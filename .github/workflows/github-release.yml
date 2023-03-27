@@ -14,14 +14,14 @@ jobs:
         fetch-depth: 0
     - name: Install poetry
       run: pipx install poetry
-    - name: Install poetry-dynamic-versioning
-      run: pipx install poetry-dynamic-versioning
     - name: Create lock file
       run: poetry lock
     - uses: actions/setup-python@v4
       with:
         python-version: '3.9'
         cache: poetry
+    - name: Install build dependencies
+      run: poetry install --only build
     - uses: actions/setup-node@v3
     - name: Run conventional-github-releaser
       run: npx conventional-github-releaser -p angular
