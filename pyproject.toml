@@ -47,9 +47,6 @@ pydocstyle = "^6.1"
 sphinx = "^4.2"
 sphinx-markdown-builder = { git = "https://github.com/clayrisser/sphinx-markdown-builder" }
 
-[tool.poetry.group.build.dependencies]
-poetry-dynamic-versioning = "^0.21.4"
-
 [tool.poetry-dynamic-versioning]
 enable = true
 vcs = "git"

@@ -21,7 +21,7 @@ jobs:
         python-version: '3.9'
         cache: poetry
     - name: Install build dependencies
-      run: poetry install --only build
+      run: poetry self add "poetry-dynamic-versioning[plugin]"
     - uses: actions/setup-node@v3
     - name: Run conventional-github-releaser
       run: npx conventional-github-releaser -p angular
