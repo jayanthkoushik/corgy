@@ -81,22 +81,23 @@ classes using intuitive type annotations.
 
   >>> class MyArgs(Corgy):
   ...     arg1: Annotated[int, "a number"] = 1
-  ...     arg2: Annotated[List[float], "at least one float"]
+  ...     arg2: Annotated[Tuple[float, ...], "at least one float"]
   ...     grp1: Annotated[ArgGroup, "group 1"]
 
   >>> parser = ArgumentParser(usage="")
   >>> MyArgs.add_args_to_parser(parser)
-  >>> parser.print_help()  # doctest: +NORMALIZE_WHITESPACE
+  >>> parser.print_help()  # doctest: +SKIP
   usage:
-  <BLANKLINE>
+
   optional arguments:
     -h, --help            show this help message and exit
     --arg1 ARG1           a number
-    --arg2 [ARG2 ...]     at least one float
-  <BLANKLINE>
+    --arg2 ARG2 [ARG2 ...]
+                          at least one float
+
   grp1:
     group 1
-  <BLANKLINE>
+
     --grp1:arg1 [GRP1:ARG1]
                           optional number
     --grp1:arg2, --no-grp1:arg2
@@ -118,7 +119,7 @@ classes using intuitive type annotations.
   >>> parser.print_help()  # doctest: +SKIP
   ```
 
-    ![Sample argparse output with `CorgyHelpFormatter`](https://raw.githubusercontent.com/jayanthkoushik/corgy/master/example.svg)
+    ![Sample argparse output with `CorgyHelpFormatter`](https://raw.githubusercontent.com/jayanthkoushik/corgy/44d0d2bdc225456e1d1d0ac78cfde26065f9b86f/example.svg)
 
 * **Convenience types**: `corgy.types` provides a number of types for
   converting strings into objects like paths, dictionaries, classes,
