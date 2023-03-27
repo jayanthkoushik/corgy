@@ -2309,7 +2309,7 @@ class TestCorgyAddRequiredArgsToParser(unittest.TestCase):
 
 class TestCorgyCmdlineParsing(unittest.TestCase):
     def setUp(self):
-        self.parser = argparse.ArgumentParser(exit_on_error=False)
+        self.parser = argparse.ArgumentParser()
         self.orig_parse_args = argparse.ArgumentParser.parse_args
 
     def test_cmdline_args_are_parsed_to_corgy_cls_properties(self):
@@ -2585,6 +2585,9 @@ class TestCorgyCmdlineParsing(unittest.TestCase):
                     self.assertEqual(c.x, None)
 
     def test_parse_from_cmdline_length_checks_optional_collection(self):
+        def _raise_error(msg):
+            raise argparse.ArgumentError(None, msg)
+
         for _type in COLLECTION_TYPES:
             if _type in (SequenceType, ListType, SetType):
                 continue
@@ -2599,6 +2602,7 @@ class TestCorgyCmdlineParsing(unittest.TestCase):
                         self.parser,
                         ["--x", *_args],  # pylint: disable=cell-var-from-loop
                     )
+                    self.parser.error = _raise_error
                     with self.assertRaises(argparse.ArgumentError):
                         C.parse_from_cmdline(self.parser, add_help=False)
 
