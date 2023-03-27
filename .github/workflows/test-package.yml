@@ -35,6 +35,6 @@ jobs:
     - name: Install extra dependencies
       run: poetry install --only main -E colors -E toml
     - name: Run all tests
-      run: poetry run python -m unittest
+      run: poetry run python -m unittest -v
       env:
         PYTHONDEVMODE: 1
