@@ -31,7 +31,7 @@ jobs:
     - name: Install required dependencies
       run: poetry install --only main
     - name: Run core tests
-      run: poetry run --no-cache python -m unittest
+      run: poetry run --no-cache python -m unittest -v
     - name: Install extra dependencies
       run: poetry install --only main -E colors -E toml
     - name: Run all tests
