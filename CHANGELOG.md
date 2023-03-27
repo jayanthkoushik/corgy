@@ -2,6 +2,108 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [6.0.0](https://github.com/jayanthkoushik/corgy/compare/v5.0.0...v6.0.0) (2023-03-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* By default, `Corgy.add_args_to_parser` now adds
+attributes as optional. This makes command line parsing consistent with
+the rest of the `Corgy` interface. To get the previous behavior,
+pass `corgy_required_by_default=True` to the `Corgy` class. But note
+that this will also make attributes required during init.
+* Attributes marked with `Optional` are no longer added
+by `Corgy.add_args_to_parser` with `optional=True`, unless they have a
+default value. This behavior is consistent with the treatment of other
+types--`Optional` only indicates that the attribute can be `None`. In
+line with this change, `Optional` attributes are added with a custom
+action with allows arguments to accept zero arguments (which will be
+treated as `None`).
+* `Corgy` now uses defaults only during `__init__`.
+This means after init, attributes with default values are
+undistinguishable from the rest. The key effect of this change is that
+an attribute with a default value can be unset using `del`. Previously,
+such attributes would "fallback" to the default value.
+* `Corgy` now handles `Set` and `List` types for
+collections. Collection handling has been re-written to fix various
+issues.
+* `Corgy.add_args_to_parser` no longer adds collection
+types with custom actions. Dictionaries parsed from the command line
+should be loaded using `Corgy.from_dict` with `try_cast=True`.
+* `Corgy.parse_from_cmdline` and `Corgy.parse_from_toml`
+now try to cast parsed values. This allows `parse_from_cmdline` to not
+be dependent on custom actions added to the parser.
+* Unset values of `Corgy` instances are no longer shown
+by `repr`. This makes `repr` consistent with code for creating an
+instance, i.e., `eval`ing the `repr` of a `Corgy` instance will create
+an instance with the same values. `Corgy.__str__` is unchanged, and will
+show unset values as before.
+* The default value of the `recursive` argument of
+`Corgy.as_dict` has been changed from `False` to `True`. Groups will be
+converted to dictionaries recursively by default.
+* By default, arguments with a custom parser will now
+always receive a single string argument, regardless of the argument
+type. This behavior can be controlled with the newly added `nargs`
+argument for `@corgyparser`. Setting this argument (which is `None` by
+default) will cause the set value to be passed as the `nargs` argument
+for `ArgumentParser.add_argument`, and the correspondingly, the custom
+parser will be called with all arguments in a list (unless `nargs` is
+`None`).
+* `Corgy` classes now enforce attribute types. This
+applies to both assigned values, and defaults. Incorrectly typed values
+will raise `ValueError`.
+* `Corgy.__init__` no longer accepts group arguments
+specified with the `:` syntax. Instead this functionality has been moved
+to `Corgy.from_dict`.
+* Classes in `corgy.types` raise `ValueError` instead of
+`ArgumentTypeError`.
+
+### Features
+
+* add `Corgy.attrs` class method ([f39dc7b](https://github.com/jayanthkoushik/corgy/commit/f39dc7b0fa60f6e3b8add82bfb8493c8f9a2ba12))
+* add `Corgy.freeze` method ([d855dd4](https://github.com/jayanthkoushik/corgy/commit/d855dd461b4f49712aecf7e03f328e0eda253dbb))
+* add `Corgy.load_dict` method ([c2aa69a](https://github.com/jayanthkoushik/corgy/commit/c2aa69aec6e07de8adb69fa045712aed78c77ba5))
+* add `corgy.types.IODirectory` type ([889f11c](https://github.com/jayanthkoushik/corgy/commit/889f11cf754831d813322dd47ceef41cf889f7c5))
+* add `flatten` argument to `Corgy.as_dict` ([82207a0](https://github.com/jayanthkoushik/corgy/commit/82207a03ccaf8e31865acae3c6e3d46b40548c0a))
+* add option to cast values in `Corgy.from_dict` ([267e325](https://github.com/jayanthkoushik/corgy/commit/267e325c74bc88639850f8cbb578f493cd4e085a))
+* add support for `Required` and `NotRequired` annotations ([ba537d3](https://github.com/jayanthkoushik/corgy/commit/ba537d3a0069ebd36688a6029f68b38cca58c881))
+* allow `Corgy` attributes with default values to be unset ([65550fa](https://github.com/jayanthkoushik/corgy/commit/65550fa40fec86249dc34f3eff61d3c081cea69d))
+* allow `Corgy` class attributes to be unset with `del` ([da3c1c8](https://github.com/jayanthkoushik/corgy/commit/da3c1c8dbbe50864d8311ab9573aca3eb6089f97))
+* allow `corgyparser` functions to specify nargs ([1d8d10c](https://github.com/jayanthkoushik/corgy/commit/1d8d10c96d7760e45637c1ffd48ee844f29835eb))
+* allow freezing `Corgy` instances after init with `corgy_freeze_after_init` ([931f925](https://github.com/jayanthkoushik/corgy/commit/931f925938be8cd4ed7032adc0207dda194df647))
+* allow passing multiple argument names to `corgyparser` ([9cd7539](https://github.com/jayanthkoushik/corgy/commit/9cd7539cff6d347a24b81aceed259f04e8ca19b4))
+* allow setting metavar when decorating with `corgyparser` ([9b0b8f2](https://github.com/jayanthkoushik/corgy/commit/9b0b8f20ec0ba4f1fac5a4e0d96dbd8b22fdef7c))
+* change typing annotation of `Corgy.from_dict` to accept arbitrary mappings ([a9d65cc](https://github.com/jayanthkoushik/corgy/commit/a9d65ccae6999e17b6da364fedb515a2dd5cc1d1))
+* enforce type checking for `Corgy` classes ([6871838](https://github.com/jayanthkoushik/corgy/commit/687183815902dfc3b0bb30c9f513cffaa4a62939))
+* handle formatting of nested sequence and optional types ([6c9fe58](https://github.com/jayanthkoushik/corgy/commit/6c9fe5896d5d7c80cf1b79ce4a020db2c75f4892))
+* handle groups within collections in `Corgy.as_dict` ([b673335](https://github.com/jayanthkoushik/corgy/commit/b673335cb5ced43268b91bdb499e735a0c833148))
+* handle groups within collections in `Corgy.from_dict` ([bf1b0ec](https://github.com/jayanthkoushik/corgy/commit/bf1b0ece091fb20e8f9e59b5e66926c3e9b68783))
+* hide unset values in `Corgy.__repr__` ([7fda899](https://github.com/jayanthkoushik/corgy/commit/7fda899c0ffbdd3587b1105976efb1cd17a6d412))
+* implement equality for `Corgy` instances ([bc56f54](https://github.com/jayanthkoushik/corgy/commit/bc56f543d7dde79fc66b87ff214d2199a85aca42))
+* make `Corgy.as_dict` recursive by default ([f74e341](https://github.com/jayanthkoushik/corgy/commit/f74e3412d74c73dcabbf87001001fee3b4a7d43b))
+* make `types.SubClass/KeyValuePairs/InitArgs` objects pickleable ([fbd817c](https://github.com/jayanthkoushik/corgy/commit/fbd817c2c6c900864e9a4c09a17bb64ffde4ff92))
+* make formatting of zero or more sequence metavars in Python<3.9 match later versions ([261fcef](https://github.com/jayanthkoushik/corgy/commit/261fcefe3cf3f369d2df64d20493180fd3671b96))
+* make parsing of `Optional` attributes consistent with other types ([c96cdd3](https://github.com/jayanthkoushik/corgy/commit/c96cdd39dd4f624d12c1908692f42086a5e6b162))
+* move functionality to parse args with `:` from `Corgy.__init__` to ([f0378b8](https://github.com/jayanthkoushik/corgy/commit/f0378b830044953750be47da19f0cc827ecf687a))
+* rewrite handling of collection types ([6c60628](https://github.com/jayanthkoushik/corgy/commit/6c6062836bf1ad65592afde0e5c12a33b1a77374))
+
+
+### Bug Fixes
+
+* correct formatting of tuples by `CorgyHelpFormatter` ([51b29ca](https://github.com/jayanthkoushik/corgy/commit/51b29caf6d46ef6abf2d6d9ec04885154748888d))
+* don't use `BooleanOptionalAction` for `Literal` boolean types in `Corgy.add_args_to_parser` ([a8d0546](https://github.com/jayanthkoushik/corgy/commit/a8d0546c012b50eca90ae99c07631f87bf483c05))
+* handle `dict` defaults/choices in `CorgyHelpFormatter` ([6d2c20c](https://github.com/jayanthkoushik/corgy/commit/6d2c20c995a7540cadc34876436cacb242534606))
+* handle sequence edge cases in `CorgyHelpFormatter` ([2824e64](https://github.com/jayanthkoushik/corgy/commit/2824e645f3e099cc4e9bf30ace12cf6546a76168))
+* prevent class variables from being assigned `corgyparsers` ([4cd9557](https://github.com/jayanthkoushik/corgy/commit/4cd9557938db38c20286ef0beec488021923e744))
+* remove enclosing `[]` from `KeyValuePairs.__metavar__` ([195c614](https://github.com/jayanthkoushik/corgy/commit/195c614a69d6c29ba19e91eeead88ab518d43e61))
+* use `__init__` to initialize in `Corgy.from_dict` ([2c3cd2a](https://github.com/jayanthkoushik/corgy/commit/2c3cd2abb905e8181a64d4de91e32df4ec27774c))
+* use `_typeshed.StrPath` for annotations instead of custom implementation ([099736e](https://github.com/jayanthkoushik/corgy/commit/099736efc696f745106b4c51c224ec927e3bd100))
+* use binary open mode for binary file types in `corgy.types` ([8469ae9](https://github.com/jayanthkoushik/corgy/commit/8469ae9c029f930c94790519bff4a932120db50c))
+* use correct metavar when adding bool sequences in `Corgy.add_args_to_parser` ([70a3742](https://github.com/jayanthkoushik/corgy/commit/70a37426074fb5944b63f6f8e8f481f2e3a27d20))
+
+
+* raise `ValueError` from classes in `corgy.types` if `__init__` fails ([deb4153](https://github.com/jayanthkoushik/corgy/commit/deb41538184237eaf2c3e307ec2dd7d8332a785d))
+
 ## [5.0.0](https://github.com/jayanthkoushik/corgy/compare/v4.7.0...v5.0.0) (2022-11-17)
 
 
