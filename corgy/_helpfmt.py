@@ -22,7 +22,7 @@ from types import ModuleType
 from typing import Optional, Sequence, Tuple, Union
 from unittest.mock import patch
 
-from ._utils import get_concrete_collection_type, is_optional_type
+from ._utils import get_concrete_collection_type, is_optional_type, OptionalTypeAction
 
 __all__ = ("CorgyHelpFormatter",)
 
@@ -212,7 +212,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             >>> _ = parser.add_argument("--arg", type=T)
             >>> parser.print_help()
             options:
-              --arg METAVAR  (optional)
+              --arg METAVAR  (default: None)
 
     """
 
@@ -306,9 +306,11 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             return obj.__name__  # type: ignore
         except AttributeError:
             try:
-                return type_.__str__(obj)
-            except:  # pylint: disable=bare-except
-                return str(obj)
+                if isinstance(obj, type_):
+                    return type_.__str__(obj)
+            except TypeError:
+                pass
+            return str(obj)
 
     @staticmethod
     def _get_stringify_type_for_default(action):
@@ -509,7 +511,13 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         else:
             placeholder_metavar = metavar
 
-        with patch.object(action, "metavar", placeholder_metavar):
+        # For `corgy._corgy.OptionalTypeAction`s, use the true `nargs` for formatting.
+        _fmt_nargs = (
+            action._base_nargs
+            if isinstance(action, OptionalTypeAction)
+            else action.nargs
+        )
+        with patch.multiple(action, nargs=_fmt_nargs, metavar=placeholder_metavar):
             if action.nargs == ZERO_OR_MORE:
                 # Python 3.9+ shows '*' argumets of a single type as `[<base_type> ...]`
                 # instead of `[<base_type> [<base_type> ...]]`. This code backports that
@@ -518,7 +526,11 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 if len(_mv) == 2:
                     return f"[{_mv[0]} [{_mv[1]} ...]]"
                 return f"[{_mv[0]} ...]"
-            return super()._format_args(action, "")
+            _fmt = super()._format_args(action, "")
+            if isinstance(action, OptionalTypeAction):
+                # Add `[]` around the metavar.
+                _fmt = f"[{_fmt}]"
+            return _fmt
 
     def _format_action(self, action: Action) -> str:
         """Format a single argument.
@@ -574,7 +586,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 )
             else:
                 arg_qualifier = ""
-        elif action.default is None or action.default is SUPPRESS:
+        elif action.default is SUPPRESS:
             if action.nargs == 0:
                 # The argument takes no values, so no need to explicitly indicate that
                 # it is optional. For example, help and version actions are obviously
@@ -726,7 +738,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 fmt = fmt[: match.start()] + match_sub + fmt[match.end() :]
 
         # Colorize the default value.
-        if action.default is not None and action.default != SUPPRESS:
+        if action.default != SUPPRESS:
             pattern = self._pattern_placeholder_text(_PLACEHOLDER_DEFAULT_VAL)
             _stringify_type = self._get_stringify_type_for_default(action)
             f_sub = partial(
@@ -859,8 +871,16 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
 
         """
         parser.add_argument(
-            *short_help_flags, nargs=0, action=cls.ShortHelpAction, help=short_help_msg
+            *short_help_flags,
+            nargs=0,
+            action=cls.ShortHelpAction,
+            help=short_help_msg,
+            default=SUPPRESS,
         )
         parser.add_argument(
-            *full_help_flags, nargs=0, action=cls.FullHelpAction, help=full_help_msg
+            *full_help_flags,
+            nargs=0,
+            action=cls.FullHelpAction,
+            help=full_help_msg,
+            default=SUPPRESS,
         )

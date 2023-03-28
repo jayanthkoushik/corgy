@@ -1168,7 +1168,7 @@ on the argument type. The following attributes are recognized:
     >>> _ = parser.add_argument("--arg", type=T)
     >>> parser.print_help()
     options:
-      --arg METAVAR  (optional)
+      --arg METAVAR  (default: None)
     ```
 
 

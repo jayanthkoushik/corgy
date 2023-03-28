@@ -31,6 +31,9 @@ _C = lambda s: _COLOR_HELPER.colorize(s, CorgyHelpFormatter.color_choices)
 _D = lambda s: _COLOR_HELPER.colorize(s, CorgyHelpFormatter.color_defaults)
 _O = lambda s: _COLOR_HELPER.colorize(s, CorgyHelpFormatter.color_options)
 
+# Shortcut for `default: None`.
+_DNone = lambda: f"{_K('default')}: {_D('None')}"
+
 # Make outputs independent of terminal width.
 CorgyHelpFormatter.output_width = 80
 CorgyHelpFormatter.max_help_position = 80
@@ -112,7 +115,7 @@ class TestCorgyHelpFormatterAPI(TestCase):
             parser = ArgumentParser(
                 formatter_class=CorgyHelpFormatter, add_help=False, usage=SUPPRESS
             )
-            parser.add_argument("-x", "--x", type=int, choices=[1, 2])
+            parser.add_argument("-x", "--x", type=int, choices=[1, 2], default=SUPPRESS)
 
             self.assertEqual(
                 parser.format_help(), "options:\n  -x|--x int  % ( 1|2 )  optional%\n"
@@ -124,7 +127,7 @@ class TestCorgyHelpFormatterAPI(TestCase):
             parser = ArgumentParser(
                 formatter_class=CorgyHelpFormatter, add_help=False, prog=""
             )
-            parser.add_argument("--x", type=int, help="x help")
+            parser.add_argument("--x", type=int, help="x help", default=SUPPRESS)
 
             self.assertEqual(
                 parser.format_help(),
@@ -154,12 +157,12 @@ class TestCorgyHelpFormatterAPI(TestCase):
                 #   -h/--help
                 #       show this help message and exit
                 #   --x A LONG METAVAR
-                #       x help (optional)
+                #       x help (default: None)
                 "options:\n"
                 "  -h/--help\n"
                 "      show this help message and exit\n"
                 "  --x A LONG METAVAR\n"
-                "      x help (optional)\n",
+                "      x help (default: None)\n",
             )
 
     def test_corgy_help_formatter_handles_changing_show_full_help(self):
@@ -178,11 +181,11 @@ class TestCorgyHelpFormatterAPI(TestCase):
                 parser.format_help(),
                 # options:
                 #   --x int  x help
-                #   --y int  y help (optional)
+                #   --y int  y help (default: None)
                 #   --z int  z help (default: 0)
                 "options:\n"
                 "  --x int  x help\n"
-                "  --y int  y help (optional)\n"
+                "  --y int  y help (default: None)\n"
                 "  --z int  z help (default: 0)\n",
             )
 
@@ -197,11 +200,11 @@ class TestCorgyHelpFormatterAPI(TestCase):
             #
             # options:
             #   -h/--help  show this help message and exit
-            #   --x int    ([1/2] optional)
+            #   --x int    ([1/2] default: None)
             f"usage: [-h] [--x int]\n\n"
             f"options:\n"
             f"  {_O('-h')}/{_O('--help')}  show this help message and exit\n"
-            f"  {_O('--x')} {_M('int')}    ([{_C(1)}/{_C(2)}] {_K('optional')})\n"
+            f"  {_O('--x')} {_M('int')}    ([{_C(1)}/{_C(2)}] {_DNone()})\n"
         )
 
         self.assertEqual(parser.format_help(), desired_output)
@@ -266,6 +269,7 @@ class TestCorgyHelpFormatterHelpActions(TestCase):
             nargs=0,
             action=CorgyHelpFormatter.ShortHelpAction,
             help="show short help",
+            default=SUPPRESS,
         )
         self.parser.add_argument.assert_any_call(
             "-H",
@@ -273,6 +277,7 @@ class TestCorgyHelpFormatterHelpActions(TestCase):
             nargs=0,
             action=CorgyHelpFormatter.FullHelpAction,
             help="show full help",
+            default=SUPPRESS,
         )
 
 
@@ -313,7 +318,7 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
 
     def test_corgy_help_formatter_handles_optional(self):
         self.assertEqual(
-            self._get_arg_help("--x", type=str),
+            self._get_arg_help("--x", type=str, default=SUPPRESS),
             #   --x str  (optional)
             f"  {_O('--x')} {_M('str')}  ({_K('optional')})",
         )
@@ -328,8 +333,8 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
     def test_corgy_help_formatter_handles_choices(self):
         self.assertEqual(
             self._get_arg_help("--x", type=str, choices=["a", "b"]),
-            #   --x str  ([a/b] optional)
-            f"  {_O('--x')} {_M('str')}  ([{_C('a')}/{_C('b')}] {_K('optional')})",
+            #   --x str  ([a/b] default: None)
+            f"  {_O('--x')} {_M('str')}  ([{_C('a')}/{_C('b')}] {_DNone()})",
         )
 
     def test_corgy_help_formatter_handles_choices_with_default(self):
@@ -343,22 +348,24 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
     def test_corgy_help_formatter_handles_help_text(self):
         self.assertEqual(
             self._get_arg_help("--x", help="x help", type=str),
-            #   --x str  x help (optional)
-            f"  {_O('--x')} {_M('str')}  x help ({_K('optional')})",
+            #   --x str  x help (default: None)
+            f"  {_O('--x')} {_M('str')}  x help ({_DNone()})",
         )
 
     def test_corgy_help_formatter_handles_option_aliases(self):
         self.assertEqual(
             self._get_arg_help("-x", "--ex", "--between-y-and-z", type=str),
-            # -x/--ex/--between-y-and-z str  (optional)
+            # -x/--ex/--between-y-and-z str  (default: None)
             f"  {_O('-x')}/{_O('--ex')}/{_O('--between-y-and-z')} {_M('str')}  "
-            f"({_K('optional')})",
+            f"({_DNone()})",
         )
 
     def test_corgy_help_formatter_handles_long_option(self):
         with patch.object(CorgyHelpFormatter, "output_width", 10):
             self.assertEqual(
-                self._get_arg_help("--avery-long-argument-name", type=str),
+                self._get_arg_help(
+                    "--avery-long-argument-name", type=str, default=SUPPRESS
+                ),
                 #   --avery-
                 #     long-a
                 #     rgumen
@@ -381,8 +388,8 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
         with patch.object(self.parser, "prefix_chars", "+++"):
             self.assertEqual(
                 self._get_arg_help("+++x", type=str, help="x help"),
-                #   +++x str  x help (optional)
-                f"  {_O('+++x')} {_M('str')}  x help ({_K('optional')})",
+                #   +++x str  x help (default: None)
+                f"  {_O('+++x')} {_M('str')}  x help ({_DNone()})",
             )
 
     def test_corgy_help_formatter_handles_boolean_optional_action(self):
@@ -402,48 +409,48 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
     def test_corgy_help_formatter_handles_nargs_plus(self):
         self.assertEqual(
             self._get_arg_help("--x", nargs="+", type=str),
-            #   --x str [str ...]  (optional)
-            f"  {_O('--x')} {_M('str')} [{_M('str')} ...]  ({_K('optional')})",
+            #   --x str [str ...]  (default: None)
+            f"  {_O('--x')} {_M('str')} [{_M('str')} ...]  ({_DNone()})",
         )
 
     def test_corgy_help_formatter_handles_nargs_star(self):
         self.assertEqual(
             self._get_arg_help("--x", nargs="*", type=str),
-            f"  {_O('--x')} [{_M('str')} ...]  ({_K('optional')})",
+            f"  {_O('--x')} [{_M('str')} ...]  ({_DNone()})",
         )
 
     def test_corgy_help_formatter_handles_nargs_star_with_tuple_metavar(self):
         self.assertEqual(
             self._get_arg_help("--x", nargs="*", type=str, metavar=("a", "b")),
-            f"  {_O('--x')} [{_M('a')} [{_M('b')} ...]]  ({_K('optional')})",
+            f"  {_O('--x')} [{_M('a')} [{_M('b')} ...]]  ({_DNone()})",
         )
 
     def test_corgy_help_formatter_handles_nargs_const(self):
         self.assertEqual(
             self._get_arg_help("--x", nargs=3, type=str),
-            #   --x str str str  (optional)
-            f"  {_O('--x')} {_M('str')} {_M('str')} {_M('str')}  ({_K('optional')})",
+            #   --x str str str  (default: None)
+            f"  {_O('--x')} {_M('str')} {_M('str')} {_M('str')}  ({_DNone()})",
         )
 
     def test_corgy_help_formatter_handles_nargs_suppress(self):
         self.assertEqual(
             self._get_arg_help("--x", nargs=SUPPRESS, type=str),
-            #   --x  (optional)
-            f"  {_O('--x')}  ({_K('optional')})",
+            #   --x  (default: None)
+            f"  {_O('--x')}  ({_DNone()})",
         )
 
     def test_corgy_help_formatter_handles_tuple_metavar(self):
         self.assertEqual(
             self._get_arg_help("--x", metavar=("M1", "M2"), nargs=2),
-            #   --x M1 M2  (optional)
-            f"  {_O('--x')} {_M('M1')} {_M('M2')}  ({_K('optional')})",
+            #   --x M1 M2  (default: None)
+            f"  {_O('--x')} {_M('M1')} {_M('M2')}  ({_DNone()})",
         )
 
     def test_corgy_help_formatter_handles_tuple_metavar_with_nargs_plus(self):
         self.assertEqual(
             self._get_arg_help("--x", metavar=("M1", "M2"), nargs="+"),
-            #   --x M1 [M2 ...]  (optional)
-            f"  {_O('--x')} {_M('M1')} [{_M('M2')} ...]  ({_K('optional')})",
+            #   --x M1 [M2 ...]  (default: None)
+            f"  {_O('--x')} {_M('M1')} [{_M('M2')} ...]  ({_DNone()})",
         )
 
     def test_corgy_help_formatter_handles_custom_type(self):
@@ -452,8 +459,8 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
 
         self.assertEqual(
             self._get_arg_help("--x", type=CustomType),
-            #   --x CustomType  (optional)
-            f"  {_O('--x')} {_M('CustomType')}  ({_K('optional')})",
+            #   --x CustomType  (default: None)
+            f"  {_O('--x')} {_M('CustomType')}  ({_DNone()})",
         )
 
     def test_corgy_help_formatter_handles_callable_type(self):
@@ -472,15 +479,15 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
 
         self.assertEqual(
             self._get_arg_help("--x", type=CustomType),
-            #   --x CUSTOM  (optional)
-            f"  {_O('--x')} {_M('CUSTOM')}  ({_K('optional')})",
+            #   --x CUSTOM  (default: None)
+            f"  {_O('--x')} {_M('CUSTOM')}  ({_DNone()})",
         )
 
     def test_corgy_help_formatter_handles_missing_type(self):
         self.assertEqual(
             self._get_arg_help("--x", type=None),
-            #   --x  (optional)
-            f"  {_O('--x')}  ({_K('optional')})",
+            #   --x  (default: None)
+            f"  {_O('--x')}  ({_DNone()})",
         )
 
     def test_corgy_help_formatter_handles_bad_type(self):
@@ -493,8 +500,8 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
 
         self.assertEqual(
             self._get_arg_help("--x", type=T()),
-            #   --x BAD  (optional)
-            f"  {_O('--x')} {_M('BAD')}  ({_K('optional')})",
+            #   --x BAD  (default: None)
+            f"  {_O('--x')} {_M('BAD')}  ({_DNone()})",
         )
 
     def test_corgy_help_formatter_handles_long_metavar(self):
@@ -503,7 +510,7 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
 
         with patch.object(CorgyHelpFormatter, "output_width", 10):
             self.assertEqual(
-                self._get_arg_help("--x", type=CustomType),
+                self._get_arg_help("--x", type=CustomType, default=SUPPRESS),
                 #   --x A-VE
                 #     RY-VER
                 #     Y-LONG
@@ -525,7 +532,9 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
     def test_corgy_help_formatter_handles_long_help(self):
         with patch.object(CorgyHelpFormatter, "output_width", 15):
             self.assertEqual(
-                self._get_arg_help("--x", type=str, help="a very lengthy help"),
+                self._get_arg_help(
+                    "--x", type=str, help="a very lengthy help", default=SUPPRESS
+                ),
                 #   --x str  a
                 #            very
                 #            leng
@@ -547,7 +556,9 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
     def test_corgy_help_formatter_handles_long_help_with_small_max_help_pos(self):
         with patch.multiple(CorgyHelpFormatter, output_width=15, max_help_position=5):
             self.assertEqual(
-                self._get_arg_help("--x", type=str, help="a very lengthy help"),
+                self._get_arg_help(
+                    "--x", type=str, help="a very lengthy help", default=SUPPRESS
+                ),
                 #   --x str
                 #       a very
                 #       lengthy
@@ -653,7 +664,7 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
 
         self.assertEqual(
             self._get_arg_help("--arg", choices=[A]),
-            f"  {_O('--arg')}  ([{_C('A')}] {_K('optional')})",
+            f"  {_O('--arg')}  ([{_C('A')}] {_DNone()})",
         )
 
     def test_corgy_help_formatter_uses_name_for_default(self):
@@ -675,8 +686,7 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
 
         self.assertEqual(
             self._get_arg_help("--arg", type=A, choices=[A(1), A("a")]),
-            f"  {_O('--arg')} {_M('A')}  ([{_C('A:1')}/{_C('A:a')}] "
-            f"{_K('optional')})",
+            f"  {_O('--arg')} {_M('A')}  ([{_C('A:1')}/{_C('A:a')}] " f"{_DNone()})",
         )
 
     def test_corgy_help_formatter_handles_dict_default(self):
@@ -713,7 +723,7 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
         )
         self.assertEqual(
             self._get_arg_help("--x", type=T, choices=(T("a=1"), T("b=2,c=3"))),
-            f"  {_O('--x')} {_M('T')}  ([{_choices_str}] {_K('optional')})",
+            f"  {_O('--x')} {_M('T')}  ([{_choices_str}] {_DNone()})",
         )
 
 
@@ -726,7 +736,7 @@ class TestCorgyHelpFormatterMultiArgs(TestCase):
         self.maxDiff = None
 
     def test_corgy_help_formatter_handles_multi_arg_alignment(self):
-        self.parser.add_argument("--x", type=int, help="x help")
+        self.parser.add_argument("--x", type=int, help="x help", default=SUPPRESS)
         self.parser.add_argument("-y", "--why", type=float, required=True)
         self.parser.add_argument("-z", type=str, default="z", help="z help")
 
@@ -734,7 +744,7 @@ class TestCorgyHelpFormatterMultiArgs(TestCase):
             self.parser.format_help(),
             # options:
             #   -h/--help       show this help message and exit
-            #   --x int         x help
+            #   --x int         x help (optional)
             #   -y/--why float  (required)
             #   -z str          z help (default: z)
             f"options:\n"
@@ -745,7 +755,9 @@ class TestCorgyHelpFormatterMultiArgs(TestCase):
         )
 
     def test_corgy_help_formatter_handles_multi_arg_wrapping(self):
-        self.parser.add_argument("-x", "--ex", type=float, help="help" * 10)
+        self.parser.add_argument(
+            "-x", "--ex", type=float, help="help" * 10, default=SUPPRESS
+        )
         with patch.object(CorgyHelpFormatter, "output_width", 30):
             self.assertEqual(
                 self.parser.format_help(),
@@ -781,7 +793,7 @@ class TestCorgyHelpFormatterMultiArgs(TestCase):
                 f"  {_O('-h')}/{_O('--help')}\n"
                 f"      show this help message and exit\n"
                 f"  {_O('-x')}/{_O('--ex')} {_M('float')}\n"
-                f"      helphelphelphelphelphelphelphelphelphelp ({_K('optional')})\n",
+                f"      helphelphelphelphelphelphelphelphelphelp ({_DNone()})\n",
             )
 
     def test_corgy_help_formatter_handles_argument_groups(self):
@@ -791,7 +803,7 @@ class TestCorgyHelpFormatterMultiArgs(TestCase):
         grp_parser.add_argument("--y", required=True)
         grp_parser.add_argument("--z", type=float)
         grp_parser = self.parser.add_argument_group("group 2", "group 2 description")
-        grp_parser.add_argument("--w", type=str)
+        grp_parser.add_argument("--w", type=str, default=SUPPRESS)
 
         self.assertEqual(
             self.parser.format_help(),
@@ -800,11 +812,11 @@ class TestCorgyHelpFormatterMultiArgs(TestCase):
             #
             # options:
             #   -h/--help  show this help message and exit
-            #   --x str    x help (optional)
+            #   --x str    x help (default: None)
             #
             # group 1:
             #   --y        (required)
-            #   --z float  (optional)
+            #   --z float  (default: None)
             #
             # group 2:
             #   group 2 description
@@ -814,11 +826,11 @@ class TestCorgyHelpFormatterMultiArgs(TestCase):
             f"\n"
             f"options:\n"
             f"  {_O('-h')}/{_O('--help')}  show this help message and exit\n"
-            f"  {_O('--x')} {_M('str')}    x help ({_K('optional')})\n"
+            f"  {_O('--x')} {_M('str')}    x help ({_DNone()})\n"
             f"\n"
             f"group 1:\n"
             f"  {_O('--y')}        ({_K('required')})\n"
-            f"  {_O('--z')} {_M('float')}  ({_K('optional')})\n"
+            f"  {_O('--z')} {_M('float')}  ({_DNone()})\n"
             f"\n"
             f"group 2:\n"
             f"  group 2 description\n"
@@ -839,13 +851,13 @@ class TestCorgyHelpFormatterMultiArgs(TestCase):
             #
             # options:
             #   -h/--help  show this help message and exit
-            #   --arg str  (optional)
+            #   --arg str  (default: None)
             f"positional arguments:\n"
             f"  {_O('CMD')}        sub commands ([{_C('x')}/{_C('y')}])\n"
             f"\n"
             f"options:\n"
             f"  {_O('-h')}/{_O('--help')}  show this help message and exit\n"
-            f"  {_O('--arg')} {_M('str')}  ({_K('optional')})\n",
+            f"  {_O('--arg')} {_M('str')}  ({_DNone()})\n",
         )
 
 
@@ -1195,8 +1207,8 @@ class TestCorgyHelpFormatterUsage(TestCase):
             self.assertEqual(
                 self.parser.format_help(),
                 # options:
-                #   --arg str  (optional)
-                f"options:\n" f"  {_O('--arg')} {_M('str')}  ({_K('optional')})\n",
+                #   --arg str  (default: None)
+                f"options:\n" f"  {_O('--arg')} {_M('str')}  ({_DNone()})\n",
             )
 
 

@@ -34,7 +34,7 @@ Examples::
     >>> _ = parser.add_argument("--d", type=InputDirectory)
     >>> parser.print_help()
     options:
-      --d dir  (optional)
+      --d dir  (default: None)
 
 """
 from __future__ import annotations
