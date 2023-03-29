@@ -11,6 +11,7 @@ from typing import (
     Any,
     Callable,
     ClassVar,
+    Collection,
     Dict,
     IO,
     List,
@@ -1123,8 +1124,11 @@ class Corgy(metaclass=_CorgyMeta):
             _parsers = getattr(cls, "__parsers")
             if var_name in _parsers:
                 _var_parser = _parsers[var_name]
-                var_action = partial(CorgyParserAction, _var_parser)  # type: ignore
+                var_action = partial(
+                    CorgyParserAction, _var_parser, var_choices  # type: ignore
+                )
                 var_add_type = str
+                var_choices = None  # handled by the parser
                 var_nargs = getattr(_var_parser, "__nargs__", None)
                 _parser_metavar = getattr(_var_parser, "__metavar__", None)
                 if _parser_metavar is not None:
@@ -1706,12 +1710,21 @@ def corgyparser(
 
 
 class CorgyParserAction(argparse.Action):
-    def __init__(self, corgy_parser: _CorgyParser, *args, **kwargs):
+    def __init__(
+        self, corgy_parser: _CorgyParser, choices: Optional[Collection], *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self._corgy_parser = corgy_parser
+        self._choices = choices
 
     def __call__(self, parser, namespace, values, option_string=None):
         try:
-            setattr(namespace, self.dest, self._corgy_parser(values))
+            val = self._corgy_parser(values)
+            if self._choices is not None and val not in self._choices:
+                raise ValueError(
+                    f"invalid choice: {val} (choose from "
+                    f"{', '.join(map(str, self._choices))})"
+                )
+            setattr(namespace, self.dest, val)
         except ValueError as e:
             raise argparse.ArgumentTypeError from e

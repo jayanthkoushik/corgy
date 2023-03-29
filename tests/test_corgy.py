@@ -2997,25 +2997,26 @@ class TestCorgyCustomParsers(unittest.TestCase):
 
     def test_corgy_cls_respects_choices_with_custom_parser(self):
         class C(Corgy):
-            x: Literal[1, 2, 3]
+            x: Literal[10, 20, 30]
 
-            @corgyparser("x")
+            @corgyparser("x", nargs="+")
             @staticmethod
             def parsex(s):
-                return 1
+                return sum(map(int, s))
 
-        parser = argparse.ArgumentParser()
-        parser.add_argument = MagicMock()
-        _parser_action = partial(CorgyParserAction, C.parsex)
-        with patch("corgy._corgy.partial", MagicMock(return_value=_parser_action)):
-            C.add_args_to_parser(parser)
-        parser.add_argument.assert_called_once_with(
-            "--x",
-            type=str,
-            default=argparse.SUPPRESS,
-            action=_parser_action,
-            choices=(1, 2, 3),
-        )
+        orig_parse_args = argparse.ArgumentParser.parse_args
+
+        def _run_with_args(*cmd_args):
+            parser = argparse.ArgumentParser()
+            parser.parse_args = lambda: orig_parse_args(
+                parser, ["--x"] + list(cmd_args)
+            )
+            args = C.parse_from_cmdline(parser)
+            return args.x
+
+        with self.assertRaises(argparse.ArgumentTypeError):
+            _run_with_args("2", "3", "4")
+        self.assertEqual(_run_with_args("1", "2", "3", "4"), 10)
 
     def test_corgy_cls_respects_optional_with_custom_parser(self):
         class C(Corgy):
