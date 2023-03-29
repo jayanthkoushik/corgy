@@ -1,30 +1,35 @@
 [tool.poetry]
 name = "corgy"
 version = "0.0.0"  # managed by `poetry-dynamic-versioning`
-description = "Elegant command line parsing"
-authors = ["Jayanth Koushik <jnkoushik@gmail.com>"]
+description = "Elegant data classes"
+authors = ["Jayanth Koushik <mail@jkoushik.me>"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/jayanthkoushik/corgy"
 packages = [
-    { include = "corgy" },
-    { include = "tests", format = "sdist" }
+  { include = "corgy" },
 ]
-include = ["CHANGELOG.md", "example.png", "docs"]
+include = [
+  { path = "tests", format = "sdist" },
+  { path = "docs", format = "sdist" },
+  { path = "CHANGELOG.md", format = "sdist" },
+]
+exclude = ["docs/make.sh"]
 
 keywords = [
-    "argparse",
-    "argument parsing",
-    "command line parsing",
-    "cli",
+  "data classes",
+  "argparse",
+  "argument parsing",
+  "command line parsing",
+  "cli",
 ]
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
-    "Natural Language :: English",
-    "Operating System :: OS Independent",
-    "Intended Audience :: Developers",
-    "Topic :: Software Development :: User Interfaces",
-    "Topic :: Utilities",
+  "Development Status :: 5 - Production/Stable",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: User Interfaces",
+  "Topic :: Utilities",
 ]
 
 [tool.poetry.dependencies]
@@ -73,30 +78,30 @@ max-line-length = "88"
 
 [tool.pylint.'MESSAGES CONTROL']
 disable = """
-    fixme,
-    missing-docstring,
-    invalid-name,
-    ungrouped-imports,
-    wrong-import-order,
-    wrong-import-position,
-    import-outside-toplevel,
-    unused-argument,
-    no-self-use,
-    no-member,
-    protected-access,
-    attribute-defined-outside-init,
-    too-few-public-methods,
-    too-many-public-methods,
-    too-many-ancestors,
-    too-many-instance-attributes,
-    too-many-arguments,
-    too-many-locals,
-    too-many-statements,
-    too-many-lines,
-    too-many-branches,
-    too-many-nested-blocks,
-    too-many-return-statements,
-    too-many-boolean-expressions,
+  fixme,
+  missing-docstring,
+  invalid-name,
+  ungrouped-imports,
+  wrong-import-order,
+  wrong-import-position,
+  import-outside-toplevel,
+  unused-argument,
+  no-self-use,
+  no-member,
+  protected-access,
+  attribute-defined-outside-init,
+  too-few-public-methods,
+  too-many-public-methods,
+  too-many-ancestors,
+  too-many-instance-attributes,
+  too-many-arguments,
+  too-many-locals,
+  too-many-statements,
+  too-many-lines,
+  too-many-branches,
+  too-many-nested-blocks,
+  too-many-return-statements,
+  too-many-boolean-expressions,
 """
 
 [tool.pydocstyle]
