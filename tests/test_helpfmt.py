@@ -235,7 +235,7 @@ class TestCorgyHelpFormatterHelpActions(TestCase):
         self.parser.add_argument(
             "-h", nargs=0, action=CorgyHelpFormatter.ShortHelpAction
         )
-        self.parser.parse_args(["-h"])
+        self.parser.parse_args(["-h"])  # pylint: disable=too-many-function-args (???)
         self.parser.print_help.assert_called_once()
         self.parser.exit.assert_called_once()
         self.assertEqual(CorgyHelpFormatter.show_full_help, False)
@@ -244,7 +244,7 @@ class TestCorgyHelpFormatterHelpActions(TestCase):
         self.parser.add_argument(
             "-h", nargs=0, action=CorgyHelpFormatter.FullHelpAction
         )
-        self.parser.parse_args(["-h"])
+        self.parser.parse_args(["-h"])  # pylint: disable=too-many-function-args (???)
         self.parser.print_help.assert_called_once()
         self.parser.exit.assert_called_once()
         self.assertEqual(CorgyHelpFormatter.show_full_help, True)
