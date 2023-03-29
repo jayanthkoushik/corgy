@@ -74,6 +74,8 @@ else:
 from ._corgy import Corgy
 
 __all__ = (
+    "ReadableFile",
+    "WritableFile",
     "OutputTextFile",
     "OutputBinFile",
     "LazyOutputTextFile",
@@ -88,6 +90,82 @@ __all__ = (
     "KeyValuePairs",
     "InitArgs",
 )
+
+
+class ReadableFile(Path):
+    """`Path` sub-class representing a readable file."""
+
+    __metavar__ = "file"
+    __slots__ = ()
+
+    def __new__(cls, path: StrPath):  # pylint: disable=arguments-differ
+        if cls is _WindowsReadableFile or cls is _PosixReadableFile:
+            # Don't do any checks if this is a concrete class.
+            return Path.__new__(cls, path)
+
+        # Check that the path is a file, and that it is readable.
+        if not os.path.isfile(path):
+            raise ValueError(f"`{path}` is not a file")
+        if not os.access(path, os.R_OK):
+            raise ValueError(f"`{path}` is not readable")
+
+        # `super().__new__` needs to be called with the os-dependent concrete class.
+        cls_ = _WindowsReadableFile if os.name == "nt" else _PosixReadableFile
+        return Path.__new__(cls_, path)
+
+    def __repr__(self) -> str:
+        return f"ReadablePath({super().__str__()!r})"
+
+
+class _WindowsReadableFile(ReadableFile, WindowsPath):
+    # pylint: disable=abstract-method
+    __slots__ = ()
+
+
+class _PosixReadableFile(ReadableFile, PosixPath):
+    # pylint: disable=abstract-method
+    __slots__ = ()
+
+
+class WritableFile(Path):
+    """`Path` sub-class representing a writable file."""
+
+    __metavar__ = "file"
+    __slots__ = ()
+
+    def __new__(cls, path: StrPath):  # pylint: disable=arguments-differ
+        if cls is _WindowsWritableFile or cls is _PosixWritableFile:
+            return Path.__new__(cls, path)
+
+        if os.path.exists(path):
+            # If the path exists, check that it is a file, and that it is writable.
+            if not os.path.isfile(path):
+                raise ValueError(f"`{path}` is not a file")
+            if not os.access(path, os.W_OK):
+                raise ValueError(f"`{path}` is not writable")
+        else:
+            # If the path does not exist, check that the path's directory is writable.
+            path_dir = os.path.dirname(path)
+            if not path_dir:
+                path_dir = "."
+            if not os.access(path_dir, os.W_OK):
+                raise ValueError(f"`{path_dir}` is not writable")
+
+        cls_ = _WindowsWritableFile if os.name == "nt" else _PosixWritableFile
+        return Path.__new__(cls_, path)
+
+    def __repr__(self) -> str:
+        return f"WritablePath({super().__str__()!r})"
+
+
+class _WindowsWritableFile(WritableFile, WindowsPath):
+    # pylint: disable=abstract-method
+    __slots__ = ()
+
+
+class _PosixWritableFile(WritableFile, PosixPath):
+    # pylint: disable=abstract-method
+    __slots__ = ()
 
 
 def _get_output_stream(name: StrPath, mode: Literal["w", "wb"]) -> FileIO:

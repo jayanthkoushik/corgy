@@ -4,7 +4,7 @@ import stat
 import sys
 from io import BufferedReader, BufferedWriter, TextIOWrapper
 from pathlib import Path
-from tempfile import TemporaryDirectory
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import Type, Union
 from unittest import skipIf, TestCase
 from unittest.mock import MagicMock, patch
@@ -23,8 +23,83 @@ from corgy.types import (
     OutputBinFile,
     OutputDirectory,
     OutputTextFile,
+    ReadableFile,
     SubClass,
+    WritableFile,
 )
+
+
+class TestReadableFile(TestCase):
+    def test_readable_file_is_path(self):
+        with NamedTemporaryFile() as f:
+            p = ReadableFile(f.name)
+            self.assertIsInstance(p, ReadableFile)
+            self.assertIsInstance(p, Path)
+            self.assertEqual(p, Path(f.name))
+
+    def test_readable_file_raises_if_file_not_exists(self):
+        with TemporaryDirectory() as d:
+            with self.assertRaises(ValueError):
+                ReadableFile(os.path.join(d, "foo.file"))
+
+    def test_readable_file_raises_if_file_not_readable(self):
+        with NamedTemporaryFile() as f:
+            os.chmod(f.name, stat.S_IWRITE)
+            with self.assertRaises(ValueError):
+                ReadableFile(f.name)
+            os.chmod(f.name, stat.S_IREAD | stat.S_IWRITE)
+
+    def test_readable_file_raises_if_path_not_file(self):
+        with TemporaryDirectory() as d:
+            with self.assertRaises(ValueError):
+                ReadableFile(d)
+
+
+class TestWritableFile(TestCase):
+    def test_writable_file_is_path(self):
+        with NamedTemporaryFile() as f:
+            p = WritableFile(f.name)
+            self.assertIsInstance(p, WritableFile)
+            self.assertIsInstance(p, Path)
+            self.assertEqual(p, Path(f.name))
+
+    def test_writable_file_works_when_file_not_exists(self):
+        with TemporaryDirectory() as d:
+            WritableFile(os.path.join(d, "foo.file"))
+
+    def test_writable_file_raises_if_path_not_file(self):
+        with TemporaryDirectory() as d:
+            with self.assertRaises(ValueError):
+                WritableFile(d)
+
+    def test_writable_file_raises_if_file_not_writeable(self):
+        with NamedTemporaryFile() as f:
+            os.chmod(f.name, stat.S_IREAD)
+            with self.assertRaises(ValueError):
+                WritableFile(f.name)
+            os.chmod(f.name, stat.S_IREAD | stat.S_IWRITE)
+
+    def test_writable_file_raises_if_file_not_exists_and_dir_not_writeable(self):
+        with TemporaryDirectory() as d:
+            os.chmod(d, stat.S_IREAD | stat.S_IEXEC)
+            with self.assertRaises(ValueError):
+                WritableFile(os.path.join(d, "foo.file"))
+            os.chmod(d, stat.S_IREAD | stat.S_IWRITE | stat.S_IEXEC)
+
+    def test_writable_file_works_if_file_exists_and_dir_not_writeable(self):
+        with TemporaryDirectory() as d:
+            with open(os.path.join(d, "foo.file"), "xb"):
+                pass
+            os.chmod(d, stat.S_IREAD | stat.S_IEXEC)
+            with self.assertRaises(ValueError):
+                WritableFile(os.path.join(d, "bar.file"))
+            WritableFile(os.path.join(d, "foo.file"))
+            os.chmod(d, stat.S_IREAD | stat.S_IWRITE | stat.S_IEXEC)
+
+    def test_writable_file_handles_current_dir(self):
+        with NamedTemporaryFile(dir=".") as f:
+            fpath = Path(f.name)
+            self.assertEqual(WritableFile(fpath.name).absolute(), fpath.absolute())
 
 
 class _TestFile(TestCase):

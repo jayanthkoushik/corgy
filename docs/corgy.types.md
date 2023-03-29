@@ -41,6 +41,14 @@ options:
 ```
 
 
+### _class_ corgy.types.ReadableFile(path)
+`Path` sub-class representing a readable file.
+
+
+### _class_ corgy.types.WritableFile(path)
+`Path` sub-class representing a writable file.
+
+
 ### _class_ corgy.types.OutputTextFile(path, \*\*kwargs)
 `TextIOWrapper` sub-class representing an output file.
 
