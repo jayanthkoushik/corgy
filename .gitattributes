@@ -2,4 +2,8 @@
 .pre-commit-config.yaml     export-ignore
 .commitlintrc.yaml          export-ignore
 .editorconfig               export-ignore
+.cspell.json                export-ignore
 release.sh                  export-ignore
+tox.ini                     export-ignore
+example.svg                 export-ignore
+docs/make.sh                export-ignore
