@@ -66,6 +66,10 @@ if sys.version_info >= (3, 9):
     from typing import Literal, Protocol
 else:
     from typing_extensions import Literal, Protocol
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
 
 from ._corgy import Corgy
 
@@ -102,33 +106,7 @@ def _get_output_stream(name: StrPath, mode: Literal["w", "wb"]) -> FileIO:
         raise ValueError(f"could not open `{name}`: {e}") from None
 
 
-def _get_wrapped_buf(cls, buffer):
-    """Return an instance of `cls` wrapping `buffer`."""
-    # This function is used to implement the `std<in/out/err>_wrapper` class methods
-    # in `InputTextFile` and `OutputTextFile`.
-    obj_name = f"__{buffer.name}"  # private variable to hold the singleton
-    obj = getattr(cls, obj_name, None)
-    if obj is None:
-        obj = cls.__new__(cls)
-        super(cls, obj).__init__(buffer, line_buffering=True)
-        atexit.register(cls.close, obj)
-        setattr(cls, obj_name, obj)
-    return obj
-
-
-class _OutputTextFileMeta(type):
-    # Python < 3.9 does not support `classmethod` combined with `property`,
-    # so we need to define class properties as properties on the metaclass.
-    @property
-    def stdout_wrapper(cls):
-        return _get_wrapped_buf(cls, sys.__stdout__.buffer)
-
-    @property
-    def stderr_wrapper(cls):
-        return _get_wrapped_buf(cls, sys.__stderr__.buffer)
-
-
-class OutputTextFile(TextIOWrapper, metaclass=_OutputTextFileMeta):
+class OutputTextFile(TextIOWrapper):
     """`TextIOWrapper` sub-class representing an output file.
 
     Args:
@@ -159,17 +137,22 @@ class OutputTextFile(TextIOWrapper, metaclass=_OutputTextFileMeta):
     def init(self):
         """No-op for compatibility with `LazyOutputTextFile`."""
 
-    @classmethod  # type: ignore
-    @property
-    def stdout_wrapper(cls) -> OutputTextFile:
-        """`sys.__stdout__` wrapped with `TextIOWrapper` (line buffered)."""
-        # For Sphinx.
+    @classmethod
+    def _stdoe_wrapper(cls, f: TextIOWrapper) -> Self:
+        obj = cls.__new__(cls)
+        TextIOWrapper.__init__(obj, f.buffer, line_buffering=True)
+        atexit.register(cls.close, obj)
+        return obj
 
-    @classmethod  # type: ignore
-    @property
-    def stderr_wrapper(cls) -> OutputTextFile:
-        """`sys.__stderr__` wrapped with `TextIOWrapper` (line buffered)."""
-        # For Sphinx.
+    @classmethod
+    def stdout_wrapper(cls) -> Self:
+        """`sys.__stdout__` as `OutputTextFile`."""
+        return cls._stdoe_wrapper(sys.__stdout__)
+
+    @classmethod
+    def stderr_wrapper(cls) -> Self:
+        """`sys.__stderr__` as `OutputTextFile`."""
+        return cls._stdoe_wrapper(sys.__stderr__)
 
 
 class LazyOutputTextFile(OutputTextFile):
@@ -240,15 +223,7 @@ class LazyOutputBinFile(OutputBinFile):
         super().__init__(self._path)
 
 
-class _InputTextFileMeta(type):
-    # Python < 3.9 does not support `classmethod` combined with `property`,
-    # so we need to define class properties as properties on the metaclass.
-    @property
-    def stdin_wrapper(cls):
-        return _get_wrapped_buf(cls, sys.__stdin__.buffer)
-
-
-class InputTextFile(TextIOWrapper, metaclass=_InputTextFileMeta):
+class InputTextFile(TextIOWrapper):
     """`TextIOWrapper` sub-class representing an input file.
 
     Args:
@@ -278,11 +253,13 @@ class InputTextFile(TextIOWrapper, metaclass=_InputTextFileMeta):
     def __str__(self) -> str:
         return str(self.buffer.name)
 
-    @classmethod  # type: ignore
-    @property
+    @classmethod
     def stdin_wrapper(cls) -> InputTextFile:
-        """`sys.__stdin__` wrapped with `TextIOWrapper`."""
-        # For Sphinx.
+        """`sys.__stdin__` as `InputTextFile`."""
+        obj = cls.__new__(cls)
+        TextIOWrapper.__init__(obj, sys.__stdin__.buffer, line_buffering=True)
+        atexit.register(cls.close, obj)
+        return obj
 
 
 class InputBinFile(BufferedReader):

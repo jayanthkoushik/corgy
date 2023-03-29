@@ -64,12 +64,12 @@ close the file on program termination.
 No-op for compatibility with `LazyOutputTextFile`.
 
 
-#### _class property_ stdout_wrapper()
-`sys.__stdout__` wrapped with `TextIOWrapper` (line buffered).
+#### _classmethod_ stdout_wrapper()
+`sys.__stdout__` as `OutputTextFile`.
 
 
-#### _class property_ stderr_wrapper()
-`sys.__stderr__` wrapped with `TextIOWrapper` (line buffered).
+#### _classmethod_ stderr_wrapper()
+`sys.__stderr__` as `OutputTextFile`.
 
 
 ### _class_ corgy.types.OutputBinFile(path)
@@ -132,8 +132,8 @@ raised if this fails. An `atexit` handler will be registered to close the file o
 program termination.
 
 
-#### _class property_ stdin_wrapper()
-`sys.__stdin__` wrapped with `TextIOWrapper`.
+#### _classmethod_ stdin_wrapper()
+`sys.__stdin__` as `InputTextFile`.
 
 
 ### _class_ corgy.types.InputBinFile(path)
