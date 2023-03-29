@@ -4,7 +4,7 @@ from typing import Optional
 from unittest import skipIf, TestCase
 from unittest.mock import Mock, patch
 
-from corgy import Corgy, CorgyHelpFormatter
+from corgy import Corgy, CorgyHelpFormatter, NotRequired, Required
 from corgy._corgy import BooleanOptionalAction
 from corgy._helpfmt import _ColorHelper
 from corgy.types import KeyValuePairs
@@ -15,11 +15,6 @@ else:
     from collections.abc import Sequence  # pylint: disable=reimported
 
     Tuple = tuple  # type: ignore
-
-if sys.version_info >= (3, 11):
-    from typing import NotRequired, Required
-else:
-    from typing_extensions import NotRequired, Required
 
 _COLOR_HELPER = _ColorHelper(skip_tty_check=True)
 _CRAYONS = _COLOR_HELPER.crayons

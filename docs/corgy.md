@@ -256,15 +256,11 @@ Traceback (most recent call last):
 TypeError: attribute `x` cannot be unset
 ```
 
-Attributes can also explicitly be marked as required/not-required using the
-`Required` and `NotRequired` annotations:
+Attributes can also explicitly be marked as required/not-required using
+`corgy.Required` and `corgy.NotRequired` annotations:
 
 ```python
->>> import sys
->>> if sys.version_info >= (3, 11):
-...     from typing import Required, NotRequired
-... else:
-...     from typing_extensions import Required, NotRequired
+>>> from corgy import Required, NotRequired
 
 >>> class A(Corgy):
 ...     x: Required[int]
@@ -545,6 +541,8 @@ Attributes can also be explicitly marked as required or not required, and will
 control whether the argument will be added with `required=True`:
 
 ```python
+>>> from corgy import Required, NotRequired
+
 >>> class A(Corgy):
 ...     x: Required[int]
 ...     y: NotRequired[int]

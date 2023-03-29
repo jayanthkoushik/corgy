@@ -25,16 +25,13 @@ else:
     from typing_extensions import Annotated, Literal
 
 import corgy
-from corgy import Corgy, CorgyHelpFormatter, corgyparser
+from corgy import Corgy, CorgyHelpFormatter, corgyparser, NotRequired, Required
 from corgy._corgy import _CorgyMeta, BooleanOptionalAction, CorgyParserAction
 from corgy._utils import get_concrete_collection_type, OptionalTypeAction
 
 if sys.version_info >= (3, 11):
     import tomllib as tomli
-    from typing import NotRequired, Required
 else:
-    from typing_extensions import NotRequired, Required
-
     try:
         import tomli
     except ImportError:

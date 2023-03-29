@@ -18,20 +18,16 @@ from typing import (
     Mapping,
     NamedTuple,
     Optional,
+    Tuple,
     Type,
     TypeVar,
     Union,
 )
 
 if sys.version_info >= (3, 9):
-    from typing import get_type_hints, Literal
+    from typing import Annotated, get_type_hints, Literal
 else:
-    from typing_extensions import get_type_hints, Literal
-
-if sys.version_info >= (3, 11):
-    from typing import NotRequired, Required
-else:
-    from typing_extensions import Required, NotRequired
+    from typing_extensions import Annotated, get_type_hints, Literal
 
 from ._helpfmt import CorgyHelpFormatter
 from ._utils import (
@@ -47,8 +43,16 @@ from ._utils import (
 # for command line parsing. `corgyparser` is a decorator that allows custom parsers to
 # be defined for `Corgy` attributes.
 
-__all__ = ("Corgy", "corgyparser")
+__all__ = ("Corgy", "corgyparser", "Required", "NotRequired")
 _T = TypeVar("_T", bound="Corgy")
+
+# `Required` and `NotRequired` are implemented as `Annotated` types.
+# These are used to mark attributes as required or not required.
+_A = TypeVar("_A")
+_REQUIRED = object()
+_NOT_REQUIRED = object()
+Required = Annotated[_A, _REQUIRED]
+NotRequired = Annotated[_A, _NOT_REQUIRED]
 
 
 class BooleanOptionalAction(argparse.Action):
@@ -174,17 +178,38 @@ class _CorgyMeta(type):
             if _mangled_name in namespace or _mangled_name in cls_annotations:
                 raise TypeError(f"name clash: `{var_name}`, `{_mangled_name}`")
 
+            var_ano_required: Optional[bool]
+            var_meta: Optional[Tuple[Any, ...]]
             if hasattr(var_ano, "__origin__") and hasattr(var_ano, "__metadata__"):
-                # `<var_name>: Annotated[<var_type>, <var_help>, [<var_flags>]]`.
+                # `<var_name>`: Annotated[<var_type>, <var_flags]`.
                 var_type = var_ano.__origin__
-                var_help = var_ano.__metadata__[0]
+
+                # Check if `_REQUIRED` or `_NOT_REQUIRED` is present.
+                # `Required` and `NotRequired` are defined as `Annotated[., _REQUIRED]`,
+                # and `Annotated[., _NOT_REQUIRED]`, respectively. Since nested
+                # `Annotated` types get flattened, `_REQUIRED` and `_NOT_REQUIRED` will
+                # be the last element in `var_meta`.
+                if var_ano.__metadata__[-1] in (_REQUIRED, _NOT_REQUIRED):
+                    var_ano_required = var_ano.__metadata__[-1] is _REQUIRED
+                    var_meta = var_ano.__metadata__[:-1]
+                else:
+                    var_ano_required = None
+                    var_meta = var_ano.__metadata__
+            else:
+                var_type = var_ano
+                var_ano_required = None
+                var_meta = None
+
+            if var_meta:
+                # `<var_name>: Annotated[<var_type>, <var_help>, [<var_flags>]]`.
+                var_help = var_meta[0]
                 if not isinstance(var_help, str):
                     raise TypeError(
                         f"incorrect help string annotation for variable `{var_name}`: "
                         f"expected str"
                     )
 
-                if len(var_ano.__metadata__) > 1:
+                if len(var_meta) > 1:
                     if isinstance(var_type, cls):
                         # Custom flags are not allowed for groups.
                         raise TypeError(
@@ -192,7 +217,7 @@ class _CorgyMeta(type):
                             f"custom flags not allowed for groups"
                         )
 
-                    var_flags = var_ano.__metadata__[1]
+                    var_flags = var_meta[1]
                     if not isinstance(var_flags, list) or not var_flags:
                         raise TypeError(
                             f"incorrect custom flags for variable `{var_name}`: "
@@ -202,7 +227,6 @@ class _CorgyMeta(type):
                     var_flags = None
             else:
                 # `<var_name>: <var_type>`.
-                var_type = var_ano
                 var_help = namespace["__helps"].get(var_name, None)
                 var_flags = namespace["__flags"].get(var_name, None)
 
@@ -217,12 +241,8 @@ class _CorgyMeta(type):
                 continue
 
             # Determine if variable is required or not.
-            if hasattr(var_type, "__origin__") and var_type.__origin__ in (
-                Required,
-                NotRequired,
-            ):
-                _var_required = var_type.__origin__ is Required
-                var_type = var_type.__args__[0]
+            if var_ano_required is not None:
+                _var_required = var_ano_required
             elif var_name not in cls_annotations:
                 # Variable was defined in a base class, and is not redefined.
                 if var_name in namespace["__required"]:
@@ -546,14 +566,10 @@ class Corgy(metaclass=_CorgyMeta):
             ...
         TypeError: attribute `x` cannot be unset
 
-    Attributes can also explicitly be marked as required/not-required using the
-    `Required` and `NotRequired` annotations::
+    Attributes can also explicitly be marked as required/not-required using
+    `corgy.Required` and `corgy.NotRequired` annotations::
 
-        >>> import sys
-        >>> if sys.version_info >= (3, 11):
-        ...     from typing import Required, NotRequired
-        ... else:
-        ...     from typing_extensions import Required, NotRequired
+        >>> from corgy import Required, NotRequired
 
         >>> class A(Corgy):
         ...     x: Required[int]
@@ -803,6 +819,8 @@ class Corgy(metaclass=_CorgyMeta):
         depends on the class parameter `corgy_required_by_default` (`False` by default).
         Attributes can also be explicitly marked as required or not required, and will
         control whether the argument will be added with `required=True`::
+
+            >>> from corgy import Required, NotRequired
 
             >>> class A(Corgy):
             ...     x: Required[int]
