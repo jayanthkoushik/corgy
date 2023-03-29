@@ -92,6 +92,14 @@ will be registered to close the file on program termination.
 No-op for compatibility with `LazyOutputBinFile`.
 
 
+#### _classmethod_ stdout_wrapper()
+`sys.__stdout__` as `OutputBinFile`.
+
+
+#### _classmethod_ stderr_wrapper()
+`sys.__stderr__` as `OutputBinFile`.
+
+
 ### _class_ corgy.types.LazyOutputTextFile(path, \*\*kwargs)
 `OutputTextFile` sub-class that does not auto-initialize.
 
@@ -149,6 +157,10 @@ This class is a thin wrapper around `BufferedReader` that accepts a path, instea
 of a file stream. The file must exist, and will be opened in binary mode.
 `ValueError` is raised if this fails. An `atexit` handler will be registered
 to close the file on program termination.
+
+
+#### _classmethod_ stdin_wrapper()
+`sys.__stdin__` as `InputBinFile`.
 
 
 ### _class_ corgy.types.OutputDirectory(path)

@@ -100,6 +100,15 @@ class TestOutputBinFile(_TestOutputFile):
         with self.type(os.path.join(self.tmp_dir.name, "foo.bin")) as f:
             self.assertIsInstance(f, BufferedWriter)
 
+    def test_output_bin_file_stdouterr_wrappers(self):
+        for wrapper, buffer in zip(
+            [OutputBinFile.stdout_wrapper(), OutputBinFile.stderr_wrapper()],
+            [sys.__stdout__.buffer, sys.__stderr__.buffer],
+        ):
+            with self.subTest(wrapper=wrapper):
+                self.assertIsInstance(wrapper, OutputBinFile)
+                self.assertEqual(wrapper.fileno(), buffer.fileno())
+
 
 class _TestLazyOutputFile(_TestFile):
     type: Union[Type[LazyOutputTextFile], Type[LazyOutputBinFile]]
@@ -174,6 +183,11 @@ class TestInputBinFile(_TestInputFile):
     def test_input_bin_file_type(self):
         with self.type(self.tmp_file_name) as f:
             self.assertIsInstance(f, BufferedReader)
+
+    def test_input_bin_file_stdin_wrapper(self):
+        wrapper = InputBinFile.stdin_wrapper()
+        self.assertIsInstance(wrapper, InputBinFile)
+        self.assertEqual(wrapper.fileno(), sys.__stdin__.buffer.fileno())
 
 
 class _TestDirectory(TestCase):

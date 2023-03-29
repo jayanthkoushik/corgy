@@ -204,6 +204,24 @@ class OutputBinFile(BufferedWriter):
     def init(self):
         """No-op for compatibility with `LazyOutputBinFile`."""
 
+    @classmethod
+    def _stdoe_wrapper(cls, f: TextIOWrapper) -> Self:
+        obj = cls.__new__(cls)
+        stream = FileIO(f.fileno(), mode="wb")
+        BufferedWriter.__init__(obj, stream)
+        atexit.register(cls.close, obj)
+        return obj
+
+    @classmethod
+    def stdout_wrapper(cls) -> Self:
+        """`sys.__stdout__` as `OutputBinFile`."""
+        return cls._stdoe_wrapper(sys.__stdout__)
+
+    @classmethod
+    def stderr_wrapper(cls) -> Self:
+        """`sys.__stderr__` as `OutputBinFile`."""
+        return cls._stdoe_wrapper(sys.__stderr__)
+
 
 class LazyOutputBinFile(OutputBinFile):
     """`OutputBinFile` sub-class that does not auto-initialize.
@@ -290,6 +308,15 @@ class InputBinFile(BufferedReader):
 
     def __str__(self) -> str:
         return str(self.name)
+
+    @classmethod
+    def stdin_wrapper(cls) -> Self:
+        """`sys.__stdin__` as `InputBinFile`."""
+        obj = cls.__new__(cls)
+        stream = FileIO(sys.__stdin__.fileno(), mode="rb")
+        BufferedReader.__init__(obj, stream)
+        atexit.register(cls.close, obj)
+        return obj
 
 
 class OutputDirectory(Path):
