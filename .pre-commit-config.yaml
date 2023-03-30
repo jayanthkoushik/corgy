@@ -47,7 +47,7 @@ repos:
   - id: test
     name: run unittests
     language: system
-    entry: "tox run-parallel"
+    entry: "tox run"
     types: [python]
     pass_filenames: false
   - id: docs

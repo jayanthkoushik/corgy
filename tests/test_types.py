@@ -34,12 +34,15 @@ from corgy.types import (
 def temp_file_in_home(testcase: TestCase):
     """Get a temporary file (or directory) in the home directory."""
     try:
-        f = NamedTemporaryFile(dir=Path.home())
-        yield Path(f.name)
+        d = TemporaryDirectory(dir=Path.home())
+        fpath = os.path.join(d.name, "temp.file")
+        with open(fpath, "wb"):
+            pass
+        yield Path(fpath)
     except OSError as e:
         testcase.skipTest(f"could not create temp file in home: {e}")
     finally:
-        f.close()
+        d.cleanup()
 
 
 @contextmanager
@@ -111,7 +114,7 @@ class TestReadableFile(TestCase):
 
     def test_readable_file_expands_user(self):
         with temp_file_in_home(self) as fpath:
-            p = ReadableFile(f"~/{fpath.name}")
+            p = ReadableFile(os.path.join("~", fpath.relative_to(Path.home())))
             self.assertEqual(p, fpath)
 
     def test_readable_file_does_not_expand_user_if_disabled(self):
@@ -120,7 +123,7 @@ class TestReadableFile(TestCase):
 
         with temp_file_in_home(self) as fpath:
             with self.assertRaises(ValueError):
-                RF(f"~/{fpath.name}")
+                RF(os.path.join("~", fpath.name))
 
     def test_readable_file_expands_env_var(self):
         with temp_env_var_file(self) as (env_var, fpath):
@@ -187,7 +190,7 @@ class TestWritableFile(TestCase):
 
     def test_writable_file_expands_user(self):
         with temp_file_in_home(self) as fpath:
-            p = WritableFile(f"~/{fpath.name}")
+            p = WritableFile(os.path.join("~", fpath.relative_to(Path.home())))
             self.assertEqual(p, fpath)
 
     def test_writable_file_does_not_expand_user_if_disabled(self):
@@ -196,7 +199,7 @@ class TestWritableFile(TestCase):
 
         with temp_file_in_home(self) as fpath:
             with self.assertRaises(ValueError):
-                WF(f"~/{fpath.name}")
+                WF(os.path.join("~", fpath.name))
 
     def test_writable_file_expands_env_var(self):
         with temp_env_var_file(self) as (env_var, fpath):
@@ -239,7 +242,7 @@ class _TestFile(TestCase):
 
     def test_file_expands_user(self):
         with temp_file_in_home(self) as fpath:
-            f = self.type(os.path.join("~", fpath.name))
+            f = self.type(os.path.join("~", fpath.relative_to(Path.home())))
             if issubclass(self.type, (OutputTextFile, OutputBinFile)):
                 f.init()
             self.assertEqual(str(f), str(fpath))
@@ -252,16 +255,16 @@ class _TestFile(TestCase):
         with temp_file_in_home(self) as fpath:
             if issubclass(self.type, (InputTextFile, InputBinFile)):
                 with self.assertRaises(ValueError):
-                    F(f"~/{fpath.name}")
+                    F(os.path.join("~", fpath.name))
                 return
-            o = F(f"~/{fpath.name}")
+            o = F(os.path.join("~", fpath.name))
             o.init()
             self.assertNotEqual(str(o), str(fpath))
-            self.assertEqual(str(o), f"~/{fpath.name}")
+            self.assertEqual(str(o), os.path.join("~", fpath.name))
             o.close()
             # Remove the file created by the test, and the '~' directory.
-            os.remove(f"./~/{fpath.name}")
-            os.rmdir("./~")
+            os.remove(os.path.join(".", "~", fpath.name))
+            os.rmdir(os.path.join(".", "~"))
 
     def test_file_expands_env_var(self):
         with temp_env_var_file(self) as (env_var, fpath):
@@ -285,7 +288,7 @@ class _TestFile(TestCase):
             self.assertNotEqual(str(o), str(fpath))
             self.assertEqual(str(o), f"${env_var}")
             o.close()
-            os.remove(f"./${env_var}")
+            os.remove(os.path.join(".", f"${env_var}"))
 
 
 class _TestOutputFile(_TestFile):
@@ -492,7 +495,7 @@ class _TestDirectory(TestCase):
 
     def test_directory_expands_user(self):
         with temp_dir_in_home(self) as d:
-            td = self.type(f"~/{d.name}")
+            td = self.type(os.path.join("~", d.name))
             self.assertEqual(str(td), str(d))
 
     def test_directory_does_not_expand_user_if_disabled(self):
@@ -501,14 +504,14 @@ class _TestDirectory(TestCase):
 
         with temp_dir_in_home(self) as d:
             if issubclass(self.type, OutputDirectory):
-                td = D(f"~/{d.name}")
+                td = D(os.path.join("~", d.name))
                 td.init()
                 self.assertNotEqual(str(td), str(d))
                 os.rmdir(td)
-                os.rmdir("./~")
+                os.rmdir(os.path.join("~", d.name))
             else:
                 with self.assertRaises(ValueError):
-                    D(f"~/{d.name}")
+                    D(os.path.join("~", d.name))
 
     def test_directory_expands_env_var(self):
         with temp_env_var_dir(self) as (env_var, d):
