@@ -44,12 +44,20 @@ options:
 ### _class_ corgy.types.ReadableFile(path)
 `Path` sub-class representing a readable file.
 
+User directory and environment variable expansion is performed on the path.
+To disable this behavior, set class attributes `do_expanduser` and `do_expandvars`
+to `False` respectively.
+
 
 ### _class_ corgy.types.WritableFile(path)
 `Path` sub-class representing a writable file.
 
+User directory and environment variable expansion is performed on the path.
+To disable this behavior, set class attributes `do_expanduser` and `do_expandvars`
+to `False` respectively.
 
-### _class_ corgy.types.OutputTextFile(path, \*\*kwargs)
+
+### _class_ corgy.types.OutputTextFile(path)
 `TextIOWrapper` sub-class representing an output file.
 
 
@@ -67,17 +75,9 @@ and opened in text mode (`w`). Existing files will be truncated. `ValueError`
 is raised if any of the operations fail. An `atexit` handler will be registered to
 close the file on program termination.
 
-
-#### init()
-No-op for compatibility with `LazyOutputTextFile`.
-
-
-#### _classmethod_ stdout_wrapper()
-`sys.__stdout__` as `OutputTextFile`.
-
-
-#### _classmethod_ stderr_wrapper()
-`sys.__stderr__` as `OutputTextFile`.
+User directory and environment variable expansion is performed on the path.
+To disable this behavior, set class attributes `do_expanduser` and `do_expandvars`
+to `False` respectively.
 
 
 ### _class_ corgy.types.OutputBinFile(path)
@@ -95,28 +95,20 @@ parent directories), and opened in binary mode. Existing files will be truncated
 `ValueError` is raised if any of the operations fail. An `atexit` handler
 will be registered to close the file on program termination.
 
-
-#### init()
-No-op for compatibility with `LazyOutputBinFile`.
-
-
-#### _classmethod_ stdout_wrapper()
-`sys.__stdout__` as `OutputBinFile`.
+User directory and environment variable expansion is performed on the path.
+To disable this behavior, set class attributes `do_expanduser` and `do_expandvars`
+to `False` respectively.
 
 
-#### _classmethod_ stderr_wrapper()
-`sys.__stderr__` as `OutputBinFile`.
-
-
-### _class_ corgy.types.LazyOutputTextFile(path, \*\*kwargs)
+### _class_ corgy.types.LazyOutputTextFile(path)
 `OutputTextFile` sub-class that does not auto-initialize.
 
 Useful for “default” files, which only need to be created if an alternative is not
 provided. `init` must be called on instances before they can be used.
 
-
-#### init()
-Initialize the file.
+User directory and environment variable expansion is performed on the path.
+To disable this behavior, set class attributes `do_expanduser` and `do_expandvars`
+to `False` respectively.
 
 
 ### _class_ corgy.types.LazyOutputBinFile(path)
@@ -125,12 +117,12 @@ Initialize the file.
 Useful for “default” files, which only need to be created if an alternative is not
 provided. `init` must be called on instances before they can be used.
 
+User directory and environment variable expansion is performed on the path.
+To disable this behavior, set class attributes `do_expanduser` and `do_expandvars`
+to `False` respectively.
 
-#### init()
-Initialize the file.
 
-
-### _class_ corgy.types.InputTextFile(path, \*\*kwargs)
+### _class_ corgy.types.InputTextFile(path)
 `TextIOWrapper` sub-class representing an input file.
 
 
@@ -147,9 +139,9 @@ The file must exist, and will be opened in text mode (`r`). `ValueError` is
 raised if this fails. An `atexit` handler will be registered to close the file on
 program termination.
 
-
-#### _classmethod_ stdin_wrapper()
-`sys.__stdin__` as `InputTextFile`.
+User directory and environment variable expansion is performed on the path.
+To disable this behavior, set class attributes `do_expanduser` and `do_expandvars`
+to `False` respectively.
 
 
 ### _class_ corgy.types.InputBinFile(path)
@@ -166,9 +158,9 @@ of a file stream. The file must exist, and will be opened in binary mode.
 `ValueError` is raised if this fails. An `atexit` handler will be registered
 to close the file on program termination.
 
-
-#### _classmethod_ stdin_wrapper()
-`sys.__stdin__` as `InputBinFile`.
+User directory and environment variable expansion is performed on the path.
+To disable this behavior, set class attributes `do_expanduser` and `do_expandvars`
+to `False` respectively.
 
 
 ### _class_ corgy.types.OutputDirectory(path)
@@ -184,9 +176,9 @@ If the path does not exist, a directory with the path name will be created
 (including any parent directories). `ValueError` is raised if this fails, or
 if the path is not a directory, or if the directory is not writable.
 
-
-#### init()
-No-op for compatibility with `LazyOutputDirectory`.
+User directory and environment variable expansion is performed on the path.
+To disable this behavior, set class attributes `do_expanduser` and `do_expandvars`
+to `False` respectively.
 
 
 ### _class_ corgy.types.LazyOutputDirectory(path)
@@ -195,9 +187,9 @@ No-op for compatibility with `LazyOutputDirectory`.
 Useful for “default” folders, which only need to be created if an alternative is not
 provided. `init` must be called on instances to ensure that the directory exists.
 
-
-#### init()
-Initialize the directory.
+User directory and environment variable expansion is performed on the path.
+To disable this behavior, set class attributes `do_expanduser` and `do_expandvars`
+to `False` respectively.
 
 
 ### _class_ corgy.types.InputDirectory(path)
@@ -212,6 +204,10 @@ Initialize the directory.
 The directory must exist, and will be checked to ensure it is readable.
 `ValueError` is raised if this is not the case.
 
+User directory and environment variable expansion is performed on the path.
+To disable this behavior, set class attributes `do_expanduser` and `do_expandvars`
+to `False` respectively.
+
 
 ### _class_ corgy.types.IODirectory(path)
 `Path` sub-class representing an existing directory to be read from/written to.
@@ -224,6 +220,10 @@ The directory must exist, and will be checked to ensure it is readable.
 
 The directory must exist, and will be checked to ensure it is readable and
 writeable. `ValueError` is raised if this is not the case.
+
+User directory and environment variable expansion is performed on the path.
+To disable this behavior, set class attributes `do_expanduser` and `do_expandvars`
+to `False` respectively.
 
 
 ### _class_ corgy.types.SubClass(name)

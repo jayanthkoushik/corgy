@@ -44,6 +44,7 @@ import inspect
 import os
 import sys
 import typing
+from functools import partial
 from io import BufferedReader, BufferedWriter, FileIO, TextIOWrapper
 from pathlib import Path, PosixPath, WindowsPath
 from typing import (
@@ -92,6 +93,69 @@ __all__ = (
 )
 
 
+def _expand_mixin_base(class_: Type, mod_new: bool) -> Type:
+    """Mixin to add support for expanding user directory and environment variables.
+
+    Two concrete implementations of this mixin are provided: `_expand_with_new` and
+    `_expand_with_init`. The former is used for classes that have a custom `__new__`
+    method, and the latter is used for classes that have a custom `__init__` method.
+
+    The mixins are used as decorators. For example::
+
+        >>> @_expand_with_new  # doctest: +SKIP
+        ... class ReadableFile(Path):
+        ...     def __new__(cls, path):
+        ...         ...
+
+    """
+    # Extra docstring to add to the class.
+    doc_extra = """
+
+    User directory and environment variable expansion is performed on the path.
+    To disable this behavior, set class attributes `do_expanduser` and `do_expandvars`
+    to `False` respectively."""
+
+    class ExpandMixin(class_):
+        do_expanduser: bool = True
+        do_expandvars: bool = True
+
+        @classmethod
+        def _do_expand(cls, path: StrPath) -> StrPath:
+            if cls.do_expanduser:
+                path = os.path.expanduser(path)
+            if cls.do_expandvars:
+                path = os.path.expandvars(path)
+            return path
+
+        if mod_new:
+
+            def __new__(cls: Type[Self], path: StrPath) -> Self:
+                path = cls._do_expand(path)
+                return super().__new__(cls, path)
+
+        else:
+
+            def __init__(self: Self, path: StrPath) -> None:
+                path = self._do_expand(path)
+                super().__init__(path)
+
+    base_doc = getattr(class_, "__doc__", "")
+    ExpandMixin.__doc__ = base_doc + doc_extra if base_doc else doc_extra.lstrip()
+
+    # Make `ExpandMixin` look like `class`.
+    ExpandMixin.__name__ = class_.__name__
+    ExpandMixin.__qualname__ = class_.__qualname__
+    ExpandMixin.__module__ = class_.__module__
+    ExpandMixin.__slots__ = class_.__slots__
+
+    return ExpandMixin
+
+
+_expand_with_new = partial(_expand_mixin_base, mod_new=True)
+_expand_with_init = partial(_expand_mixin_base, mod_new=False)
+
+
+@_expand_with_new
 class ReadableFile(Path):
     """`Path` sub-class representing a readable file."""
 
@@ -127,6 +191,7 @@ class _PosixReadableFile(ReadableFile, PosixPath):
     __slots__ = ()
 
 
+@_expand_with_new
 class WritableFile(Path):
     """`Path` sub-class representing a writable file."""
 
@@ -188,6 +253,7 @@ def _get_output_stream(name: StrPath, mode: Literal["w", "wb"]) -> FileIO:
         raise ValueError(f"could not open `{name}`: {e}") from None
 
 
+@_expand_with_init
 class OutputTextFile(TextIOWrapper):
     """`TextIOWrapper` sub-class representing an output file.
 
@@ -237,6 +303,7 @@ class OutputTextFile(TextIOWrapper):
         return cls._stdoe_wrapper(sys.__stderr__)
 
 
+@_expand_with_init
 class LazyOutputTextFile(OutputTextFile):
     """`OutputTextFile` sub-class that does not auto-initialize.
 
@@ -256,6 +323,7 @@ class LazyOutputTextFile(OutputTextFile):
         super().__init__(self._path, **self._kwargs)
 
 
+@_expand_with_init
 class OutputBinFile(BufferedWriter):
     """Type for an output binary file.
 
@@ -305,6 +373,7 @@ class OutputBinFile(BufferedWriter):
         return cls._stdoe_wrapper(sys.__stderr__)
 
 
+@_expand_with_init
 class LazyOutputBinFile(OutputBinFile):
     """`OutputBinFile` sub-class that does not auto-initialize.
 
@@ -323,6 +392,7 @@ class LazyOutputBinFile(OutputBinFile):
         super().__init__(self._path)
 
 
+@_expand_with_init
 class InputTextFile(TextIOWrapper):
     """`TextIOWrapper` sub-class representing an input file.
 
@@ -362,6 +432,7 @@ class InputTextFile(TextIOWrapper):
         return obj
 
 
+@_expand_with_init
 class InputBinFile(BufferedReader):
     """Type for an input binary file.
 
@@ -401,6 +472,7 @@ class InputBinFile(BufferedReader):
         return obj
 
 
+@_expand_with_new
 class OutputDirectory(Path):
     """`Path` sub-class representing a directory to be written to.
 
@@ -452,6 +524,7 @@ class _PosixOutputDirectory(OutputDirectory, PosixPath):
     __slots__ = ()
 
 
+@_expand_with_new
 class LazyOutputDirectory(OutputDirectory):
     """`OutputDirectory` sub-class that does not auto-initialize.
 
@@ -486,6 +559,7 @@ class _PosixLazyOutputDirectory(LazyOutputDirectory, PosixPath):
     __slots__ = ()
 
 
+@_expand_with_new
 class InputDirectory(Path):
     """`Path` sub-class representing a directory to be read from.
 
@@ -529,6 +603,7 @@ class _PosixInputDirectory(InputDirectory, PosixPath):
     __slots__ = ()
 
 
+@_expand_with_new
 class IODirectory(Path):
     """`Path` sub-class representing an existing directory to be read from/written to.
 
