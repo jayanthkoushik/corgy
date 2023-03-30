@@ -59,10 +59,13 @@ def temp_env_var_file(testcase: TestCase):
     """Get a temporary file and set an environment variable to its name."""
     # Get a random string to use as the environment variable name
     env_var = f"CORGY_TEMP_{os.urandom(8).hex()}"
-    with NamedTemporaryFile() as f:
-        os.environ[env_var] = f.name
+    with TemporaryDirectory() as d:
+        fpath = os.path.join(d, "temp.file")
+        with open(fpath, "wb"):
+            pass
+        os.environ[env_var] = fpath
         try:
-            yield env_var, Path(f.name)
+            yield env_var, Path(fpath)
         finally:
             del os.environ[env_var]
 
@@ -93,6 +96,7 @@ class TestReadableFile(TestCase):
             with self.assertRaises(ValueError):
                 ReadableFile(os.path.join(d, "foo.file"))
 
+    @skipIf(os.name == "nt", "`chmod` does not seem to work on Windows")
     def test_readable_file_raises_if_file_not_readable(self):
         with NamedTemporaryFile() as f:
             os.chmod(f.name, stat.S_IWRITE)
@@ -149,6 +153,7 @@ class TestWritableFile(TestCase):
             with self.assertRaises(ValueError):
                 WritableFile(d)
 
+    @skipIf(os.name == "nt", "`chmod` does not seem to work on Windows")
     def test_writable_file_raises_if_file_not_writeable(self):
         with NamedTemporaryFile() as f:
             os.chmod(f.name, stat.S_IREAD)
@@ -156,6 +161,7 @@ class TestWritableFile(TestCase):
                 WritableFile(f.name)
             os.chmod(f.name, stat.S_IREAD | stat.S_IWRITE)
 
+    @skipIf(os.name == "nt", "`chmod` does not seem to work on Windows")
     def test_writable_file_raises_if_file_not_exists_and_dir_not_writeable(self):
         with TemporaryDirectory() as d:
             os.chmod(d, stat.S_IREAD | stat.S_IEXEC)
@@ -163,6 +169,7 @@ class TestWritableFile(TestCase):
                 WritableFile(os.path.join(d, "foo.file"))
             os.chmod(d, stat.S_IREAD | stat.S_IWRITE | stat.S_IEXEC)
 
+    @skipIf(os.name == "nt", "`chmod` does not seem to work on Windows")
     def test_writable_file_works_if_file_exists_and_dir_not_writeable(self):
         with TemporaryDirectory() as d:
             with open(os.path.join(d, "foo.file"), "xb"):
@@ -220,8 +227,11 @@ class _TestFile(TestCase):
         self.tmp_dir.cleanup()
 
     def test_file_is_correct_type(self):
-        with NamedTemporaryFile() as f:
-            p = self.type(f.name)
+        with TemporaryDirectory() as d:
+            fpath = os.path.join(d, "foo.file")
+            with open(fpath, "wb"):
+                pass
+            p = self.type(fpath)
             if issubclass(self.type, (OutputTextFile, OutputBinFile)):
                 p.init()
             self.assertIsInstance(p, self.type)
@@ -229,7 +239,7 @@ class _TestFile(TestCase):
 
     def test_file_expands_user(self):
         with temp_file_in_home(self) as fpath:
-            f = self.type(f"~/{fpath.name}")
+            f = self.type(os.path.join("~", fpath.name))
             if issubclass(self.type, (OutputTextFile, OutputBinFile)):
                 f.init()
             self.assertEqual(str(f), str(fpath))
