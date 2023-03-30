@@ -116,6 +116,14 @@ class _TestFile(TestCase):
     def tearDown(self):
         self.tmp_dir.cleanup()
 
+    def test_file_is_correct_type(self):
+        with NamedTemporaryFile() as f:
+            p = self.type(f.name)
+            if issubclass(self.type, (OutputTextFile, OutputBinFile)):
+                p.init()
+            self.assertIsInstance(p, self.type)
+            p.close()
+
 
 class _TestOutputFile(_TestFile):
     def test_output_file_creates_dir_if_not_exists(self):
@@ -138,6 +146,15 @@ class _TestOutputFile(_TestFile):
         with self.assertRaises(ValueError):
             self.type(fname)
         os.chmod(fname, stat.S_IREAD | stat.S_IWRITE)
+
+    def test_output_file_handles_existing_file(self):
+        fname = os.path.join(self.tmp_dir.name, "foo.file")
+        with open(fname, "wb") as f:
+            f.write(b"foo")
+        of = self.type(fname)
+        with open(fname, "rb") as f:
+            self.assertEqual(f.read(), b"")
+        of.close()
 
     def test_output_file_repr_str(self):
         fname = os.path.join(self.tmp_dir.name, "foo.file")
@@ -199,6 +216,19 @@ class _TestLazyOutputFile(_TestFile):
         f.init()
         self.assertTrue(os.path.exists(fname))
         f.close()
+
+    def test_lazy_output_file_handles_existing_file(self):
+        with TemporaryDirectory() as tmp_dir:
+            fpath = os.path.join(tmp_dir, "foo.file")
+            with open(fpath, "wb") as f:
+                f.write(b"foo")
+            lazyf = self.type(fpath)
+            with open(fpath, "rb") as f:
+                self.assertEqual(f.read(), b"foo")
+            lazyf.init()
+            with open(fpath, "rb") as f:
+                self.assertEqual(f.read(), b"")
+            lazyf.close()
 
 
 class TestLazyOutputTextFile(_TestLazyOutputFile):
@@ -276,6 +306,7 @@ class _TestDirectory(TestCase):
 
     def test_directory_returns_pathlib_path(self):
         d = self.type(self.tmp_dir.name)
+        self.assertIsInstance(d, self.type)
         self.assertIsInstance(d, Path)
         self.assertEqual(str(d), self.tmp_dir.name)
 

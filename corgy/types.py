@@ -99,19 +99,19 @@ class ReadableFile(Path):
     __slots__ = ()
 
     def __new__(cls, path: StrPath):  # pylint: disable=arguments-differ
-        if cls is _WindowsReadableFile or cls is _PosixReadableFile:
-            # Don't do any checks if this is a concrete class.
-            return Path.__new__(cls, path)
+        if not (cls is _WindowsReadableFile or cls is _PosixReadableFile):
+            # Check that the path is a file, and that it is readable.
+            if not os.path.isfile(path):
+                raise ValueError(f"`{path}` is not a file")
+            if not os.access(path, os.R_OK):
+                raise ValueError(f"`{path}` is not readable")
+            cls_ = _WindowsReadableFile if os.name == "nt" else _PosixReadableFile
+        else:
+            cls_ = cls
 
-        # Check that the path is a file, and that it is readable.
-        if not os.path.isfile(path):
-            raise ValueError(f"`{path}` is not a file")
-        if not os.access(path, os.R_OK):
-            raise ValueError(f"`{path}` is not readable")
-
-        # `super().__new__` needs to be called with the os-dependent concrete class.
-        cls_ = _WindowsReadableFile if os.name == "nt" else _PosixReadableFile
-        return Path.__new__(cls_, path)
+        if cls_ is _WindowsReadableFile:
+            return WindowsPath.__new__(cls_, path)
+        return PosixPath.__new__(cls_, path)
 
     def __repr__(self) -> str:
         return f"ReadablePath({super().__str__()!r})"
@@ -134,25 +134,29 @@ class WritableFile(Path):
     __slots__ = ()
 
     def __new__(cls, path: StrPath):  # pylint: disable=arguments-differ
-        if cls is _WindowsWritableFile or cls is _PosixWritableFile:
-            return Path.__new__(cls, path)
+        if not (cls is _WindowsWritableFile or cls is _PosixWritableFile):
+            if os.path.exists(path):
+                # If the path exists, check that it is a file, and that it is writable.
+                if not os.path.isfile(path):
+                    raise ValueError(f"`{path}` is not a file")
+                if not os.access(path, os.W_OK):
+                    raise ValueError(f"`{path}` is not writable")
+            else:
+                # If the path does not exist, check that the path's directory is
+                # writable.
+                path_dir = os.path.dirname(path)
+                if not path_dir:
+                    path_dir = "."
+                if not os.access(path_dir, os.W_OK):
+                    raise ValueError(f"`{path_dir}` is not writable")
 
-        if os.path.exists(path):
-            # If the path exists, check that it is a file, and that it is writable.
-            if not os.path.isfile(path):
-                raise ValueError(f"`{path}` is not a file")
-            if not os.access(path, os.W_OK):
-                raise ValueError(f"`{path}` is not writable")
+            cls_ = _WindowsWritableFile if os.name == "nt" else _PosixWritableFile
         else:
-            # If the path does not exist, check that the path's directory is writable.
-            path_dir = os.path.dirname(path)
-            if not path_dir:
-                path_dir = "."
-            if not os.access(path_dir, os.W_OK):
-                raise ValueError(f"`{path_dir}` is not writable")
+            cls_ = cls
 
-        cls_ = _WindowsWritableFile if os.name == "nt" else _PosixWritableFile
-        return Path.__new__(cls_, path)
+        if cls_ is _WindowsWritableFile:
+            return WindowsPath.__new__(cls_, path)
+        return PosixPath.__new__(cls_, path)
 
     def __repr__(self) -> str:
         return f"WritablePath({super().__str__()!r})"
@@ -411,7 +415,8 @@ class OutputDirectory(Path):
     __metavar__ = "dir"
     __slots__ = ()
 
-    def __new__(cls, path: StrPath):  # pylint: disable=arguments-differ
+    @staticmethod
+    def _check_path(path: StrPath):
         try:
             os.makedirs(path, exist_ok=True)
         except OSError as e:
@@ -419,12 +424,19 @@ class OutputDirectory(Path):
         if not os.access(path, os.W_OK):
             raise ValueError(f"`{path}` is not writable")
 
-        # `super().__new__` needs to be called with the os-dependent concrete class.
-        cls_ = _WindowsOutputDirectory if os.name == "nt" else _PosixOutputDirectory
-        return super().__new__(cls_, path)
+    def __new__(cls, path: StrPath):  # pylint: disable=arguments-differ
+        if not (cls is _WindowsOutputDirectory or cls is _PosixOutputDirectory):
+            cls._check_path(path)
+            cls_ = _WindowsOutputDirectory if os.name == "nt" else _PosixOutputDirectory
+        else:
+            cls_ = cls
+
+        if cls_ is _WindowsOutputDirectory:
+            return WindowsPath.__new__(cls_, path)
+        return PosixPath.__new__(cls_, path)
 
     def __repr__(self) -> str:
-        return f"OutputDirectory({super().__str__()!r})"
+        return f"OutputDirectory({Path.__str__(self)!r})"
 
     def init(self):
         """No-op for compatibility with `LazyOutputDirectory`."""
@@ -455,12 +467,13 @@ class LazyOutputDirectory(OutputDirectory):
             if os.name == "nt"
             else _PosixLazyOutputDirectory
         )
-        return Path.__new__(cls_, path)
+        if cls_ is _WindowsLazyOutputDirectory:
+            return WindowsPath.__new__(cls_, path)
+        return PosixPath.__new__(cls_, path)
 
     def init(self):
         """Initialize the directory."""
-        # Just try to create an `OutputDirectory` instance with the same path.
-        OutputDirectory(str(self))
+        self._check_path(self)
 
 
 class _WindowsLazyOutputDirectory(LazyOutputDirectory, WindowsPath):
@@ -487,16 +500,20 @@ class InputDirectory(Path):
     __slots__ = ()
 
     def __new__(cls, path: StrPath):  # pylint: disable=arguments-differ
-        if not os.path.exists(path):
-            raise ValueError(f"`{path}` does not exist")
-        if not os.path.isdir(path):
-            raise ValueError(f"`{path}` is not a directory")
-        if not os.access(path, os.R_OK):
-            raise ValueError(f"`{path}` is not readable")
+        if not (cls is _WindowsInputDirectory or cls is _PosixInputDirectory):
+            if not os.path.exists(path):
+                raise ValueError(f"`{path}` does not exist")
+            if not os.path.isdir(path):
+                raise ValueError(f"`{path}` is not a directory")
+            if not os.access(path, os.R_OK):
+                raise ValueError(f"`{path}` is not readable")
+            cls_ = _WindowsInputDirectory if os.name == "nt" else _PosixInputDirectory
+        else:
+            cls_ = cls
 
-        # `super().__new__` needs to be called with the os-dependent concrete class.
-        cls_ = _WindowsInputDirectory if os.name == "nt" else _PosixInputDirectory
-        return super().__new__(cls_, path)
+        if cls_ is _WindowsInputDirectory:
+            return WindowsPath.__new__(cls_, path)
+        return PosixPath.__new__(cls_, path)
 
     def __repr__(self) -> str:
         return f"InputDirectory({super().__str__()!r})"
@@ -526,18 +543,22 @@ class IODirectory(Path):
     __slots__ = ()
 
     def __new__(cls, path: StrPath):  # pylint: disable=arguments-differ
-        if not os.path.exists(path):
-            raise ValueError(f"`{path}` does not exist")
-        if not os.path.isdir(path):
-            raise ValueError(f"`{path}` is not a directory")
-        if not os.access(path, os.R_OK):
-            raise ValueError(f"`{path}` is not readable")
-        if not os.access(path, os.W_OK):
-            raise ValueError(f"`{path}` is not writable")
+        if not (cls is _IOWindowsDirectory or cls is _IOPosixDirectory):
+            if not os.path.exists(path):
+                raise ValueError(f"`{path}` does not exist")
+            if not os.path.isdir(path):
+                raise ValueError(f"`{path}` is not a directory")
+            if not os.access(path, os.R_OK):
+                raise ValueError(f"`{path}` is not readable")
+            if not os.access(path, os.W_OK):
+                raise ValueError(f"`{path}` is not writable")
+            cls_ = _IOWindowsDirectory if os.name == "nt" else _IOPosixDirectory
+        else:
+            cls_ = cls
 
-        # `super().__new__` needs to be called with the os-dependent concrete class.
-        cls_ = _IOWindowsDirectory if os.name == "nt" else _IOPosixDirectory
-        return super().__new__(cls_, path)
+        if cls_ is _IOWindowsDirectory:
+            return WindowsPath.__new__(cls_, path)
+        return PosixPath.__new__(cls_, path)
 
     def __repr__(self) -> str:
         return f"IODirectory({super().__str__()!r})"
