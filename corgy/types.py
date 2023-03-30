@@ -157,7 +157,14 @@ _expand_with_init = partial(_expand_mixin_base, mod_new=False)
 
 @_expand_with_new
 class ReadableFile(Path):
-    """`Path` sub-class representing a readable file."""
+    """`Path` sub-class representing a readable file.
+
+    Args:
+        path: String or path-like object.
+
+    The provided path must point to an existing file, and the file must be readable.
+    `ValueError` is raised otherwise.
+    """
 
     __metavar__ = "file"
     __slots__ = ()
@@ -193,7 +200,15 @@ class _PosixReadableFile(ReadableFile, PosixPath):
 
 @_expand_with_new
 class WritableFile(Path):
-    """`Path` sub-class representing a writable file."""
+    """`Path` sub-class representing a writable file.
+
+    Args:
+        path: String or path-like object.
+
+    If the path exists, it must be a file, and it must be writable. If the path does
+    not exist, the path's directory must exist and be writable. `ValueError` is
+    raised otherwise.
+    """
 
     __metavar__ = "file"
     __slots__ = ()

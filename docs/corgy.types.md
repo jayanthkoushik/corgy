@@ -44,6 +44,15 @@ options:
 ### _class_ corgy.types.ReadableFile(path)
 `Path` sub-class representing a readable file.
 
+
+* **Parameters**
+
+    **path** – String or path-like object.
+
+
+The provided path must point to an existing file, and the file must be readable.
+`ValueError` is raised otherwise.
+
 User directory and environment variable expansion is performed on the path.
 To disable this behavior, set class attributes `do_expanduser` and `do_expandvars`
 to `False` respectively.
@@ -51,6 +60,16 @@ to `False` respectively.
 
 ### _class_ corgy.types.WritableFile(path)
 `Path` sub-class representing a writable file.
+
+
+* **Parameters**
+
+    **path** – String or path-like object.
+
+
+If the path exists, it must be a file, and it must be writable. If the path does
+not exist, the path’s directory must exist and be writable. `ValueError` is
+raised otherwise.
 
 User directory and environment variable expansion is performed on the path.
 To disable this behavior, set class attributes `do_expanduser` and `do_expandvars`
