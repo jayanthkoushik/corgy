@@ -63,11 +63,7 @@ to `False` respectively.
 
 * **Parameters**
 
-
-    * **path** – Path to a file.
-
-
-    * **kwargs** – Keyword only arguments that are passed to `TextIOWrapper`.
+    **path** – Path to a file.
 
 
 The file will be created if it does not exist (including any parent directories),
@@ -128,11 +124,7 @@ to `False` respectively.
 
 * **Parameters**
 
-
-    * **path** – Path to a file.
-
-
-    * **kwargs** – Keyword only arguments that are passed to `TextIOWrapper`.
+    **path** – Path to a file.
 
 
 The file must exist, and will be opened in text mode (`r`). `ValueError` is

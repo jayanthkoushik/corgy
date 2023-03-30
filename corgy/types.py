@@ -259,7 +259,6 @@ class OutputTextFile(TextIOWrapper):
 
     Args:
         path: Path to a file.
-        kwargs: Keyword only arguments that are passed to `TextIOWrapper`.
 
     The file will be created if it does not exist (including any parent directories),
     and opened in text mode (`w`). Existing files will be truncated. `ValueError`
@@ -270,10 +269,10 @@ class OutputTextFile(TextIOWrapper):
     __metavar__ = "file"
     __slots__ = ()
 
-    def __init__(self, path: StrPath, **kwargs):
+    def __init__(self, path: StrPath):
         stream = _get_output_stream(path, "w")
         buffer = BufferedWriter(stream)
-        super().__init__(buffer, **kwargs)
+        super().__init__(buffer)
         atexit.register(self.__class__.close, self)
 
     def __repr__(self) -> str:
@@ -311,16 +310,15 @@ class LazyOutputTextFile(OutputTextFile):
     provided. `init` must be called on instances before they can be used.
     """
 
-    __slots__ = ("_path", "_kwargs")
+    __slots__ = ("_path",)
 
-    def __init__(self, path: StrPath, **kwargs):
+    def __init__(self, path: StrPath):
         # pylint: disable=super-init-not-called
         self._path = path
-        self._kwargs = kwargs
 
     def init(self):
         """Initialize the file."""
-        super().__init__(self._path, **self._kwargs)
+        super().__init__(self._path)
 
 
 @_expand_with_init
@@ -398,7 +396,6 @@ class InputTextFile(TextIOWrapper):
 
     Args:
         path: Path to a file.
-        kwargs: Keyword only arguments that are passed to `TextIOWrapper`.
 
     The file must exist, and will be opened in text mode (`r`). `ValueError` is
     raised if this fails. An `atexit` handler will be registered to close the file on
@@ -408,7 +405,7 @@ class InputTextFile(TextIOWrapper):
     __metavar__ = "file"
     __slots__ = ()
 
-    def __init__(self, path: StrPath, **kwargs):
+    def __init__(self, path: StrPath):
         try:
             stream = FileIO(str(path), "r")
         except OSError as e:
