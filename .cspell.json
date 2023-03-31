@@ -2,6 +2,7 @@
   "maxDuplicateProblems": 1,
   "languageId": "python",
   "words": [
+    "subpackages",
     "corgy",
     "corgyparser",
     "metavars",

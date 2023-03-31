@@ -1,28 +1,22 @@
 from __future__ import annotations
 
-import importlib
+import argparse
 import inspect
 import re
-import shutil
 import sys
 import textwrap
-from argparse import (
-    Action,
-    ArgumentParser,
-    HelpFormatter,
-    ONE_OR_MORE,
-    PARSER,
-    SUPPRESS,
-    ZERO_OR_MORE,
-)
+from argparse import Action, ArgumentParser, HelpFormatter
 from collections.abc import Sequence as AbstractSequence
 from functools import lru_cache, partial
+from importlib import import_module
 from itertools import cycle, zip_longest
+from shutil import get_terminal_size
 from types import ModuleType
 from typing import Optional, Sequence, Tuple, Union
 from unittest.mock import patch
 
-from ._utils import get_concrete_collection_type, is_optional_type, OptionalTypeAction
+from ._actions import OptionalTypeAction
+from ._meta import get_concrete_collection_type, is_optional_type
 
 __all__ = ("CorgyHelpFormatter",)
 
@@ -52,7 +46,7 @@ _MARKER_METAVARS_END = "]"
 _MARKER_METAVARS_REPEAT = "..."
 
 
-class _ColorHelper:
+class ColorHelper:
     """Wrapper around `crayons` library to colorize text.
 
     Args:
@@ -68,14 +62,14 @@ class _ColorHelper:
     def __init__(self, use_colors: Optional[bool] = None, skip_tty_check: bool = False):
         if use_colors:
             try:
-                self.crayons = importlib.import_module("crayons")
+                self.crayons = import_module("crayons")
             except ImportError:
                 raise ImportError(
                     "`crayons` library is required to use colors"
                 ) from None
         elif use_colors is None and (skip_tty_check or sys.stdout.isatty()):
             try:
-                self.crayons = importlib.import_module("crayons")
+                self.crayons = import_module("crayons")
             except ImportError:
                 self.crayons = None
         else:
@@ -138,12 +132,13 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     independently of `Corgy`. Simply pass it as the `formatter_class` argument to
     `argparse.ArgumentParser()`::
 
-        >>> from argparse import ArgumentParser, SUPPRESS
+        >>> import argparse
+        >>> from argparse import ArgumentParser
         >>> from corgy import CorgyHelpFormatter
 
         >>> parser = ArgumentParser(
         ...     formatter_class=CorgyHelpFormatter,
-        ...     usage=SUPPRESS,
+        ...     usage=argparse.SUPPRESS,
         ... )
         >>> _ = parser.add_argument("--x", type=int, required=True)
         >>> _ = parser.add_argument("--y", type=str, nargs="*", required=True)
@@ -207,7 +202,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             >>> parser = ArgumentParser(
             ...     formatter_class=CorgyHelpFormatter,
             ...     add_help=False,
-            ...     usage=SUPPRESS,
+            ...     usage=argparse.SUPPRESS,
             ... )
             >>> _ = parser.add_argument("--arg", type=T)
             >>> parser.print_help()
@@ -224,7 +219,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     color_options = "BOLD"
 
     output_width: Optional[int] = None
-    max_help_position: Optional[int] = shutil.get_terminal_size().columns // 2
+    max_help_position: Optional[int] = get_terminal_size().columns // 2
 
     marker_extras_begin = "("
     marker_extras_end = ")"
@@ -235,7 +230,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     show_full_help = True
 
     __slots__ = ("_color_helper",)
-    _color_helper: _ColorHelper
+    _color_helper: ColorHelper
 
     @property
     def using_colors(self) -> bool:
@@ -316,7 +311,10 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     def _get_stringify_type_for_default(action):
         """Get the type that should be used to stringify `action.default`."""
         _stringify_type = action.type
-        if isinstance(action.nargs, int) or action.nargs in (ZERO_OR_MORE, ONE_OR_MORE):
+        if isinstance(action.nargs, int) or action.nargs in (
+            argparse.ZERO_OR_MORE,
+            argparse.ONE_OR_MORE,
+        ):
             # If the argument specifies nargs, and the default value is a,
             # collection, wrap the action type with the default collection type.
             if isinstance(action.default, tuple):
@@ -445,9 +443,11 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             option_strings = action.option_strings
         else:
             # If no option strings are present, (positional arguments), use
-            # `action.dest`. However, this can be `SUPPRESS` for sub-actions, in which
-            # case use the word `CMD`.
-            option_strings = [action.dest if action.dest != SUPPRESS else "CMD"]
+            # `action.dest`. However, this can be `argparse.SUPPRESS` for sub-actions,
+            # in which case use the word `CMD`.
+            option_strings = [
+                action.dest if action.dest != argparse.SUPPRESS else "CMD"
+            ]
 
         if self.using_colors:
             # Create placeholders for the option strings, and store originals.
@@ -470,7 +470,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
 
     def _format_args(self, action: Action, default_metavar: Optional[str]) -> str:
         """Format the metavars."""
-        if action.nargs == PARSER:
+        if action.nargs == argparse.PARSER:
             # No metavars for a sub-command.
             return ""
 
@@ -518,7 +518,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             else action.nargs
         )
         with patch.multiple(action, nargs=_fmt_nargs, metavar=placeholder_metavar):
-            if action.nargs == ZERO_OR_MORE:
+            if action.nargs == argparse.ZERO_OR_MORE:
                 # Python 3.9+ shows '*' argumets of a single type as `[<base_type> ...]`
                 # instead of `[<base_type> [<base_type> ...]]`. This code backports that
                 # functionality.
@@ -586,7 +586,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 )
             else:
                 arg_qualifier = ""
-        elif action.default is SUPPRESS:
+        elif action.default is argparse.SUPPRESS:
             if action.nargs == 0:
                 # The argument takes no values, so no need to explicitly indicate that
                 # it is optional. For example, help and version actions are obviously
@@ -632,7 +632,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             extra_help = ""
 
         # Wrap the text according to `output_width` and `max_help_position`.
-        output_width = self.output_width or shutil.get_terminal_size().columns
+        output_width = self.output_width or get_terminal_size().columns
         max_help_position = self.max_help_position or output_width
         if len(base_fmt) + self._current_indent < min(output_width, max_help_position):
             # Example of desired result:
@@ -738,7 +738,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 fmt = fmt[: match.start()] + match_sub + fmt[match.end() :]
 
         # Colorize the default value.
-        if action.default != SUPPRESS:
+        if action.default != argparse.SUPPRESS:
             pattern = self._pattern_placeholder_text(_PLACEHOLDER_DEFAULT_VAL)
             _stringify_type = self._get_stringify_type_for_default(action)
             f_sub = partial(
@@ -799,7 +799,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             # Disable colors for usage string.
             fmt = super()._format_usage(usage, *args, **kwargs)
 
-        output_width = self.output_width or shutil.get_terminal_size().columns
+        output_width = self.output_width or get_terminal_size().columns
         # Wrap usage to output width.
         fmt = textwrap.fill(
             fmt,
@@ -811,7 +811,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
 
     def __init__(self, prog: str):
         # noqa: D107
-        self._color_helper = _ColorHelper(self.use_colors)
+        self._color_helper = ColorHelper(self.use_colors)
         # Wrapping is managed by this class, so pass `sys.maxsize` to the superclass.
         super().__init__(prog, max_help_position=sys.maxsize, width=sys.maxsize)
 
@@ -861,7 +861,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             >>> parser = ArgumentParser(
             ...     formatter_class=CorgyHelpFormatter,
             ...     add_help=False,
-            ...     usage=SUPPRESS,
+            ...     usage=argparse.SUPPRESS,
             ... )
             >>> CorgyHelpFormatter.add_short_full_helps(parser)
             >>> parser.print_help()
@@ -875,12 +875,12 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             nargs=0,
             action=cls.ShortHelpAction,
             help=short_help_msg,
-            default=SUPPRESS,
+            default=argparse.SUPPRESS,
         )
         parser.add_argument(
             *full_help_flags,
             nargs=0,
             action=cls.FullHelpAction,
             help=full_help_msg,
-            default=SUPPRESS,
+            default=argparse.SUPPRESS,
         )

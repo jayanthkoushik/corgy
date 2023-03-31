@@ -1,4 +1,4 @@
-# corgy.types module
+# corgy.types package
 
 Types for use with `corgy` (or standalone with `argparse`).
 
@@ -26,13 +26,14 @@ Examples:
 >>> a_subcls_obj
 <B object at 0x106cd93d0>
 
->>> from argparse import ArgumentParser, SUPPRESS
+>>> import argparse
+>>> from argparse import ArgumentParser
 >>> from corgy import CorgyHelpFormatter
 >>> from corgy.types import InputDirectory
 >>> parser = ArgumentParser(
 ...     formatter_class=CorgyHelpFormatter,
 ...     add_help=False,
-...     usage=SUPPRESS,
+...     usage=argparse.SUPPRESS,
 ... )
 >>> _ = parser.add_argument("--d", type=InputDirectory)
 >>> parser.print_help()
@@ -374,6 +375,8 @@ Dictionary sub-class that is initialized from a string of key-value pairs.
 Example:
 
 ```python
+>>> from corgy.types import KeyValuePairs
+
 >>> MapType = KeyValuePairs[str, int]
 >>> print(MapType("a=1,b=2"))
 {'a': 1, 'b': 2}
@@ -423,7 +426,8 @@ Corgy wrapper around arguments of a class’s `__init__`.
 Example:
 
 ```python
->>> from argparse import ArgumentParser, SUPPRESS
+>>> import argparse
+>>> from argparse import ArgumentParser
 >>> from typing import Sequence
 >>> from corgy import CorgyHelpFormatter
 >>> from corgy.types import InitArgs
@@ -441,7 +445,7 @@ Example:
 >>> parser = ArgumentParser(
 ...     formatter_class=CorgyHelpFormatter,
 ...     add_help=False,
-...     usage=SUPPRESS,
+...     usage=argparse.SUPPRESS,
 ... )
 >>> FooInitArgs.add_args_to_parser(parser)
 >>> parser.print_help()

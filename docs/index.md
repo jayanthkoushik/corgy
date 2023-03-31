@@ -4,7 +4,7 @@
 * [corgy package](corgy.md)
 
 
-    * [Submodules](corgy.md#submodules)
+    * [Subpackages](corgy.md#subpackages)
 
 
-        * [corgy.types module](corgy.types.md)
+        * [corgy.types package](corgy.types.md)

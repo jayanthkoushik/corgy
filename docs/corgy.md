@@ -487,7 +487,8 @@ annotations are described below.
 `typing.Annotated` can be used to add a help message for the argument:
 
 ```python
->>> from argparse import ArgumentParser, SUPPRESS
+>>> import argparse
+>>> from argparse import ArgumentParser
 >>> from corgy import CorgyHelpFormatter
 
 >>> class A(Corgy):
@@ -496,7 +497,7 @@ annotations are described below.
 >>> parser = ArgumentParser(
 ...     formatter_class=CorgyHelpFormatter,
 ...     add_help=False,
-...     usage=SUPPRESS,
+...     usage=argparse.SUPPRESS,
 ... )
 
 >>> A.add_args_to_parser(parser)
@@ -518,7 +519,7 @@ will be created:
 >>> parser = ArgumentParser(
 ...     formatter_class=CorgyHelpFormatter,
 ...     add_help=False,
-...     usage=SUPPRESS,
+...     usage=argparse.SUPPRESS,
 ... )
 
 >>> A.add_args_to_parser(parser)
@@ -551,7 +552,7 @@ control whether the argument will be added with `required=True`:
 >>> parser = ArgumentParser(
 ...     formatter_class=CorgyHelpFormatter,
 ...     add_help=False,
-...     usage=SUPPRESS,
+...     usage=argparse.SUPPRESS,
 ... )
 
 >>> A.add_args_to_parser(parser)
@@ -563,7 +564,7 @@ options:
 ```
 
 Attributes which are not required, and don’t have a default value are added
-with `default=SUPPRESS`, and so will not be included in the parsed namespace:
+with `default=argparse.SUPPRESS`, and so will not be in the parsed namespace:
 
 ```python
 >>> parser.parse_args(["--x", "1", "--y", "2"])
@@ -603,7 +604,7 @@ Namespace(x=None)
 >>> parser = ArgumentParser(
 ...     formatter_class=CorgyHelpFormatter,
 ...     add_help=False,
-...     usage=SUPPRESS,
+...     usage=argparse.SUPPRESS,
 ... )
 
 >>> A.add_args_to_parser(parser)
@@ -658,7 +659,7 @@ all other choices must be subclasses of that type:
 >>> parser = ArgumentParser(
 ...     formatter_class=CorgyHelpFormatter,
 ...     add_help=False,
-...     usage=SUPPRESS,
+...     usage=argparse.SUPPRESS,
 ... )
 
 >>> A.add_args_to_parser(parser)
@@ -692,7 +693,7 @@ Example:
 >>> parser = ArgumentParser(
 ...     formatter_class=CorgyHelpFormatter,
 ...     add_help=False,
-...     usage=SUPPRESS,
+...     usage=argparse.SUPPRESS,
 ... )
 
 >>> A.add_args_to_parser(parser)
@@ -893,7 +894,7 @@ Return an instance of the class parsed from command line arguments.
 
 * **Raises**
 
-    **ArgumentError** – Error parsing command line arguments.
+    **ArgumentTypeError** – Error parsing command line arguments.
 
 
 
@@ -996,7 +997,10 @@ Decorating the function with `@staticmethod` is optional, but prevents type erro
 Example:
 
 ```python
->>> from corgy import corgyparser
+>>> import argparse
+>>> from argparse import ArgumentParser
+>>> from typing import Tuple
+>>> from corgy import Corgy, CorgyHelpFormatter, corgyparser
 
 >>> class A(Corgy):
 ...     time: Tuple[int, int, int]
@@ -1008,7 +1012,7 @@ Example:
 >>> parser = ArgumentParser(
 ...     formatter_class=CorgyHelpFormatter,
 ...     add_help=False,
-...     usage=SUPPRESS,
+...     usage=argparse.SUPPRESS,
 ... )
 
 >>> A.add_args_to_parser(parser)
@@ -1060,7 +1064,7 @@ argument type:
 >>> parser = ArgumentParser(
 ...     formatter_class=CorgyHelpFormatter,
 ...     add_help=False,
-...     usage=SUPPRESS,
+...     usage=argparse.SUPPRESS,
 ... )
 
 >>> A.add_args_to_parser(parser)
@@ -1081,12 +1085,13 @@ independently of `Corgy`. Simply pass it as the `formatter_class` argument to
 `argparse.ArgumentParser()`:
 
 ```python
->>> from argparse import ArgumentParser, SUPPRESS
+>>> import argparse
+>>> from argparse import ArgumentParser
 >>> from corgy import CorgyHelpFormatter
 
 >>> parser = ArgumentParser(
 ...     formatter_class=CorgyHelpFormatter,
-...     usage=SUPPRESS,
+...     usage=argparse.SUPPRESS,
 ... )
 >>> _ = parser.add_argument("--x", type=int, required=True)
 >>> _ = parser.add_argument("--y", type=str, nargs="*", required=True)
@@ -1161,7 +1166,7 @@ on the argument type. The following attributes are recognized:
     >>> parser = ArgumentParser(
     ...     formatter_class=CorgyHelpFormatter,
     ...     add_help=False,
-    ...     usage=SUPPRESS,
+    ...     usage=argparse.SUPPRESS,
     ... )
     >>> _ = parser.add_argument("--arg", type=T)
     >>> parser.print_help()
@@ -1225,7 +1230,7 @@ Example:
 >>> parser = ArgumentParser(
 ...     formatter_class=CorgyHelpFormatter,
 ...     add_help=False,
-...     usage=SUPPRESS,
+...     usage=argparse.SUPPRESS,
 ... )
 >>> CorgyHelpFormatter.add_short_full_helps(parser)
 >>> parser.print_help()
@@ -1234,7 +1239,7 @@ options:
   --helpfull  show full help message and exit
 ```
 
-## Submodules
+## Subpackages
 
 
-* [corgy.types module](corgy.types.md)
+* [corgy.types package](corgy.types.md)

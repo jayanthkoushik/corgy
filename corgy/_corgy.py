@@ -1,344 +1,35 @@
 from __future__ import annotations
 
 import argparse
-import importlib
 import sys
+from argparse import _ActionsContainer, Action, ArgumentParser
 from collections import defaultdict
 from collections.abc import Sequence as AbstractSequence
-from contextlib import suppress
 from functools import partial
-from typing import (
-    Any,
-    Callable,
-    ClassVar,
-    Collection,
-    Dict,
-    IO,
-    List,
-    Mapping,
-    NamedTuple,
-    Optional,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from importlib import import_module
+from typing import Any, Callable, Dict, IO, Mapping, Optional, Type, TypeVar, Union
 
 if sys.version_info >= (3, 9):
-    from typing import Annotated, get_type_hints, Literal
+    from typing import Literal
 else:
-    from typing_extensions import Annotated, get_type_hints, Literal
+    from typing_extensions import Literal
 
+from ._actions import BooleanOptionalAction, OptionalTypeAction
+from ._corgyparser import CorgyParserAction
 from ._helpfmt import CorgyHelpFormatter
-from ._utils import (
+from ._meta import (
     check_val_type,
+    CorgyMeta,
     get_concrete_collection_type,
     is_literal_type,
     is_optional_type,
-    OptionalTypeAction,
 )
 
-# The main interface is the `Corgy` class. `_CorgyMeta` modifies creation of `Corgy`
-# (and its subclasses) by converting annotations to properties, and setting up utilities
-# for command line parsing. `corgyparser` is a decorator that allows custom parsers to
-# be defined for `Corgy` attributes.
-
-__all__ = ("Corgy", "corgyparser", "Required", "NotRequired")
+__all__ = ("Corgy",)
 _T = TypeVar("_T", bound="Corgy")
 
-# `Required` and `NotRequired` are implemented as `Annotated` types.
-# These are used to mark attributes as required or not required.
-_A = TypeVar("_A")
-_REQUIRED = object()
-_NOT_REQUIRED = object()
-Required = Annotated[_A, _REQUIRED]
-NotRequired = Annotated[_A, _NOT_REQUIRED]
 
-
-class BooleanOptionalAction(argparse.Action):
-    # :meta private:
-    # Backport of `argparse.BooleanOptionalAction` from Python 3.9.
-    # Taken almost verbatim from `CPython/Lib/argparse.py`.
-    def __init__(self, option_strings, dest, *args, **kwargs):
-        _option_strings = []
-        for option_string in option_strings:
-            _option_strings.append(option_string)
-
-            if option_string.startswith("--"):
-                option_string = "--no-" + option_string[2:]
-                _option_strings.append(option_string)
-
-        super().__init__(
-            option_strings=_option_strings, dest=dest, nargs=0, *args, **kwargs
-        )
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        if option_string in self.option_strings:
-            setattr(namespace, self.dest, not option_string.startswith("--no-"))
-
-
-class _CorgyMeta(type):
-    """Metaclass for `Corgy`.
-
-    Modifies class creation by parsing type annotations, and creating properties for
-    each annotated attribute. Default values and custom parsers are stored in the
-    `__defaults` and `__parsers` attributes. Custom flags, if present, are stored in
-    the `__flags` attribute. `Required` and `NotRequired` annotations are extracted,
-    and required attributes are stored in `__required`.
-    """
-
-    __slots__ = ()
-
-    def __new__(cls, name, bases, namespace, **kwds) -> _CorgyMeta:
-        try:
-            _make_slots = kwds.pop("corgy_make_slots")
-        except KeyError:
-            _make_slots = True
-
-        if _make_slots:
-            if "__slots__" not in namespace:
-                namespace["__slots__"] = []
-            else:
-                namespace["__slots__"] = list(namespace["__slots__"])
-            namespace["__slots__"].append("__frozen")
-        elif "__slots__" in namespace:
-            raise TypeError(
-                "`__slots__` cannot be defined if `corgy_make_slots` is `False`"
-            )
-
-        cls_annotations = namespace.get("__annotations__", {})
-        namespace["__annotations__"] = {}
-        namespace["__defaults"] = {}
-        namespace["__flags"] = {}
-        namespace["__parsers"] = {}
-        namespace["__helps"] = {}
-        namespace["__required"] = set()
-
-        # Temp set of not required attributes--to handle inheritance from
-        # non-`Corgy` classes.
-        _not_required = set()
-
-        # Extract `corgy_freeze_after_init` (default `False`).
-        try:
-            namespace["__freeze_after_init"] = kwds.pop("corgy_freeze_after_init")
-        except KeyError:
-            namespace["__freeze_after_init"] = False
-
-        # See if `corgy_track_bases` is specified (default `True`).
-        try:
-            _track_bases = kwds.pop("corgy_track_bases")
-        except KeyError:
-            _track_bases = True
-        if _track_bases:
-            for base in bases:
-                _base_annotations = getattr(base, "__annotations__", {})
-                namespace["__annotations__"].update(_base_annotations)
-                if isinstance(base, cls):
-                    # `base` is also a `Corgy` class.
-                    namespace["__defaults"].update(getattr(base, "__defaults"))
-                    namespace["__flags"].update(getattr(base, "__flags"))
-                    namespace["__parsers"].update(getattr(base, "__parsers"))
-                    namespace["__helps"].update(getattr(base, "__helps"))
-                    namespace["__required"].update(getattr(base, "__required"))
-                    # Add not required attributes to temp set.
-                    _base_required = getattr(base, "__required")
-                    for _var_name in _base_annotations:
-                        if _var_name not in _base_required:
-                            _not_required.add(_var_name)
-                else:
-                    # Fetch default values directly from the base.
-                    for _var_name in _base_annotations:
-                        try:
-                            namespace["__defaults"][_var_name] = getattr(
-                                base, _var_name
-                            )
-                        except AttributeError:
-                            pass
-
-        # Add current annotations last, so that they override base values.
-        namespace["__annotations__"].update(cls_annotations)
-
-        # See if `corgy_required_by_default` is specified (default `False`).
-        try:
-            _required_by_default = kwds.pop("corgy_required_by_default")
-        except KeyError:
-            _required_by_default = False
-
-        tempnew = super().__new__(cls, name, bases, namespace)
-        type_hints = get_type_hints(tempnew, include_extras=True)
-
-        if not type_hints:
-            return tempnew
-
-        del tempnew  # YUCK
-        for var_name in set(namespace["__annotations__"].keys()):
-            var_ano = type_hints[var_name]
-            # Check for name conflicts.
-            _mangled_name = f"_{name.lstrip('_')}__{var_name}"
-            if _mangled_name in namespace or _mangled_name in cls_annotations:
-                raise TypeError(f"name clash: `{var_name}`, `{_mangled_name}`")
-
-            var_ano_required: Optional[bool]
-            var_meta: Optional[Tuple[Any, ...]]
-            if hasattr(var_ano, "__origin__") and hasattr(var_ano, "__metadata__"):
-                # `<var_name>`: Annotated[<var_type>, <var_flags]`.
-                var_type = var_ano.__origin__
-
-                # Check if `_REQUIRED` or `_NOT_REQUIRED` is present.
-                # `Required` and `NotRequired` are defined as `Annotated[., _REQUIRED]`,
-                # and `Annotated[., _NOT_REQUIRED]`, respectively. Since nested
-                # `Annotated` types get flattened, `_REQUIRED` and `_NOT_REQUIRED` will
-                # be the last element in `var_meta`.
-                if var_ano.__metadata__[-1] in (_REQUIRED, _NOT_REQUIRED):
-                    var_ano_required = var_ano.__metadata__[-1] is _REQUIRED
-                    var_meta = var_ano.__metadata__[:-1]
-                else:
-                    var_ano_required = None
-                    var_meta = var_ano.__metadata__
-            else:
-                var_type = var_ano
-                var_ano_required = None
-                var_meta = None
-
-            if var_meta:
-                # `<var_name>: Annotated[<var_type>, <var_help>, [<var_flags>]]`.
-                var_help = var_meta[0]
-                if not isinstance(var_help, str):
-                    raise TypeError(
-                        f"incorrect help string annotation for variable `{var_name}`: "
-                        f"expected str"
-                    )
-
-                if len(var_meta) > 1:
-                    if isinstance(var_type, cls):
-                        # Custom flags are not allowed for groups.
-                        raise TypeError(
-                            f"invalid annotation for group `{var_name}`: "
-                            f"custom flags not allowed for groups"
-                        )
-
-                    var_flags = var_meta[1]
-                    if not isinstance(var_flags, list) or not var_flags:
-                        raise TypeError(
-                            f"incorrect custom flags for variable `{var_name}`: "
-                            f"expected non-empty list"
-                        )
-                else:
-                    var_flags = None
-            else:
-                # `<var_name>: <var_type>`.
-                var_help = namespace["__helps"].get(var_name, None)
-                var_flags = namespace["__flags"].get(var_name, None)
-
-            if hasattr(var_type, "__origin__") and var_type.__origin__ is ClassVar:
-                # Class variable: make sure it has an associated value.
-                if var_name not in namespace:
-                    if var_name in namespace["__defaults"]:
-                        del namespace["__defaults"][var_name]
-                    else:
-                        raise TypeError(f"class variable `{var_name}` has no value set")
-                del namespace["__annotations__"][var_name]
-                continue
-
-            # Determine if variable is required or not.
-            if var_ano_required is not None:
-                _var_required = var_ano_required
-            elif var_name not in cls_annotations:
-                # Variable was defined in a base class, and is not redefined.
-                if var_name in namespace["__required"]:
-                    _var_required = True
-                elif var_name in _not_required:
-                    _var_required = False
-                else:
-                    # Variable inherited from a non-`Corgy` class.
-                    _var_required = _required_by_default
-            else:
-                _var_required = _required_by_default
-
-            if _var_required:
-                namespace["__required"].add(var_name)
-            else:
-                # Remove from `__required`, in case it was required in a base class.
-                namespace["__required"].discard(var_name)
-
-            namespace["__annotations__"][var_name] = var_type
-
-            if var_help is not None:
-                namespace["__helps"][var_name] = var_help
-            if var_flags is not None:
-                namespace["__flags"][var_name] = var_flags
-
-            # Add default value to dedicated dict.
-            if var_name in namespace:
-                try:
-                    check_val_type(namespace[var_name], var_type)
-                except ValueError as e:
-                    raise ValueError(
-                        f"default value type mismatch for '{var_name}'"
-                    ) from e
-                namespace["__defaults"][var_name] = namespace[var_name]
-            elif var_name in namespace["__defaults"] and var_name in cls_annotations:
-                # Variable had a default value in a base class, but does not anymore.
-                del namespace["__defaults"][var_name]
-
-            # Create `<var_name>` property.
-            namespace[var_name] = cls._create_var_property(
-                name, var_name, var_type, var_help
-            )
-            if _make_slots:
-                if f"__{var_name}" in namespace["__slots__"]:
-                    raise TypeError(
-                        f"cannot have slot `__{var_name}`: internal clash with "
-                        f"`{var_name}`"
-                    )
-                namespace["__slots__"].append(f"__{var_name}")
-
-        if _make_slots:
-            namespace["__slots__"] = tuple(namespace["__slots__"])
-
-        # Store custom parsers in a dict.
-        for _, v in namespace.items():
-            if not isinstance(v, _CorgyParser):
-                continue
-            for var_name in v.var_names:
-                if (var_name in namespace["__annotations__"]) and isinstance(
-                    namespace[var_name], property
-                ):
-                    namespace["__parsers"][var_name] = v.fparse
-                else:
-                    raise TypeError(f"invalid target for corgyparser: {var_name}")
-
-        return super().__new__(cls, name, bases, namespace, **kwds)
-
-    @staticmethod
-    def _create_var_property(cls_name, var_name, var_type, var_doc) -> property:
-        # Properties are stored in private instance variables prefixed with `__`, and
-        # must be accessed as `_<cls>__<var_name>`.
-        def var_fget(self):
-            with suppress(AttributeError):
-                return getattr(self, f"_{cls_name.lstrip('_')}__{var_name}")
-            raise AttributeError(f"no value available for attribute `{var_name}`")
-
-        def var_fset(self, val):
-            if getattr(self, f"_{cls_name.lstrip('_')}__frozen"):
-                raise TypeError(f"cannot set `{var_name}`: object is frozen")
-            check_val_type(val, var_type)
-            setattr(self, f"_{cls_name.lstrip('_')}__{var_name}", val)
-
-        def var_fdel(self):
-            if getattr(self, f"_{cls_name.lstrip('_')}__frozen"):
-                raise TypeError(f"cannot delete `{var_name}`: object is frozen")
-            if var_name in getattr(self, "__required"):
-                raise TypeError(f"attribute `{var_name}` cannot be unset")
-            delattr(self, f"_{cls_name.lstrip('_')}__{var_name}")
-
-        var_fget.__annotations__ = {"return": var_type}
-        var_fset.__annotations__ = {"val": var_type}
-
-        return property(var_fget, var_fset, var_fdel, doc=var_doc)
-
-
-class Corgy(metaclass=_CorgyMeta):
+class Corgy(metaclass=CorgyMeta):
     """Base class for collections of attributes.
 
     To use, subclass `Corgy`, and declare attributes using type annotations::
@@ -741,7 +432,7 @@ class Corgy(metaclass=_CorgyMeta):
     @classmethod
     def add_args_to_parser(
         cls,
-        parser: argparse._ActionsContainer,
+        parser: _ActionsContainer,
         name_prefix: str = "",
         flatten_subgrps: bool = False,
         defaults: Optional[Mapping[str, Any]] = None,
@@ -770,7 +461,8 @@ class Corgy(metaclass=_CorgyMeta):
         *Annotated*
         `typing.Annotated` can be used to add a help message for the argument::
 
-            >>> from argparse import ArgumentParser, SUPPRESS
+            >>> import argparse
+            >>> from argparse import ArgumentParser
             >>> from corgy import CorgyHelpFormatter
 
             >>> class A(Corgy):
@@ -779,7 +471,7 @@ class Corgy(metaclass=_CorgyMeta):
             >>> parser = ArgumentParser(
             ...     formatter_class=CorgyHelpFormatter,
             ...     add_help=False,
-            ...     usage=SUPPRESS,
+            ...     usage=argparse.SUPPRESS,
             ... )
 
             >>> A.add_args_to_parser(parser)
@@ -799,7 +491,7 @@ class Corgy(metaclass=_CorgyMeta):
             >>> parser = ArgumentParser(
             ...     formatter_class=CorgyHelpFormatter,
             ...     add_help=False,
-            ...     usage=SUPPRESS,
+            ...     usage=argparse.SUPPRESS,
             ... )
 
             >>> A.add_args_to_parser(parser)
@@ -830,7 +522,7 @@ class Corgy(metaclass=_CorgyMeta):
             >>> parser = ArgumentParser(
             ...     formatter_class=CorgyHelpFormatter,
             ...     add_help=False,
-            ...     usage=SUPPRESS,
+            ...     usage=argparse.SUPPRESS,
             ... )
 
             >>> A.add_args_to_parser(parser)
@@ -841,7 +533,7 @@ class Corgy(metaclass=_CorgyMeta):
               --z int  (optional)
 
         Attributes which are not required, and don't have a default value are added
-        with `default=SUPPRESS`, and so will not be included in the parsed namespace::
+        with `default=argparse.SUPPRESS`, and so will not be in the parsed namespace::
 
             >>> parser.parse_args(["--x", "1", "--y", "2"])
             Namespace(x=1, y=2)
@@ -874,7 +566,7 @@ class Corgy(metaclass=_CorgyMeta):
             >>> parser = ArgumentParser(
             ...     formatter_class=CorgyHelpFormatter,
             ...     add_help=False,
-            ...     usage=SUPPRESS,
+            ...     usage=argparse.SUPPRESS,
             ... )
 
             >>> A.add_args_to_parser(parser)
@@ -925,7 +617,7 @@ class Corgy(metaclass=_CorgyMeta):
             >>> parser = ArgumentParser(
             ...     formatter_class=CorgyHelpFormatter,
             ...     add_help=False,
-            ...     usage=SUPPRESS,
+            ...     usage=argparse.SUPPRESS,
             ... )
 
             >>> A.add_args_to_parser(parser)
@@ -957,7 +649,7 @@ class Corgy(metaclass=_CorgyMeta):
             >>> parser = ArgumentParser(
             ...     formatter_class=CorgyHelpFormatter,
             ...     add_help=False,
-            ...     usage=SUPPRESS,
+            ...     usage=argparse.SUPPRESS,
             ... )
 
             >>> A.add_args_to_parser(parser)
@@ -1042,7 +734,7 @@ class Corgy(metaclass=_CorgyMeta):
                 # Update defaults with any values specified individually.
                 grp_defaults.update(group_arg_defaults.get(var_name, {}))
 
-                grp_parser: argparse._ActionsContainer
+                grp_parser: _ActionsContainer
                 if flatten_subgrps:
                     grp_parser = base_parser
                 else:
@@ -1050,7 +742,7 @@ class Corgy(metaclass=_CorgyMeta):
                 var_type.add_args_to_parser(grp_parser, var_dest, True, grp_defaults)
                 continue
 
-            var_action: Optional[Type[argparse.Action]] = None
+            var_action: Optional[Type[Action]] = None
 
             # Check if the variable is required on the command line.
             var_required = var_name not in base_defaults and var_name in required_attrs
@@ -1299,7 +991,7 @@ class Corgy(metaclass=_CorgyMeta):
                 return _cast_type(  # pylint: disable=abstract-class-instantiated
                     [dictify_corgys(_val_part) for _val_part in _val]
                 )
-            if isinstance(_val.__class__, _CorgyMeta):
+            if isinstance(_val.__class__, CorgyMeta):
                 return _val.as_dict(recursive=True, flatten=flatten)
             return _val
 
@@ -1312,7 +1004,7 @@ class Corgy(metaclass=_CorgyMeta):
 
             if recursive:
                 attr_val = dictify_corgys(attr_val)
-                if flatten and isinstance(attr_type, _CorgyMeta):
+                if flatten and isinstance(attr_type, CorgyMeta):
                     for _k, _v in attr_val.items():
                         _flat_key = f"{attr_name}:{_k}"
                         self_dict[_flat_key] = _v
@@ -1381,13 +1073,13 @@ class Corgy(metaclass=_CorgyMeta):
                         f"conflicting arguments: `{arg_name}` and `{grp_name}`"
                     )
                 grp_type = cls_attrs[grp_name]
-                if not isinstance(grp_type, _CorgyMeta):
+                if not isinstance(grp_type, CorgyMeta):
                     raise ValueError(f"`{grp_name}` is not a `Corgy` class")
                 grp_args_map[grp_name][arg_name_base] = arg_val
 
             elif hasattr(cls, arg_name):
                 arg_type = cls_attrs[arg_name]
-                if isinstance(arg_type, _CorgyMeta) and isinstance(arg_val, dict):
+                if isinstance(arg_type, CorgyMeta) and isinstance(arg_val, dict):
                     grp_args_map[arg_name] = arg_val
                 else:
                     main_args_map[arg_name] = arg_val
@@ -1455,7 +1147,7 @@ class Corgy(metaclass=_CorgyMeta):
                         f"conflicting arguments: `{arg_name}` and `{grp_name}`"
                     )
                 grp_type = cls_attrs[grp_name]
-                if not isinstance(grp_type, _CorgyMeta):
+                if not isinstance(grp_type, CorgyMeta):
                     raise ValueError(f"`{grp_name}` is not a `Corgy` class")
                 main_args_map[grp_name][arg_name_base] = arg_val
 
@@ -1469,7 +1161,7 @@ class Corgy(metaclass=_CorgyMeta):
                 continue
 
             arg_new_val = main_args_map[arg_name]
-            if isinstance(arg_type, _CorgyMeta) and isinstance(arg_new_val, dict):
+            if isinstance(arg_type, CorgyMeta) and isinstance(arg_new_val, dict):
                 try:
                     arg_obj = getattr(self, arg_name)
                 except AttributeError:
@@ -1485,7 +1177,7 @@ class Corgy(metaclass=_CorgyMeta):
     @classmethod
     def parse_from_cmdline(
         cls: Type[_T],
-        parser: Optional[argparse.ArgumentParser] = None,
+        parser: Optional[ArgumentParser] = None,
         defaults: Optional[Mapping[str, Any]] = None,
         **parser_args,
     ) -> _T:
@@ -1501,12 +1193,12 @@ class Corgy(metaclass=_CorgyMeta):
                 if `parser` is not None.
 
         Raises:
-            ArgumentError: Error parsing command line arguments.
+            ArgumentTypeError: Error parsing command line arguments.
         """
         if parser is None:
             if "formatter_class" not in parser_args:
                 parser_args["formatter_class"] = CorgyHelpFormatter
-            parser = argparse.ArgumentParser(**parser_args)
+            parser = ArgumentParser(**parser_args)
         cls.add_args_to_parser(parser, defaults=defaults)
         args = vars(parser.parse_args())
         return cls.from_dict(args, try_cast=True)
@@ -1549,9 +1241,7 @@ class Corgy(metaclass=_CorgyMeta):
             A(x='one', g=G(x=1, y=[1, 2, 3]))
 
         """
-        tomli = importlib.import_module(
-            "tomllib" if sys.version_info >= (3, 11) else "tomli"
-        )
+        tomli = import_module("tomllib" if sys.version_info >= (3, 11) else "tomli")
         toml_data = tomli.load(toml_file)
         if defaults is not None:
             for _k, _v in defaults.items():
@@ -1586,163 +1276,3 @@ class Corgy(metaclass=_CorgyMeta):
 
         """
         setattr(self, f"_{self.__class__.__name__.lstrip('_')}__frozen", True)
-
-
-class _CorgyParser(NamedTuple):
-    """Class to represent custom parsers.
-
-    This class is returned by the `@corgyparser` decorator, and is used by `Corgy` to
-    keep track of parsers.
-    """
-
-    var_names: List[str]
-    fparse: Callable[[str], Any]
-    nargs: Union[None, Literal["*", "+"], int]
-
-    def __call__(self, s):
-        return self.fparse(s)
-
-
-def corgyparser(
-    *var_names: str,
-    metavar: Optional[str] = None,
-    nargs: Union[None, Literal["*", "+"], int] = None,
-) -> Callable[[Union[Callable[[str], Any], _CorgyParser]], _CorgyParser]:
-    """Decorate a function as a custom parser for one or more attributes.
-
-    To use a custom function for parsing a `Corgy` attribute, use this decorator.
-    Parsing functions must be static, and should only accept a single argument.
-    Decorating the function with `@staticmethod` is optional, but prevents type errors.
-    `@corgyparser` must be the final decorator in the decorator chain.
-
-    Args:
-        var_names: The attributes associated with the decorated parser.
-        metavar: Keyword only argument to set the metavar when adding the associated
-            attribute(s) to an `ArgumentParser` instance.
-        nargs: Keyword only argument to set the number of arguments to be used for the
-            associated attribute(s). Must be `None`, `'*'`, `'+'`, or a positive number.
-            This value is passed as the `nargs` argument to
-            `ArgumentParser.add_argument`, and controls the number of arguments that
-            will be read from the command line, and passed to the parsing function.
-            For all values other than `None`, the parsing function will receive a list
-            of strings.
-
-    Example::
-
-        >>> from corgy import corgyparser
-
-        >>> class A(Corgy):
-        ...     time: Tuple[int, int, int]
-        ...     @corgyparser("time", metavar="int:int:int")
-        ...     @staticmethod
-        ...     def parse_time(s):
-        ...         return tuple(map(int, s.split(":")))
-
-        >>> parser = ArgumentParser(
-        ...     formatter_class=CorgyHelpFormatter,
-        ...     add_help=False,
-        ...     usage=SUPPRESS,
-        ... )
-
-        >>> A.add_args_to_parser(parser)
-        >>> parser.parse_args(["--time", "1:2:3"])
-        Namespace(time=(1, 2, 3))
-
-    Multiple arguments can be passed to the decorator, and will all be associated with
-    the same parser::
-
-        >>> class A(Corgy):
-        ...     x: int
-        ...     y: int
-        ...     @corgyparser("x", "y")
-        ...     @staticmethod
-        ...     def parse_x_y(s):
-        ...         return int(s)
-
-    The `@corgyparser` decorator can also be chained to use the same parser for multiple
-    arguments::
-
-        >>> class A(Corgy):
-        ...     x: int
-        ...     y: int
-        ...     @corgyparser("x")
-        ...     @corgyparser("y")
-        ...     @staticmethod
-        ...     def parse_x_y(s):
-        ...         return int(s)
-
-    Note: when chaining, the outer-most non-`None` value of `metavar` will be used.
-
-    Custom parsers can control the number of arguments they receive, independent of the
-    argument type::
-
-        >>> class A(Corgy):
-        ...     x: int
-        ...     @corgyparser("x", nargs=3)
-        ...     @staticmethod
-        ...     def parse_x(s):
-        ...         # `s` will be a list of 3 strings.
-        ...         return sum(map(int, s))
-
-        >>> parser = ArgumentParser(
-        ...     formatter_class=CorgyHelpFormatter,
-        ...     add_help=False,
-        ...     usage=SUPPRESS,
-        ... )
-
-        >>> A.add_args_to_parser(parser)
-        >>> parser.parse_args(["--x", "1", "2", "3"])
-        Namespace(x=6)
-
-    When chaining, `nargs` must be the same for all decorators, otherwise `TypeError` is
-    raised.
-    """
-    if not all(isinstance(_var_name, str) for _var_name in var_names):
-        raise TypeError(
-            "corgyparser should be passed the name of arguments: decorate using"
-            "@corgyparser(<argument(s)>)"
-        )
-
-    def wrapper(var_names, metavar, fparse):
-        if isinstance(fparse, _CorgyParser):
-            if nargs != fparse.nargs:
-                raise TypeError(
-                    "all `corgyparser` decorations of a funciton must have same `nargs`"
-                )
-            corgy_parser = fparse
-            corgy_parser.var_names.extend(var_names)
-        else:
-            if isinstance(fparse, staticmethod):
-                fparse = fparse.__func__
-            if not callable(fparse):
-                raise TypeError("corgyparser can only decorate static functions")
-            corgy_parser = _CorgyParser(list(var_names), fparse, nargs)
-
-        if metavar is not None:
-            setattr(corgy_parser.fparse, "__metavar__", metavar)
-        if nargs is not None:
-            setattr(corgy_parser.fparse, "__nargs__", nargs)
-        return corgy_parser
-
-    return partial(wrapper, var_names, metavar)
-
-
-class CorgyParserAction(argparse.Action):
-    def __init__(
-        self, corgy_parser: _CorgyParser, choices: Optional[Collection], *args, **kwargs
-    ):
-        super().__init__(*args, **kwargs)
-        self._corgy_parser = corgy_parser
-        self._choices = choices
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        try:
-            val = self._corgy_parser(values)
-            if self._choices is not None and val not in self._choices:
-                raise ValueError(
-                    f"invalid choice: {val} (choose from "
-                    f"{', '.join(map(str, self._choices))})"
-                )
-            setattr(namespace, self.dest, val)
-        except ValueError as e:
-            raise argparse.ArgumentTypeError from e
