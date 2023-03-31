@@ -317,6 +317,29 @@ class TestCorgyCustomParsers(TestCase):
             metavar="T",
         )
 
+    def test_add_args_handles_bool_with_custom_parser(self):
+        class C(Corgy):
+            x: bool
+
+            @corgyparser("x", nargs=2, metavar=("a", "b"))
+            @staticmethod
+            def parsex(s):
+                return s[0] == s[1]
+
+        parser = ArgumentParser()
+        parser.add_argument = MagicMock()
+        _parser_action = partial(CorgyParserAction, C.parsex)
+        with patch("corgy._corgy.partial", MagicMock(return_value=_parser_action)):
+            C.add_args_to_parser(parser)
+        parser.add_argument.assert_called_once_with(
+            "--x",
+            type=str,
+            action=_parser_action,
+            default=argparse.SUPPRESS,
+            nargs=2,
+            metavar=("a", "b"),
+        )
+
     def test_corgyparser_metavar_overrides_type_metavar(self):
         class T:
             __metavar__ = "T"

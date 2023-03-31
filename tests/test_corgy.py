@@ -2302,6 +2302,15 @@ class TestCorgyAddRequiredArgsToParser(TestCase):
         C.add_args_to_parser(self.parser)
         self.parser.add_argument.assert_called_once_with("--x", type=int, default=1)
 
+    def test_add_args_handles_optional_bool(self):
+        class C(Corgy):
+            x: NotRequired[bool]
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with(
+            "--x", type=bool, action=BooleanOptionalAction, default=argparse.SUPPRESS
+        )
+
 
 class TestCorgyCmdlineParsing(TestCase):
     def setUp(self):
