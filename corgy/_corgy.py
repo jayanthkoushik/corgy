@@ -705,6 +705,10 @@ class Corgy(metaclass=CorgyMeta):
                 var_dest = var_name
 
             if not any(_flag.startswith("-") for _flag in var_flags):
+                # Note: the flags cannot be passed to `add_argument` with `dest` set
+                # to `var_name` since `argparse` will raise an error for passing `dest`
+                # twice (for positional arguments, `argparse` uses the flag to infer the
+                # `dest`).
                 var_flags = [var_name]
                 var_positional = True
             elif all(_flag.startswith("-") for _flag in var_flags):
@@ -827,6 +831,7 @@ class Corgy(metaclass=CorgyMeta):
                 and var_nargs is None
                 and var_action is None
                 and var_choices is None
+                and not var_positional
             ):
                 var_action = BooleanOptionalAction
 

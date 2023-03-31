@@ -1798,6 +1798,13 @@ class TestCorgyAddArgsToParser(TestCase):
             "--x", type=bool, required=True, choices=(True, False)
         )
 
+    def test_add_args_handles_positional_bool(self):
+        class C(Corgy):
+            x: Annotated[bool, "x help", ["x"]]
+
+        C.add_args_to_parser(self.parser)
+        self.parser.add_argument.assert_called_once_with("x", type=bool, help="x help")
+
     def test_add_args_raises_if_coll_has_no_types(self):
         for _type in COLLECTION_TYPES:
             with self.subTest(type=_type):
