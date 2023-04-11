@@ -2,6 +2,49 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [7.0.0](https://github.com/jayanthkoushik/corgy/compare/v6.0.0...v7.0.0) (2023-04-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* A few types in `corgy.types` accepted arbitrary keyword
+arguments. This was not consistent, not tested, and has been removed.
+All file related types now accept a single "path-like" argument.
+* `Path` subclasses in `corgy.types` now perform user
+home (~) and environment variable expansion by default. These classes
+also have two new attributes: `do_expanduser` and `do_expandvars` which
+can be set to `False` to disable expansion of home and environment vars
+respectively.
+* `OutputTextFile.stdout_wrapper`,
+`OutputTextFile.stderr_wrapper`, `InputTextFile.stdin_wrapper` are now
+classmethods instead of classproperties. The change allows simpler
+implementation without relying on custom metaclass, and also enables
+type checking in these methods.
+* The package no longer relies on, or uses
+`typing.Required` and `typing.NotRequired`, since type checkers consider
+it an error to use them outside of `TypedDict`s. `corgy` now provides
+its own versions of these types, implemented using `typing.Annotated`,
+so that type checking works as expected. Usage remains the same.
+
+### Features
+
+* add binary versions of `stdout/stderr/stdin` wrappers in `corgy.types` ([5083b23](https://github.com/jayanthkoushik/corgy/commit/5083b238e5e87d1917332ca0d735608893d40b3e))
+* add types for input/output file paths ([f96eca7](https://github.com/jayanthkoushik/corgy/commit/f96eca710524d91605521cf237aede4a05d63eb9))
+* perform user and environment variable expansion in `Path` types ([e3100fe](https://github.com/jayanthkoushik/corgy/commit/e3100feeb8c16845ca4edba4a0b6339d09fa7156))
+
+
+### Bug Fixes
+
+* do not convert positional bools to option pairs in `Corgy.add_args_to_parser` ([7fcda64](https://github.com/jayanthkoushik/corgy/commit/7fcda649a2a8f65d4b990a0f923b7371cb4173ae))
+* fix handling of choices when using custom parsers ([40ec87b](https://github.com/jayanthkoushik/corgy/commit/40ec87b1ae44572bfdc591b9f819d8074c7c60c2))
+* only mark args as 'optional' by 'CorgyHelpFormatter' if `default=SUPPRESS` ([5b7603f](https://github.com/jayanthkoushik/corgy/commit/5b7603f272a7f56fa9487c5dc523d876b4732269))
+* remove `kwargs` from argument list of file types ([f3aa648](https://github.com/jayanthkoushik/corgy/commit/f3aa6487bb7cfd7acf61610c4dc0da93cd888bf0))
+* use custom implementations of `Required` and `NotRequired` ([ebf0913](https://github.com/jayanthkoushik/corgy/commit/ebf0913c4f0b61ae9d88422456c477ef170dfbf1))
+* use proper delegation to concrete `Path` types in `corgy.types` ([580dd86](https://github.com/jayanthkoushik/corgy/commit/580dd868c95b8f7e8d8a9ae4af2b0a1bdae767b0))
+
+
+* rewrite `stdout/stderr/stdin` wrappers in \`corgy.types\` ([99307eb](https://github.com/jayanthkoushik/corgy/commit/99307ebf6f9811e79c907fcb292625d44a2552a8))
+
 ## [6.0.0](https://github.com/jayanthkoushik/corgy/compare/v5.0.0...v6.0.0) (2023-03-27)
 
 
