@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import sys
-from argparse import Action, ArgumentTypeError
+from argparse import Action, ArgumentError
 from functools import partial
 from typing import Any, Callable, Collection, List, NamedTuple, Optional, Union
 
@@ -46,7 +46,7 @@ class CorgyParserAction(Action):
                 )
             setattr(namespace, self.dest, val)
         except ValueError as e:
-            raise ArgumentTypeError from e
+            raise ArgumentError(self, str(e)) from None
 
 
 def corgyparser(

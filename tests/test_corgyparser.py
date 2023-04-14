@@ -1,7 +1,9 @@
 import argparse
 import sys
 from argparse import ArgumentParser, ArgumentTypeError
+from contextlib import redirect_stderr
 from functools import partial
+from io import StringIO
 from typing import ClassVar, Optional, Tuple
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
@@ -424,14 +426,15 @@ class TestCorgyCustomParsers(TestCase):
         orig_parse_args = ArgumentParser.parse_args
 
         def _run_with_args(*cmd_args):
-            parser = ArgumentParser()
-            parser.parse_args = lambda: orig_parse_args(
-                parser, ["--x"] + list(cmd_args)
-            )
-            args = C.parse_from_cmdline(parser)
-            return args.x
+            with redirect_stderr(StringIO()):
+                parser = ArgumentParser()
+                parser.parse_args = lambda: orig_parse_args(
+                    parser, ["--x"] + list(cmd_args)
+                )
+                args = C.parse_from_cmdline(parser)
+                return args.x
 
-        with self.assertRaises(ArgumentTypeError):
+        with self.assertRaises(SystemExit):
             _run_with_args("2", "3", "4")
         self.assertEqual(_run_with_args("1", "2", "3", "4"), 10)
 
@@ -473,24 +476,25 @@ class TestCorgyCustomParsers(TestCase):
         orig_parse_args = ArgumentParser.parse_args
 
         def _run_with_args(*cmd_args):
-            parser = ArgumentParser()
-            parser.parse_args = lambda: orig_parse_args(
-                parser, ["--x"] + list(cmd_args)
-            )
-            args = C.parse_from_cmdline(parser)
-            return args.x
+            with redirect_stderr(StringIO()):
+                parser = ArgumentParser()
+                parser.parse_args = lambda: orig_parse_args(
+                    parser, ["--x"] + list(cmd_args)
+                )
+                args = C.parse_from_cmdline(parser)
+                return args.x
 
         self.assertTupleEqual(_run_with_args("1", "2.1"), ((1, 2.1),))
         self.assertTupleEqual(
             _run_with_args("1", "2.1", "3", "4.1"), ((1, 2.1), (3, 4.1))
         )
-        with self.assertRaises(ArgumentTypeError):
+        with self.assertRaises(SystemExit):
             _run_with_args("1", "two")
-        with self.assertRaises(ArgumentTypeError):
+        with self.assertRaises(SystemExit):
             _run_with_args("1.1", "2.1")
-        with self.assertRaises(ArgumentTypeError):
+        with self.assertRaises(SystemExit):
             _run_with_args("1", "2.1", "3")
-        with self.assertRaises(ArgumentTypeError):
+        with self.assertRaises(SystemExit):
             _run_with_args()
 
     def test_custom_parsers_handle_required_attrs(self):
