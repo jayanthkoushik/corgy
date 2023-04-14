@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [8.0.1](https://github.com/jayanthkoushik/corgy/compare/v8.0.0...v8.0.1) (2023-04-14)
+
+
+### Bug Fixes
+
+* raise `ArgumentError` instead of `ArgumentTypeError` from `CorgyParserAction` ([f798132](https://github.com/jayanthkoushik/corgy/commit/f79813285a80ffeaf6d61a56b4829ec882d90372))
+
 ## [8.0.0](https://github.com/jayanthkoushik/corgy/compare/v7.0.0...v8.0.0) (2023-04-14)
 
 
