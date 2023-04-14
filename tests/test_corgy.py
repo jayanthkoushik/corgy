@@ -1,7 +1,14 @@
 # pylint: disable=abstract-class-instantiated
 import argparse
 import sys
-from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser, ArgumentTypeError
+from argparse import (
+    _StoreConstAction,
+    _StoreFalseAction,
+    _StoreTrueAction,
+    ArgumentDefaultsHelpFormatter,
+    ArgumentParser,
+    ArgumentTypeError,
+)
 from collections.abc import Sequence as AbstractSequence
 from io import BytesIO
 from typing import ClassVar, List, Optional, Sequence, Set, Tuple
@@ -1736,6 +1743,42 @@ class TestCorgyAddArgsToParser(TestCase):
             "--x", type=A, required=True, choices=(1, 2, 3)
         )
 
+    def test_add_args_uses_store_const_action_for_single_choice_literal(self):
+        class A:
+            __choices__ = (42,)
+
+        for type_ in (A, Literal[42]):
+            with self.subTest(type=type_):
+
+                class C(Corgy):
+                    x: type_
+
+                self.setUp()
+                C.add_args_to_parser(self.parser)
+                self.parser.add_argument.assert_called_once_with(
+                    "--x", action=_StoreConstAction, const=42, required=True
+                )
+
+    def test_add_args_uses_store_true_false_action_for_true_false_literal(self):
+        for val in (True, False):
+
+            class A:
+                __choices__ = (val,)
+
+            for type_ in (A, Literal[val]):  # type: ignore
+                with self.subTest(val=val, type=type_):
+
+                    class C(Corgy):
+                        x: type_
+
+                    self.setUp()
+                    C.add_args_to_parser(self.parser)
+                    self.parser.add_argument.assert_called_once_with(
+                        "--x",
+                        action=(_StoreTrueAction if val else _StoreFalseAction),
+                        required=True,
+                    )
+
     def test_add_args_handles_user_defined_class_as_type(self):
         class T:
             ...
@@ -2627,6 +2670,19 @@ class TestCorgyCmdlineParsing(TestCase):
 
         with self.assertRaises(ArgumentTypeError):
             C.parse_from_cmdline(self.parser, add_help=False)
+
+    def test_parse_from_cmdline_handles_single_value_literal(self):
+        class C(Corgy):
+            x: Literal[42]
+
+        self.parser.parse_args = lambda: self.orig_parse_args(self.parser, ["--x"])
+        c = C.parse_from_cmdline(self.parser)
+        self.assertTrue(hasattr(c, "x"))
+
+        self.setUp()
+        self.parser.parse_args = lambda: self.orig_parse_args(self.parser, [])
+        c = C.parse_from_cmdline(self.parser)
+        self.assertFalse(hasattr(c, "x"))
 
 
 @skipIf(tomli is None, "`tomli` package not found")

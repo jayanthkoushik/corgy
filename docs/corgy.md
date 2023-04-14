@@ -672,6 +672,28 @@ For types which specify choices by defining `__choices__`, the values are
 passed to the `choices` argument as with `Literal`, but no type inference is
 performed, and the base attribute type will be used as the argument type.
 
+**Single-value Literals**
+A special case for `Literal` types is when there is only one choice. In this
+case, the argument is added as a `store_const` action, with the value as the
+`const` argument. A further special case is when the choice is `True/False`,
+in which case the action is `store_true`/`store_false` respectively:
+
+```python
+>>> class A(Corgy):
+...     x: Literal[True]
+...     y: Literal[False]
+...     z: Literal[42]
+
+>>> parser = ArgumentParser()
+>>> A.add_args_to_parser(parser)
+>>> parser.parse_args(["--x"])  # Note that `y` and `z` are absent
+Namespace(x=True)
+>>> parser.parse_args(["--y"])
+Namespace(y=False)
+>>> parser.parse_args(["--z"])
+Namespace(z=42)
+```
+
 *Corgy*
 Attributes which are themselves `Corgy` types are treated as argument groups.
 Group arguments are added to the command line parser with the group attribute

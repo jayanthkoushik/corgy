@@ -2,7 +2,14 @@ from __future__ import annotations
 
 import argparse
 import sys
-from argparse import _ActionsContainer, Action, ArgumentParser
+from argparse import (
+    _ActionsContainer,
+    _StoreConstAction,
+    _StoreFalseAction,
+    _StoreTrueAction,
+    Action,
+    ArgumentParser,
+)
 from collections import defaultdict
 from collections.abc import Sequence as AbstractSequence
 from functools import partial
@@ -629,6 +636,26 @@ class Corgy(metaclass=CorgyMeta):
         passed to the `choices` argument as with `Literal`, but no type inference is
         performed, and the base attribute type will be used as the argument type.
 
+        **Single-value Literals**
+        A special case for `Literal` types is when there is only one choice. In this
+        case, the argument is added as a `store_const` action, with the value as the
+        `const` argument. A further special case is when the choice is `True/False`,
+        in which case the action is `store_true`/`store_false` respectively::
+
+            >>> class A(Corgy):
+            ...     x: Literal[True]
+            ...     y: Literal[False]
+            ...     z: Literal[42]
+
+            >>> parser = ArgumentParser()
+            >>> A.add_args_to_parser(parser)
+            >>> parser.parse_args(["--x"])  # Note that `y` and `z` are absent
+            Namespace(x=True)
+            >>> parser.parse_args(["--y"])
+            Namespace(y=False)
+            >>> parser.parse_args(["--z"])
+            Namespace(z=42)
+
         *Corgy*
         Attributes which are themselves `Corgy` types are treated as argument groups.
         Group arguments are added to the command line parser with the group attribute
@@ -824,6 +851,28 @@ class Corgy(metaclass=CorgyMeta):
                 var_base_type, "__metavar__", None
             )
 
+            # Convert single choice attributes to `store_*` actions.
+            if (
+                var_choices is not None
+                and len(var_choices) == 1
+                and var_nargs is None
+                and var_action is None
+            ):
+                _choice = var_choices[0]
+                if _choice is True:
+                    var_action = _StoreTrueAction
+                    var_const = None
+                elif _choice is False:
+                    var_action = _StoreFalseAction
+                    var_const = None
+                else:
+                    var_action = _StoreConstAction
+                    var_const = _choice
+                var_choices = None
+                var_base_type = None
+            else:
+                var_const = None
+
             # Check if the variable is boolean. Boolean variables are converted to
             # `--<var-name>`/`--no-<var-name>` arguments.
             if (
@@ -873,7 +922,11 @@ class Corgy(metaclass=CorgyMeta):
 
             if var_type_metavar is not None:
                 _kwargs["metavar"] = var_type_metavar
-            parser.add_argument(*var_flags, type=var_add_type, **_kwargs)
+            if var_add_type is not None:
+                _kwargs["type"] = var_add_type
+            if var_const is not None:
+                _kwargs["const"] = var_const
+            parser.add_argument(*var_flags, **_kwargs)
 
     def __init__(self, **args):
         if self.__class__ is Corgy:
