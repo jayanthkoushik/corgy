@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [8.0.0](https://github.com/jayanthkoushik/corgy/compare/v7.0.0...v8.0.0) (2023-04-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* The following path based types have been removed from
+`Corgy.types`: `ReadableFile`, `WritableFile`, `InputDirectory`,
+`OutputDirectory`, `LazyOutputDirectory`, `IODirectory`. The "promises"
+communicated by these types were only true when objects were created
+by calling the type--any operation could cause they types to have a value
+that did not satisfy the type's condition. For example, with
+`f: ReadableFile`, `f.parent` would be an object of type `ReadableFile`,
+but is not a file at all. For enforcing the conditions provided by the
+removed types in `Corgy` classes, custom parsers should be used instead.
+
+### Features
+
+* use `store_*` actions in `Corgy.add_args_to_parser` for single value literals ([88b0aa1](https://github.com/jayanthkoushik/corgy/commit/88b0aa15a6de4024b43185bd0ed09e54a3f3462b))
+
+
+* remove path sub-class types ([ac73147](https://github.com/jayanthkoushik/corgy/commit/ac7314733ffcca1c1f3be0173a3a9fff1c9a587d))
+
 ## [7.0.0](https://github.com/jayanthkoushik/corgy/compare/v6.0.0...v7.0.0) (2023-04-11)
 
 
