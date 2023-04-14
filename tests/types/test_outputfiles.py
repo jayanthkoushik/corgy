@@ -26,7 +26,9 @@ class _TestOutputFileWrapper:
                 self.assertTrue(os.path.exists(fname))
 
         def test_output_file_raises_if_dir_create_fails(self):
-            with patch("corgy.types._dir.os.makedirs", MagicMock(side_effect=OSError)):
+            with patch(
+                "corgy.types._outputfile.os.makedirs", MagicMock(side_effect=OSError)
+            ):
                 with self.assertRaises(ValueError):
                     self.type(os.path.join(self.tmp_dir.name, "foo", "bar", "baz.file"))
 

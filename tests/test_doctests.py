@@ -7,8 +7,6 @@ import corgy.types
 DOCTEST_MODULES = {
     corgy: ["_corgy.py", "_corgyparser.py", "_helpfmt.py"],
     corgy.types: [
-        "_dir.py",
-        "_filepath.py",
         "_initargs.py",
         "_inputfile.py",
         "_keyvaluepairs.py",

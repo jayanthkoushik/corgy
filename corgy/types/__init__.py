@@ -26,21 +26,19 @@ Examples::
     >>> import argparse
     >>> from argparse import ArgumentParser
     >>> from corgy import CorgyHelpFormatter
-    >>> from corgy.types import InputDirectory
+    >>> from corgy.types import InputFile
     >>> parser = ArgumentParser(
     ...     formatter_class=CorgyHelpFormatter,
     ...     add_help=False,
     ...     usage=argparse.SUPPRESS,
     ... )
-    >>> _ = parser.add_argument("--d", type=InputDirectory)
+    >>> _ = parser.add_argument("--f", type=InputFile)
     >>> parser.print_help()
     options:
-      --d dir  (default: None)
+      --f file  (default: None)
 
 """
 
-from ._dir import *
-from ._filepath import *
 from ._initargs import *
 from ._inputfile import *
 from ._keyvaluepairs import *
@@ -49,10 +47,8 @@ from ._subclass import *
 
 # pylint: disable=undefined-variable
 __all__ = (
-    _filepath.__all__  # type: ignore
-    + _outputfile.__all__  # type: ignore
+    _outputfile.__all__  # type: ignore
     + _inputfile.__all__  # type: ignore
-    + _dir.__all__  # type: ignore
     + _subclass.__all__  # type: ignore
     + _keyvaluepairs.__all__  # type: ignore
     + _initargs.__all__  # type: ignore

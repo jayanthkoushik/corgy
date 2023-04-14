@@ -29,52 +29,17 @@ Examples:
 >>> import argparse
 >>> from argparse import ArgumentParser
 >>> from corgy import CorgyHelpFormatter
->>> from corgy.types import InputDirectory
+>>> from corgy.types import InputFile
 >>> parser = ArgumentParser(
 ...     formatter_class=CorgyHelpFormatter,
 ...     add_help=False,
 ...     usage=argparse.SUPPRESS,
 ... )
->>> _ = parser.add_argument("--d", type=InputDirectory)
+>>> _ = parser.add_argument("--f", type=InputFile)
 >>> parser.print_help()
 options:
-  --d dir  (default: None)
+  --f file  (default: None)
 ```
-
-
-### _class_ corgy.types.ReadableFile(path)
-`Path` sub-class representing a readable file.
-
-
-* **Parameters**
-
-    **path** – String or path-like object.
-
-
-The provided path must point to an existing file, and the file must be readable.
-`ValueError` is raised otherwise.
-
-User directory and environment variable expansion is performed on the path.
-To disable this behavior, set class attributes `do_expanduser` and `do_expandvars`
-to `False` respectively.
-
-
-### _class_ corgy.types.WritableFile(path)
-`Path` sub-class representing a writable file.
-
-
-* **Parameters**
-
-    **path** – String or path-like object.
-
-
-If the path exists, it must be a file, and it must be writable. If the path does
-not exist, the path’s directory must exist and be writable. `ValueError` is
-raised otherwise.
-
-User directory and environment variable expansion is performed on the path.
-To disable this behavior, set class attributes `do_expanduser` and `do_expandvars`
-to `False` respectively.
 
 
 ### _class_ corgy.types.OutputTextFile(path)
@@ -169,69 +134,6 @@ This class is a thin wrapper around `BufferedReader` that accepts a path, instea
 of a file stream. The file must exist, and will be opened in binary mode.
 `ValueError` is raised if this fails. An `atexit` handler will be registered
 to close the file on program termination.
-
-User directory and environment variable expansion is performed on the path.
-To disable this behavior, set class attributes `do_expanduser` and `do_expandvars`
-to `False` respectively.
-
-
-### _class_ corgy.types.OutputDirectory(path)
-`Path` sub-class representing a directory to be written to.
-
-
-* **Parameters**
-
-    **path** – Path to a directory.
-
-
-If the path does not exist, a directory with the path name will be created
-(including any parent directories). `ValueError` is raised if this fails, or
-if the path is not a directory, or if the directory is not writable.
-
-User directory and environment variable expansion is performed on the path.
-To disable this behavior, set class attributes `do_expanduser` and `do_expandvars`
-to `False` respectively.
-
-
-### _class_ corgy.types.LazyOutputDirectory(path)
-`OutputDirectory` sub-class that does not auto-initialize.
-
-Useful for “default” folders, which only need to be created if an alternative is not
-provided. `init` must be called on instances to ensure that the directory exists.
-
-User directory and environment variable expansion is performed on the path.
-To disable this behavior, set class attributes `do_expanduser` and `do_expandvars`
-to `False` respectively.
-
-
-### _class_ corgy.types.InputDirectory(path)
-`Path` sub-class representing a directory to be read from.
-
-
-* **Parameters**
-
-    **path** – Path to a directory.
-
-
-The directory must exist, and will be checked to ensure it is readable.
-`ValueError` is raised if this is not the case.
-
-User directory and environment variable expansion is performed on the path.
-To disable this behavior, set class attributes `do_expanduser` and `do_expandvars`
-to `False` respectively.
-
-
-### _class_ corgy.types.IODirectory(path)
-`Path` sub-class representing an existing directory to be read from/written to.
-
-
-* **Parameters**
-
-    **path** – Path to a directory.
-
-
-The directory must exist, and will be checked to ensure it is readable and
-writeable. `ValueError` is raised if this is not the case.
 
 User directory and environment variable expansion is performed on the path.
 To disable this behavior, set class attributes `do_expanduser` and `do_expandvars`
