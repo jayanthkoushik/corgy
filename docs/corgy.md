@@ -61,13 +61,13 @@ Attribute values are type-checked, and `ValueError` is raised on type mismatch:
 >>> a = A(x="1")
 Traceback (most recent call last):
     ...
-ValueError: invalid value for type '<class 'int'>': '1'
+ValueError: error setting `x`: invalid value for type '<class 'int'>': '1'
 
 >>> a = A()
 >>> a.x = "1"
 Traceback (most recent call last):
     ...
-ValueError: invalid value for type '<class 'int'>': '1'
+ValueError: error setting `x`: invalid value for type '<class 'int'>': '1'
 
 >>> class A(Corgy):
 ...     x: int = "1"
@@ -356,14 +356,16 @@ A(x=[1, 2], y=('1', '2'), z={1.0, 2.0}, w=[1, 2])
 >>> a.x = [1, "2"]
 Traceback (most recent call last):
     ...
-ValueError: invalid value for type '<class 'int'>': '2'
+ValueError: error setting `x`: invalid value for type '<class 'int'>': '2'
 
 >>> a.x = (1, 2)      # `Sequence` accepts any sequence type
 
->>> a.y = ["1", "2"]  # `Tuple` only accepts tuples
+>>> # `Tuple` only accepts tuples
+>>> a.y = ["1", "2"]
 Traceback (most recent call last):
     ...
-ValueError: invalid value for type 'typing.Tuple[str]': ['1', '2']
+ValueError: error setting `y`: invalid value for type 'typing.Tuple[str]':
+['1', '2']
 ```
 
 The collection length can be controlled by the arguments of the type annotation.
@@ -383,7 +385,8 @@ argument of the type:
 >>> a.x = tuple()
 Traceback (most recent call last):
     ...
-ValueError: expected non-empty collection for type 'typing.Tuple[int, ...]'
+ValueError: error setting `x`: expected non-empty collection for type
+'typing.Tuple[int, ...]'
 ```
 
 Collections can also be restricted to be of a fixed length:
@@ -397,13 +400,13 @@ Collections can also be restricted to be of a fixed length:
 >>> a.x = (1, 1)
 Traceback (most recent call last):
     ...
-ValueError: invalid value for type '<class 'str'>': 1
+ValueError: error setting `x`: invalid value for type '<class 'str'>': 1
 
 >>> a.y = (1, 1)
 Traceback (most recent call last):
     ...
-ValueError: invalid value for type 'typing.Tuple[int, int, int]': (1, 1):
-expected exactly '3' elements
+ValueError: error setting `y`: invalid value for type
+'typing.Tuple[int, int, int]': (1, 1): expected exactly '3' elements
 ```
 
 *Literals*
@@ -420,7 +423,8 @@ of values:
 >>> a.x = "1"
 Traceback (most recent call last):
     ...
-ValueError: invalid value for type 'typing.Literal[0, 1, '2']': '1'
+ValueError: error setting `x`: invalid value for type
+'typing.Literal[0, 1, '2']': '1'
 ```
 
 Type annotations can be nested; for instance,
@@ -442,7 +446,7 @@ attribute to the argument type, containing a collection of choices:
 >>> a.x = 3
 Traceback (most recent call last):
     ...
-ValueError: invalid value for type '<class 'T'>': 3:
+ValueError: error setting `x`: invalid value for type '<class 'T'>': 3:
 expected one of: (1, 2)
 ```
 
@@ -1018,14 +1022,14 @@ Example:
 ...     @staticmethod
 ...     def check_x(val):
 ...         if val % 2:
-...             raise ValueError("not even")
+...             raise ValueError(f"'{val}' is not even")
 
 >>> a = A()
 >>> a.x = 2
 >>> a.x = 3
 Traceback (most recent call last):
    ...
-ValueError: invalid value `3` for `x`: not even
+ValueError: error setting `x`: '3' is not even
 ```
 
 Multiple attributes can use the same checker, either by chaining `corgychecker`, or

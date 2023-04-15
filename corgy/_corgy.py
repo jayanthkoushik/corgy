@@ -87,13 +87,13 @@ class Corgy(metaclass=CorgyMeta):
         >>> a = A(x="1")
         Traceback (most recent call last):
             ...
-        ValueError: invalid value for type '<class 'int'>': '1'
+        ValueError: error setting `x`: invalid value for type '<class 'int'>': '1'
 
         >>> a = A()
         >>> a.x = "1"
         Traceback (most recent call last):
             ...
-        ValueError: invalid value for type '<class 'int'>': '1'
+        ValueError: error setting `x`: invalid value for type '<class 'int'>': '1'
 
         >>> class A(Corgy):
         ...     x: int = "1"
@@ -350,14 +350,16 @@ class Corgy(metaclass=CorgyMeta):
         >>> a.x = [1, "2"]
         Traceback (most recent call last):
             ...
-        ValueError: invalid value for type '<class 'int'>': '2'
+        ValueError: error setting `x`: invalid value for type '<class 'int'>': '2'
 
         >>> a.x = (1, 2)      # `Sequence` accepts any sequence type
 
-        >>> a.y = ["1", "2"]  # `Tuple` only accepts tuples
+        >>> # `Tuple` only accepts tuples
+        >>> a.y = ["1", "2"]  # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
             ...
-        ValueError: invalid value for type 'typing.Tuple[str]': ['1', '2']
+        ValueError: error setting `y`: invalid value for type 'typing.Tuple[str]':
+        ['1', '2']
 
     The collection length can be controlled by the arguments of the type annotation.
     Note, however, that `typing.Sequence/typing.List/typing.Set` do not
@@ -372,10 +374,11 @@ class Corgy(metaclass=CorgyMeta):
         ...     x: Tuple[int, ...]
 
         >>> a = A()
-        >>> a.x = tuple()
+        >>> a.x = tuple()  # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
             ...
-        ValueError: expected non-empty collection for type 'typing.Tuple[int, ...]'
+        ValueError: error setting `x`: expected non-empty collection for type
+        'typing.Tuple[int, ...]'
 
     Collections can also be restricted to be of a fixed length::
 
@@ -387,13 +390,13 @@ class Corgy(metaclass=CorgyMeta):
         >>> a.x = (1, 1)
         Traceback (most recent call last):
             ...
-        ValueError: invalid value for type '<class 'str'>': 1
+        ValueError: error setting `x`: invalid value for type '<class 'str'>': 1
 
         >>> a.y = (1, 1)  # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
             ...
-        ValueError: invalid value for type 'typing.Tuple[int, int, int]': (1, 1):
-        expected exactly '3' elements
+        ValueError: error setting `y`: invalid value for type
+        'typing.Tuple[int, int, int]': (1, 1): expected exactly '3' elements
 
     *Literals*
     `typing.Literal` can be used to specify that an attribute takes one of a fixed set
@@ -408,7 +411,8 @@ class Corgy(metaclass=CorgyMeta):
         >>> a.x = "1"  # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
             ...
-        ValueError: invalid value for type 'typing.Literal[0, 1, '2']': '1'
+        ValueError: error setting `x`: invalid value for type
+        'typing.Literal[0, 1, '2']': '1'
 
     Type annotations can be nested; for instance,
     `Sequence[Literal[0, 1, 2], Literal[0, 1, 2]]` represents a sequence of length 2,
@@ -428,7 +432,7 @@ class Corgy(metaclass=CorgyMeta):
         >>> a.x = 3  # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
             ...
-        ValueError: invalid value for type '<class 'T'>': 3:
+        ValueError: error setting `x`: invalid value for type '<class 'T'>': 3:
         expected one of: (1, 2)
 
     Note that choices specified in this way are not type-checked to ensure that they

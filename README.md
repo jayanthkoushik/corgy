@@ -35,12 +35,12 @@ classes using intuitive type annotations.
   >>> C(x="1")
   Traceback (most recent call last):
       ...
-  ValueError: invalid value for type '<class 'int'>': '1'
+  ValueError: error setting `x`: invalid value for type '<class 'int'>': '1'
 
   >>> C(y=(1, 2, 3))
   Traceback (most recent call last):
       ...
-  ValueError: invalid value for type 'typing.Tuple[int, int]': (1, 2, 3): expected exactly '2' elements
+  ValueError: error setting `y`: invalid value for type 'typing.Tuple[int, int]': (1, 2, 3): expected exactly '2' elements
 
   ```
 

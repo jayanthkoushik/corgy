@@ -420,15 +420,13 @@ class CorgyMeta(type):
         def var_fset(self, val):
             if getattr(self, f"_{cls_name.lstrip('_')}__frozen"):
                 raise TypeError(f"cannot set `{var_name}`: object is frozen")
-            check_val_type(val, var_type)
             _checkers = getattr(self, "__checkers")
-            if var_name in _checkers:
-                try:
+            try:
+                check_val_type(val, var_type)
+                if var_name in _checkers:
                     _checkers[var_name](val)
-                except ValueError as e:
-                    raise ValueError(
-                        f"invalid value `{val}` for `{var_name}`: {e}"
-                    ) from None
+            except ValueError as e:
+                raise ValueError(f"error setting `{var_name}`: {e}") from None
 
             setattr(self, f"_{cls_name.lstrip('_')}__{var_name}", val)
 

@@ -46,14 +46,14 @@ def corgychecker(
         ...     @staticmethod
         ...     def check_x(val):
         ...         if val % 2:
-        ...             raise ValueError("not even")
+        ...             raise ValueError(f"'{val}' is not even")
 
         >>> a = A()
         >>> a.x = 2
         >>> a.x = 3
         Traceback (most recent call last):
            ...
-        ValueError: invalid value `3` for `x`: not even
+        ValueError: error setting `x`: '3' is not even
 
     Multiple attributes can use the same checker, either by chaining `corgychecker`, or
     by passing all attribute names directly::
