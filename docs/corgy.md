@@ -1009,10 +1009,9 @@ Decorate a function as a custom checker for one or more attributes.
 
 To use a custom function for checking the value of a `Corgy` attribute, use this
 decorator. Checking functions must be static, and should only accept a single
-argument, the value to be checked. They should not return anything (the return value
-is ignored), and should raise `ValueError` to indicate value mismatch. Decorating
-the function with `@staticmethod` is optional, but prevents type errors.
-`@corgychecker` must be the final decorator in the decorator chain.
+argument, the value to be checked. They should raise `ValueError` to indicate value
+mismatch. Decorating the function with `@staticmethod` is optional, but prevents
+type errors. `@corgychecker` must be the final decorator in the decorator chain.
 
 Custom checkers are called _after_ type checking, so the values passed to them will
 be of type corresponding to one of the assigned attributes.

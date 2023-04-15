@@ -77,14 +77,14 @@ class TestCorgyCustomCheckers(TestCase):
             @corgychecker("x")
             @staticmethod
             def check_x(s):
-                ...
+                return 10
 
             @corgychecker("y")
             def check_y(s):  # type: ignore # pylint: disable=no-self-argument
-                ...
+                return 20
 
-        C.check_x(1)
-        C.check_y(2)
+        self.assertEqual(C.check_x(1), 10)
+        self.assertEqual(C.check_y(2), 20)
 
     def test_corgychecker_accepts_multiple_arguments(self):
         class C(Corgy):
