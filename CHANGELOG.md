@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [8.1.1](https://github.com/jayanthkoushik/corgy/compare/v8.1.0...v8.1.1) (2023-04-15)
+
+
+### Bug Fixes
+
+* fix annotation for `corgy.corgychecker` ([1bf5dba](https://github.com/jayanthkoushik/corgy/commit/1bf5dba17c19ccc7bb3c9c1d76225c1d57dcfd98))
+
 ## [8.1.0](https://github.com/jayanthkoushik/corgy/compare/v8.0.1...v8.1.0) (2023-04-15)
 
 
