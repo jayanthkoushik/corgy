@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Any, Callable, List, NamedTuple, Union
+from typing import Callable, List, NamedTuple, Union
 
 __all__ = ("corgychecker",)
 
@@ -12,7 +12,7 @@ class CorgyChecker(NamedTuple):
     """
 
     var_names: List[str]
-    fcheck: Callable[[Any], None]
+    fcheck: Callable
 
     def __call__(self, val):
         return self.fcheck(val)
@@ -20,7 +20,7 @@ class CorgyChecker(NamedTuple):
 
 def corgychecker(
     *var_names: str,
-) -> Callable[[Union[Callable[[Any], None], CorgyChecker]], CorgyChecker]:
+) -> Callable[[Union[Callable, CorgyChecker]], CorgyChecker]:
     """Decorate a function as a custom checker for one or more attributes.
 
     To use a custom function for checking the value of a `Corgy` attribute, use this
