@@ -836,6 +836,10 @@ A(x='one', g=G(x=1))
 A(x='one', g=G(x=1))
 >>> A.from_dict({"x": "one", "g": {"x": "1"}}, try_cast=True)
 A(x='one', g=G(x=1))
+>>> G.from_dict({"x": "1"})
+Traceback (most recent call last):
+    ...
+ValueError: error setting `x`: invalid value for type '<class 'int'>': '1'
 ```
 
 Group attributes can also be passed directly in the dictionary by prefixing
@@ -894,6 +898,14 @@ True
 A(y='three')
 >>> _i == id(a)
 True
+>>> a = A()
+>>> a.load_dict({"x": "1"})
+Traceback (most recent call last):
+    ...
+ValueError: error setting `x`: invalid value for type '<class 'int'>': '1'
+>>> a.load_dict({"x": "1"}, try_cast=True)
+>>> a
+A(x=1)
 ```
 
 

@@ -1103,6 +1103,10 @@ class Corgy(metaclass=CorgyMeta):
             A(x='one', g=G(x=1))
             >>> A.from_dict({"x": "one", "g": {"x": "1"}}, try_cast=True)
             A(x='one', g=G(x=1))
+            >>> G.from_dict({"x": "1"})
+            Traceback (most recent call last):
+                ...
+            ValueError: error setting `x`: invalid value for type '<class 'int'>': '1'
 
         Group attributes can also be passed directly in the dictionary by prefixing
         their names with the group name and a colon::
@@ -1153,9 +1157,15 @@ class Corgy(metaclass=CorgyMeta):
         cls_attrs = cls.attrs()
         for arg_name, arg_val in main_args_map.copy().items():
             if arg_name in cls_attrs:
-                main_args_map[arg_name] = check_val_type(
-                    arg_val, cls_attrs[arg_name], try_cast, try_load_corgy_dicts=True
-                )
+                try:
+                    main_args_map[arg_name] = check_val_type(
+                        arg_val,
+                        cls_attrs[arg_name],
+                        try_cast,
+                        try_load_corgy_dicts=True,
+                    )
+                except ValueError as e:
+                    raise ValueError(f"error setting `{arg_name}`: {e}") from None
         return cls(**main_args_map)
 
     def load_dict(
@@ -1191,6 +1201,14 @@ class Corgy(metaclass=CorgyMeta):
             A(y='three')
             >>> _i == id(a)
             True
+            >>> a = A()
+            >>> a.load_dict({"x": "1"})
+            Traceback (most recent call last):
+                ...
+            ValueError: error setting `x`: invalid value for type '<class 'int'>': '1'
+            >>> a.load_dict({"x": "1"}, try_cast=True)
+            >>> a
+            A(x=1)
 
         """
         main_args_map: Dict[str, Any] = defaultdict(dict)
@@ -1231,9 +1249,12 @@ class Corgy(metaclass=CorgyMeta):
                 else:
                     arg_obj.load_dict(arg_new_val, try_cast, strict)
             else:
-                arg_new_val = check_val_type(
-                    arg_new_val, arg_type, try_cast, try_load_corgy_dicts=True
-                )
+                try:
+                    arg_new_val = check_val_type(
+                        arg_new_val, arg_type, try_cast, try_load_corgy_dicts=True
+                    )
+                except ValueError as e:
+                    raise ValueError(f"error setting `{arg_name}`: {e}") from None
                 setattr(self, arg_name, arg_new_val)
 
     @classmethod
