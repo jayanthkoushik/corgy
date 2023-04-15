@@ -15,6 +15,7 @@ else:
     from typing_extensions import Literal, get_type_hints
 
 from ._annotations import NOT_REQUIRED, REQUIRED
+from ._corgychecker import CorgyChecker
 from ._corgyparser import CorgyParser
 
 
@@ -172,7 +173,8 @@ class CorgyMeta(type):
     each annotated attribute. Default values and custom parsers are stored in the
     `__defaults` and `__parsers` attributes. Custom flags, if present, are stored in
     the `__flags` attribute. `Required` and `NotRequired` annotations are extracted,
-    and required attributes are stored in `__required`.
+    and required attributes are stored in `__required`. Attribute value checkers, if
+    present, are stored in `__checkers`.
     """
 
     __slots__ = ()
@@ -200,6 +202,7 @@ class CorgyMeta(type):
         namespace["__flags"] = {}
         namespace["__parsers"] = {}
         namespace["__helps"] = {}
+        namespace["__checkers"] = {}
         namespace["__required"] = set()
 
         # Temp set of not required attributes--to handle inheritance from
@@ -227,6 +230,7 @@ class CorgyMeta(type):
                     namespace["__flags"].update(getattr(base, "__flags"))
                     namespace["__parsers"].update(getattr(base, "__parsers"))
                     namespace["__helps"].update(getattr(base, "__helps"))
+                    namespace["__checkers"].update(getattr(base, "__checkers"))
                     namespace["__required"].update(getattr(base, "__required"))
                     # Add not required attributes to temp set.
                     _base_required = getattr(base, "__required")
@@ -384,17 +388,23 @@ class CorgyMeta(type):
         if _make_slots:
             namespace["__slots__"] = tuple(namespace["__slots__"])
 
-        # Store custom parsers in a dict.
+        # Store custom parsers and checkers in a dict.
         for _, v in namespace.items():
-            if not isinstance(v, CorgyParser):
+            if not isinstance(v, (CorgyParser, CorgyChecker)):
                 continue
             for var_name in v.var_names:
                 if (var_name in namespace["__annotations__"]) and isinstance(
                     namespace[var_name], property
                 ):
-                    namespace["__parsers"][var_name] = v.fparse
+                    if isinstance(v, CorgyParser):
+                        namespace["__parsers"][var_name] = v.fparse
+                    else:
+                        namespace["__checkers"][var_name] = v.fcheck
                 else:
-                    raise TypeError(f"invalid target for corgyparser: {var_name}")
+                    _type = (
+                        "corgyparser" if isinstance(v, CorgyParser) else "corgychecker"
+                    )
+                    raise TypeError(f"invalid target for {_type}: {var_name}")
 
         return super().__new__(cls, name, bases, namespace, **kwds)
 
@@ -411,6 +421,15 @@ class CorgyMeta(type):
             if getattr(self, f"_{cls_name.lstrip('_')}__frozen"):
                 raise TypeError(f"cannot set `{var_name}`: object is frozen")
             check_val_type(val, var_type)
+            _checkers = getattr(self, "__checkers")
+            if var_name in _checkers:
+                try:
+                    _checkers[var_name](val)
+                except ValueError as e:
+                    raise ValueError(
+                        f"invalid value `{val}` for `{var_name}`: {e}"
+                    ) from None
+
             setattr(self, f"_{cls_name.lstrip('_')}__{var_name}", val)
 
         def var_fdel(self):

@@ -4,6 +4,7 @@
   "words": [
     "subpackages",
     "corgy",
+    "corgychecker",
     "corgyparser",
     "metavars",
     "subcls",

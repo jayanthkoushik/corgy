@@ -2,6 +2,7 @@
 
 from ._annotations import *
 from ._corgy import *
+from ._corgychecker import *
 from ._corgyparser import *
 from ._helpfmt import *
 from ._version import __version__
@@ -10,6 +11,7 @@ from ._version import __version__
 __all__ = (
     _annotations.__all__  # type: ignore
     + _corgy.__all__  # type: ignore
+    + _corgychecker.__all__  # type: ignore
     + _corgyparser.__all__  # type: ignore
     + _helpfmt.__all__  # type: ignore
 )
