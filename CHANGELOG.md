@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [8.1.0](https://github.com/jayanthkoushik/corgy/compare/v8.0.1...v8.1.0) (2023-04-15)
+
+
+### Features
+
+* add support for custom attribute value checkers through `corgychecker` ([7904676](https://github.com/jayanthkoushik/corgy/commit/79046766f130f30a46d7d4ee52e9f5b387f6c5e9))
+* show attribute name in `ValueError` raised by `Corgy.from_dict` and `Corgy.load_dict` ([b73c5cf](https://github.com/jayanthkoushik/corgy/commit/b73c5cf9b618c21ee2dfd7d8f0b19beb89ad4337))
+* show attribute name in `ValueError` raised by `Corgy` in `setattr` ([c8fc1b2](https://github.com/jayanthkoushik/corgy/commit/c8fc1b22e97864fac14d486f8d8d428036816d37))
+
+
+### Bug Fixes
+
+* do not discard return value from custom checkers ([d5f4caf](https://github.com/jayanthkoushik/corgy/commit/d5f4cafa716dc226be3f310bb0faa371840778cb))
+
 ### [8.0.1](https://github.com/jayanthkoushik/corgy/compare/v8.0.0...v8.0.1) (2023-04-14)
 
 
