@@ -628,6 +628,55 @@ class TestCorgyClassInheritance(TestCase):
 
         self.assertSetEqual(getattr(D3, "__required"), {"y"})
 
+    def test_corgy_cls_inherits_make_slots(self):
+        class C(Corgy, corgy_make_slots=False):
+            ...
+
+        class D1(C):
+            ...
+
+        class D2(Corgy):
+            ...
+
+        self.assertEqual(getattr(D1, "__make_slots"), False)
+        self.assertEqual(getattr(D2, "__make_slots"), True)
+        self.assertIs(D1.__slots__, Corgy.__slots__)
+        self.assertIsNot(D2.__slots__, Corgy.__slots__)
+
+    def test_corgy_cls_inherits_required_by_default(self):
+        class C(Corgy, corgy_required_by_default=True):
+            ...
+
+        class D1(C):
+            x: int
+
+        class D2(Corgy):
+            x: int
+
+        self.assertEqual(getattr(D1, "__required_by_default"), True)
+        self.assertEqual(getattr(D2, "__required_by_default"), False)
+        with self.assertRaises(ValueError):
+            D1()
+        D2()
+
+    def test_corgy_cls_inherits_freeze_after_init(self):
+        class C(Corgy, corgy_freeze_after_init=True):
+            ...
+
+        class D1(C):
+            x: int
+
+        class D2(Corgy):
+            x: int
+
+        self.assertEqual(getattr(D1, "__freeze_after_init"), True)
+        self.assertEqual(getattr(D2, "__freeze_after_init"), False)
+        d1 = D1(x=1)
+        with self.assertRaises(TypeError):
+            d1.x = 2
+        d2 = D2(x=1)
+        d2.x = 2
+
 
 class TestCorgyTypeChecking(TestCase):
     def test_corgy_cls_type_checks_during_init(self):

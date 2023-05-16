@@ -180,22 +180,6 @@ class CorgyMeta(type):
     __slots__ = ()
 
     def __new__(cls, name, bases, namespace, **kwds) -> CorgyMeta:
-        try:
-            _make_slots = kwds.pop("corgy_make_slots")
-        except KeyError:
-            _make_slots = True
-
-        if _make_slots:
-            if "__slots__" not in namespace:
-                namespace["__slots__"] = []
-            else:
-                namespace["__slots__"] = list(namespace["__slots__"])
-            namespace["__slots__"].append("__frozen")
-        elif "__slots__" in namespace:
-            raise TypeError(
-                "`__slots__` cannot be defined if `corgy_make_slots` is `False`"
-            )
-
         cls_annotations = namespace.get("__annotations__", {})
         namespace["__annotations__"] = {}
         namespace["__defaults"] = {}
@@ -208,12 +192,6 @@ class CorgyMeta(type):
         # Temp set of not required attributes--to handle inheritance from
         # non-`Corgy` classes.
         _not_required = set()
-
-        # Extract `corgy_freeze_after_init` (default `False`).
-        try:
-            namespace["__freeze_after_init"] = kwds.pop("corgy_freeze_after_init")
-        except KeyError:
-            namespace["__freeze_after_init"] = False
 
         # See if `corgy_track_bases` is specified (default `True`).
         try:
@@ -232,6 +210,13 @@ class CorgyMeta(type):
                     namespace["__helps"].update(getattr(base, "__helps"))
                     namespace["__checkers"].update(getattr(base, "__checkers"))
                     namespace["__required"].update(getattr(base, "__required"))
+                    namespace["__make_slots"] = getattr(base, "__make_slots")
+                    namespace["__freeze_after_init"] = getattr(
+                        base, "__freeze_after_init"
+                    )
+                    namespace["__required_by_default"] = getattr(
+                        base, "__required_by_default"
+                    )
                     # Add not required attributes to temp set.
                     _base_required = getattr(base, "__required")
                     for _var_name in _base_annotations:
@@ -250,11 +235,37 @@ class CorgyMeta(type):
         # Add current annotations last, so that they override base values.
         namespace["__annotations__"].update(cls_annotations)
 
-        # See if `corgy_required_by_default` is specified (default `False`).
-        try:
-            _required_by_default = kwds.pop("corgy_required_by_default")
-        except KeyError:
-            _required_by_default = False
+        # Extract `corgy_` class parameters. Values set in `kwds` take preference,
+        # followed by base class values (in reverse order), and finally the parameter
+        # default.
+
+        # Extract `corgy_make_slots` (default `True`)
+        namespace["__make_slots"] = kwds.pop(
+            "corgy_make_slots", namespace.get("__make_slots", True)
+        )
+        _make_slots = namespace["__make_slots"]
+
+        if _make_slots:
+            if "__slots__" not in namespace:
+                namespace["__slots__"] = []
+            else:
+                namespace["__slots__"] = list(namespace["__slots__"])
+            namespace["__slots__"].append("__frozen")
+        elif "__slots__" in namespace:
+            raise TypeError(
+                "`__slots__` cannot be defined if `corgy_make_slots` is `False`"
+            )
+
+        # Extract `corgy_freeze_after_init` (default `False`).
+        namespace["__freeze_after_init"] = kwds.pop(
+            "corgy_freeze_after_init", namespace.get("__freeze_after_init", False)
+        )
+
+        # Extract `corgy_required_by_default` (default `False`).
+        namespace["__required_by_default"] = kwds.pop(
+            "corgy_required_by_default", namespace.get("__required_by_default", False)
+        )
+        _required_by_default = namespace["__required_by_default"]
 
         tempnew = super().__new__(cls, name, bases, namespace)
         type_hints = get_type_hints(tempnew, include_extras=True)
