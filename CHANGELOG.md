@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [8.1.2](https://github.com/jayanthkoushik/corgy/compare/v8.1.1...v8.1.2) (2023-05-16)
+
+
+### Bug Fixes
+
+* inherit `corgy_` parameters for `Corgy` sub-classes ([9e87e4d](https://github.com/jayanthkoushik/corgy/commit/9e87e4d5fb0a58c63d0c2e7cd4aaff33ecf47aef))
+
 ### [8.1.1](https://github.com/jayanthkoushik/corgy/compare/v8.1.0...v8.1.1) (2023-04-15)
 
 
