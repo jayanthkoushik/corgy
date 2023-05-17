@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [9.0.0](https://github.com/jayanthkoushik/corgy/compare/v8.1.2...v9.0.0) (2023-05-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* `Corgy.add_args_to_parser` no longer uses `store_`
+actions for types with a single choice defined using `__choices__`. Only
+`Literal` types receive this special treatment.
+
+### Features
+
+* in `Corgy.add_args_to_parser`, restrict handling of single choice attrs to `Literal` types ([5d1bfcc](https://github.com/jayanthkoushik/corgy/commit/5d1bfcce520efa2f97ddface800c67745449eb6d))
+* raise informative error if `types.InitArgs` cannot be used ([61e79c3](https://github.com/jayanthkoushik/corgy/commit/61e79c39ca6ff9fd7ec7fac21e6698928bdbccd2))
+
+
+### Bug Fixes
+
+* make arguments without defaults be required in `types.InitArgs` ([5cb533b](https://github.com/jayanthkoushik/corgy/commit/5cb533b5da87f921aba1973d4deab1266e14f48b))
+
 ### [8.1.2](https://github.com/jayanthkoushik/corgy/compare/v8.1.1...v8.1.2) (2023-05-16)
 
 
