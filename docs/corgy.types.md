@@ -352,8 +352,8 @@ Example:
 >>> FooInitArgs.add_args_to_parser(parser)
 >>> parser.print_help()
 options:
-  --a int        (optional)
-  --b [str ...]  (optional)
+  --a int        (required)
+  --b [str ...]  (required)
   --c float      (default: 0.0)
 
 >>> args = parser.parse_args(["--a", "1", "--b", "one", "two"])
