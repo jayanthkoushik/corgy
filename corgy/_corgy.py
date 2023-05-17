@@ -660,6 +660,9 @@ class Corgy(metaclass=CorgyMeta):
             >>> parser.parse_args(["--z"])
             Namespace(z=42)
 
+        Note: This special case only applies to `Literal` types, and not types which
+        define `__choices__`.
+
         *Corgy*
         Attributes which are themselves `Corgy` types are treated as argument groups.
         Group arguments are added to the command line parser with the group attribute
@@ -825,7 +828,8 @@ class Corgy(metaclass=CorgyMeta):
                 var_base_type = var_base_type.__args__[0]
 
             # Check if the variable has choices.
-            if is_literal_type(var_base_type):
+            _is_literal_type = is_literal_type(var_base_type)
+            if _is_literal_type:
                 # Determine if the first choice has `__bases__`, in which case
                 # the first base class is the type for the argument.
                 try:
@@ -861,6 +865,7 @@ class Corgy(metaclass=CorgyMeta):
                 and len(var_choices) == 1
                 and var_nargs is None
                 and var_action is None
+                and _is_literal_type
             ):
                 _choice = var_choices[0]
                 if _choice is True:

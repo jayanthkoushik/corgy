@@ -1804,9 +1804,14 @@ class TestCorgyAddArgsToParser(TestCase):
 
                 self.setUp()
                 C.add_args_to_parser(self.parser)
-                self.parser.add_argument.assert_called_once_with(
-                    "--x", action=_StoreConstAction, const=42, required=True
-                )
+                if type_ is A:
+                    self.parser.add_argument.assert_called_once_with(
+                        "--x", type=A, choices=(42,), required=True
+                    )
+                else:
+                    self.parser.add_argument.assert_called_once_with(
+                        "--x", action=_StoreConstAction, const=42, required=True
+                    )
 
     def test_add_args_uses_store_true_false_action_for_true_false_literal(self):
         for val in (True, False):
@@ -1822,11 +1827,16 @@ class TestCorgyAddArgsToParser(TestCase):
 
                     self.setUp()
                     C.add_args_to_parser(self.parser)
-                    self.parser.add_argument.assert_called_once_with(
-                        "--x",
-                        action=(_StoreTrueAction if val else _StoreFalseAction),
-                        required=True,
-                    )
+                    if type_ is A:
+                        self.parser.add_argument.assert_called_once_with(
+                            "--x", type=A, choices=(val,), required=True
+                        )
+                    else:
+                        self.parser.add_argument.assert_called_once_with(
+                            "--x",
+                            action=(_StoreTrueAction if val else _StoreFalseAction),
+                            required=True,
+                        )
 
     def test_add_args_handles_user_defined_class_as_type(self):
         class T:

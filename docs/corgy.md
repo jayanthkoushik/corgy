@@ -698,6 +698,9 @@ Namespace(y=False)
 Namespace(z=42)
 ```
 
+Note: This special case only applies to `Literal` types, and not types which
+define `__choices__`.
+
 *Corgy*
 Attributes which are themselves `Corgy` types are treated as argument groups.
 Group arguments are added to the command line parser with the group attribute
