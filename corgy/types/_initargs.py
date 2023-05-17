@@ -61,6 +61,12 @@ class InitArgs(Corgy, Generic[_T], corgy_required_by_default=True):
     __slots__ = ()
 
     def __class_getitem__(cls, item: Type[_T]) -> Type[InitArgs[_T]]:
+        try:
+            is_generic = issubclass(item, Generic)  # type: ignore
+        except TypeError as e:
+            raise TypeError(f"could not perform class test on `{item}`: {e}") from None
+        if is_generic:
+            raise TypeError(f"{cls.__name__} cannot be used with generic classes")
         item_sig = inspect.signature(item)
         item_annotations, item_defaults = {}, {}
         for param_name, param in item_sig.parameters.items():
