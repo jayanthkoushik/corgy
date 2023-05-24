@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [9.1.0](https://github.com/jayanthkoushik/corgy/compare/v9.0.0...v9.1.0) (2023-05-24)
+
+
+### Features
+
+* add support for `Self` type annotations ([b33ec24](https://github.com/jayanthkoushik/corgy/commit/b33ec24ad762c1dd0655ad4a5af847eb16f15b55))
+
+
+### Bug Fixes
+
+* prioritize custom parsers in `Corgy.add_args_to_parser` ([5cf047f](https://github.com/jayanthkoushik/corgy/commit/5cf047fd6ebb1f1b385ab01587355af680d7002d))
+
 ## [9.0.0](https://github.com/jayanthkoushik/corgy/compare/v8.1.2...v9.0.0) (2023-05-17)
 
 
