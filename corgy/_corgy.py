@@ -7,24 +7,35 @@ from argparse import (
     _StoreConstAction,
     _StoreFalseAction,
     _StoreTrueAction,
-    Action,
     ArgumentParser,
 )
 from collections import defaultdict
 from collections.abc import Sequence as AbstractSequence
+from dataclasses import dataclass
 from functools import partial
 from importlib import import_module
-from typing import Any, Callable, Dict, IO, Mapping, Optional, Type, TypeVar, Union
-
-if sys.version_info >= (3, 11):
-    from typing import Self
-else:
-    from typing_extensions import Self
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    IO,
+    Mapping,
+    Optional,
+    Sequence,
+    Type,
+    TypeVar,
+    Union,
+)
 
 if sys.version_info >= (3, 9):
     from typing import Literal
 else:
     from typing_extensions import Literal
+
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
 
 from ._actions import BooleanOptionalAction, OptionalTypeAction
 from ._corgyparser import CorgyParserAction
@@ -762,37 +773,208 @@ class Corgy(metaclass=CorgyMeta):
                 raise ValueError(f"default value for unknown argument: `{_k}`")
 
         required_attrs = getattr(cls, "__required")
+        custom_flags = getattr(cls, "__flags")
+        custom_parsers = getattr(cls, "__parsers")
+
+        @dataclass
+        class _Arg:
+            name: str
+            required: Optional[bool] = None
+            positional: Optional[bool] = None
+            dest: Optional[str] = None
+            flags: Optional[Sequence[str]] = None
+            help: Optional[str] = None
+            nargs: Union[int, Literal["+", "*"], None] = None
+            action: Optional[Type[argparse.Action]] = None
+            choices: Optional[Sequence[Any]] = None
+            metavar: Optional[str] = None
+            add_type: Optional[Any] = None
+            const: Optional[Any] = None
+
+            def get_add_kwargs(self) -> Dict[str, Any]:
+                assert self.required is not None
+                assert self.positional is not None
+                assert self.dest is not None
+                kwargs: Dict[str, Any] = {}
+                if (not self.positional) and (self.name in custom_flags):
+                    kwargs["dest"] = self.dest
+                if self.help is not None:
+                    kwargs["help"] = self.help
+                if self.nargs is not None:
+                    kwargs["nargs"] = self.nargs
+                if self.action is not None:
+                    kwargs["action"] = self.action
+                if self.choices is not None:
+                    kwargs["choices"] = self.choices
+
+                if self.name in base_defaults:
+                    kwargs["default"] = base_defaults[self.name]
+                elif self.required and not self.positional:
+                    kwargs["required"] = True
+                elif not self.positional:
+                    kwargs["default"] = argparse.SUPPRESS
+
+                if self.metavar is not None:
+                    kwargs["metavar"] = self.metavar
+                if self.add_type is not None:
+                    kwargs["type"] = self.add_type
+                if self.const is not None:
+                    kwargs["const"] = self.const
+
+                return kwargs
+
+            def process_optional(self, type_) -> Any:
+                if is_optional_type(type_):
+                    self.action = OptionalTypeAction
+                    return type_.__args__[0]
+                return type_
+
+            def process_collection(self, type_) -> Any:
+                _col_type = get_concrete_collection_type(type_)
+                if _col_type is not None:
+                    if (
+                        not hasattr(type_, "__args__")
+                        or not type_.__args__
+                        or isinstance(type_.__args__[0], TypeVar)
+                    ):
+                        raise TypeError(
+                            f"`{self.name}` is a collection, but has no type arguments:"
+                            f" use `{type_}[<types>]"
+                        )
+                    if len(type_.__args__) == 1:
+                        self.nargs = "*"
+                    elif len(type_.__args__) == 2 and type_.__args__[1] is Ellipsis:
+                        # `...` is used to represent non-empty collections, e.g.,
+                        # `Sequence[int, ...]`.
+                        self.nargs = "+"
+                    else:
+                        # Ensure single type.
+                        if any(_a != type_.__args__[0] for _a in type_.__args__[1:]):
+                            raise TypeError(
+                                f"`{self.name}` has unsupported type `{type_}`: only"
+                                f" single-type collections are supported"
+                            )
+                        self.nargs = len(type_.__args__)
+                    return type_.__args__[0]
+                return type_
+
+            def process_choices(self, type_) -> Any:
+                _is_literal_type = is_literal_type(type_)
+                if _is_literal_type:
+                    # Determine if the first choice has `__bases__`, in which case
+                    # the first base class is the type for the argument.
+                    try:
+                        c0_type = type_.__args__[0].__bases__[0]
+                    except AttributeError:
+                        c0_type = type(type_.__args__[0])
+                        f_check_type: Callable[[Any, Any], bool] = isinstance
+                    else:
+                        f_check_type = issubclass
+
+                    # All choices must be of the same type.
+                    if any(not f_check_type(_a, c0_type) for _a in type_.__args__[1:]):
+                        raise TypeError(
+                            f"choices for `{self.name}` not all of type `{c0_type}`: "
+                            f"`{type_.__args__}`"
+                        )
+                    self.choices = type_.__args__
+
+                    # Convert single choice attributes to `store_*` actions.
+                    if (
+                        self.choices is not None
+                        and len(self.choices) == 1
+                        and self.nargs is None
+                        and self.action is None
+                    ):
+                        _choice = self.choices[0]
+                        if _choice is True:
+                            self.action = _StoreTrueAction
+                        elif _choice is False:
+                            self.action = _StoreFalseAction
+                        else:
+                            self.action = _StoreConstAction
+                            self.const = _choice
+                        self.choices = None
+                        return None
+                    return c0_type
+
+                if hasattr(type_, "__choices__"):
+                    self.choices = type_.__choices__
+
+                return type_
 
         for var_name, var_type in cls.attrs().items():
-            var_flags = getattr(cls, "__flags").get(
+            var_arg = _Arg(var_name)
+            var_arg.help = getattr(
+                cls, var_name
+            ).__doc__  # doc is stored in the property
+            var_arg.required = (
+                var_name not in base_defaults and var_name in required_attrs
+            )
+
+            # Determine add flags.
+            var_arg.flags = custom_flags.get(
                 var_name, [f"--{var_name.replace('_', '-')}"]
             )
+            assert var_arg.flags is not None
             if name_prefix:
-                var_flags = [
+                var_arg.flags = [
                     f"--{name_prefix.replace('_', '-')}:{flag.lstrip('-')}"
-                    for flag in var_flags
+                    for flag in var_arg.flags
                 ]
-                var_dest = f"{name_prefix}:{var_name}"
+                var_arg.dest = f"{name_prefix}:{var_name}"
             else:
-                var_dest = var_name
+                var_arg.dest = var_name
 
-            if not any(_flag.startswith("-") for _flag in var_flags):
+            # Determine if argument is positional.
+            if not any(_flag.startswith("-") for _flag in var_arg.flags):
                 # Note: the flags cannot be passed to `add_argument` with `dest` set
                 # to `var_name` since `argparse` will raise an error for passing `dest`
                 # twice (for positional arguments, `argparse` uses the flag to infer the
                 # `dest`).
-                var_flags = [var_name]
-                var_positional = True
-            elif all(_flag.startswith("-") for _flag in var_flags):
-                var_positional = False
+                var_arg.flags = [var_name]
+                var_arg.positional = True
+            elif all(_flag.startswith("-") for _flag in var_arg.flags):
+                var_arg.positional = False
             else:
                 raise TypeError(
                     f"inconsistent positional/optional flags for {var_name}: "
-                    f"{var_flags}"
+                    f"{var_arg.flags}"
                 )
 
-            var_help = getattr(cls, var_name).__doc__  # doc is stored in the property
+            ###################################################################
+            # Check if the variable has a custom parser.
+            if var_name in custom_parsers:
+                _var_parser = custom_parsers[var_name]
+                _var_base_type = var_type
+                # Extract choices if present.
+                if is_literal_type(var_type):
+                    _var_choices = var_type.__args__
+                    try:
+                        _var_base_type = _var_choices[0].__bases__[0]
+                    except AttributeError:
+                        _var_base_type = type(_var_choices[0])
+                elif hasattr(var_type, "__choices__"):
+                    _var_choices = var_type.__choices__
+                else:
+                    _var_choices = None
 
+                var_arg.action = partial(
+                    CorgyParserAction, _var_parser, _var_choices  # type: ignore
+                )
+                var_arg.add_type = str
+                var_arg.nargs = getattr(_var_parser, "__nargs__", None)
+                try:
+                    var_arg.metavar = _var_parser.__metavar__
+                except AttributeError:
+                    try:
+                        var_arg.metavar = _var_base_type.__metavar__
+                    except AttributeError:
+                        pass
+                parser.add_argument(*var_arg.flags, **var_arg.get_add_kwargs())
+                continue
+
+            ###################################################################
             # Check if the variable is also `Corgy` type.
             if type(var_type) is type(cls):
                 # Create an argument group using `<var_type>`.
@@ -814,171 +996,39 @@ class Corgy(metaclass=CorgyMeta):
                 if flatten_subgrps:
                     grp_parser = base_parser
                 else:
-                    grp_parser = base_parser.add_argument_group(var_dest, var_help)
-                var_type.add_args_to_parser(grp_parser, var_dest, True, grp_defaults)
+                    grp_parser = base_parser.add_argument_group(
+                        var_arg.dest, var_arg.help
+                    )
+                var_type.add_args_to_parser(
+                    grp_parser, var_arg.dest, True, grp_defaults
+                )
                 continue
 
-            var_action: Optional[Type[Action]] = None
-
-            # Check if the variable is required on the command line.
-            var_required = var_name not in base_defaults and var_name in required_attrs
-
-            # Check if the variable can be `None`.
-            if is_optional_type(var_type):
-                var_base_type = var_type.__args__[0]
-                var_action = OptionalTypeAction
-            else:
-                var_base_type = var_type
-
-            # Check if the variable is a collection.
-            var_nargs: Union[int, Literal["+", "*", "?"], None] = None
-            _col_type = get_concrete_collection_type(var_base_type)
-            if _col_type is not None:
-                if (
-                    not hasattr(var_base_type, "__args__")
-                    or not var_base_type.__args__
-                    or isinstance(var_base_type.__args__[0], TypeVar)
-                ):
-                    raise TypeError(
-                        f"`{var_name}` is a collection, but has no type arguments: "
-                        f"use `{var_base_type}[<types>]"
-                    )
-                if len(var_base_type.__args__) == 1:
-                    var_nargs = "*"
-                elif (
-                    len(var_base_type.__args__) == 2
-                    and var_base_type.__args__[1] is Ellipsis
-                ):
-                    # `...` is used to represent non-empty collections, e.g.,
-                    # `Sequence[int, ...]`.
-                    var_nargs = "+"
-                else:
-                    # Ensure single type.
-                    if any(
-                        _a != var_base_type.__args__[0]
-                        for _a in var_base_type.__args__[1:]
-                    ):
-                        raise TypeError(
-                            f"`{var_name}` has unsupported type `{var_base_type}`: only"
-                            f" single-type collections are supported"
-                        )
-                    var_nargs = len(var_base_type.__args__)
-                var_base_type = var_base_type.__args__[0]
-
-            # Check if the variable has choices.
-            _is_literal_type = is_literal_type(var_base_type)
-            if _is_literal_type:
-                # Determine if the first choice has `__bases__`, in which case
-                # the first base class is the type for the argument.
-                try:
-                    c0_type = var_base_type.__args__[0].__bases__[0]
-                except AttributeError:
-                    c0_type = type(var_base_type.__args__[0])
-                    f_check_type: Callable[[Any, Any], bool] = isinstance
-                else:
-                    f_check_type = issubclass
-
-                # All choices must be of the same type.
-                if any(
-                    not f_check_type(_a, c0_type) for _a in var_base_type.__args__[1:]
-                ):
-                    raise TypeError(
-                        f"choices for `{var_name}` not all of type `{c0_type}`: "
-                        f"`{var_base_type.__args__}`"
-                    )
-                var_choices = var_base_type.__args__
-                var_base_type = c0_type
-            elif hasattr(var_base_type, "__choices__"):
-                var_choices = var_base_type.__choices__
-            else:
-                var_choices = None
-
-            var_type_metavar: Optional[str] = getattr(
-                var_base_type, "__metavar__", None
-            )
-
-            # Convert single choice attributes to `store_*` actions.
-            if (
-                var_choices is not None
-                and len(var_choices) == 1
-                and var_nargs is None
-                and var_action is None
-                and _is_literal_type
-            ):
-                _choice = var_choices[0]
-                if _choice is True:
-                    var_action = _StoreTrueAction
-                    var_const = None
-                elif _choice is False:
-                    var_action = _StoreFalseAction
-                    var_const = None
-                else:
-                    var_action = _StoreConstAction
-                    var_const = _choice
-                var_choices = None
-                var_base_type = None
-            else:
-                var_const = None
-
+            ###################################################################
             # Check if the variable is boolean. Boolean variables are converted to
-            # `--<var-name>`/`--no-<var-name>` arguments.
-            if (
-                var_base_type is bool
-                and var_nargs is None
-                and var_action is None
-                and var_choices is None
-                and not var_positional
-            ):
-                var_action = BooleanOptionalAction
+            # `--<var-name>`/`--no-<var-name>` arguments (if not positional).
+            if var_type is bool:
+                var_arg.add_type = bool
+                if not var_arg.positional:
+                    var_arg.action = BooleanOptionalAction
+                parser.add_argument(*var_arg.flags, **var_arg.get_add_kwargs())
+                continue
 
-            # Check if the variable has a custom parser.
-            _parsers = getattr(cls, "__parsers")
-            if var_name in _parsers:
-                _var_parser = _parsers[var_name]
-                var_action = partial(
-                    CorgyParserAction, _var_parser, var_choices  # type: ignore
-                )
-                var_add_type = str
-                var_choices = None  # handled by the parser
-                var_nargs = getattr(_var_parser, "__nargs__", None)
-                _parser_metavar = getattr(_var_parser, "__metavar__", None)
-                if _parser_metavar is not None:
-                    var_type_metavar = _parser_metavar
-            else:
-                var_add_type = var_base_type
+            ###################################################################
+            # Process annotations.
+            var_base_type = var_type
+            var_base_type = var_arg.process_optional(var_base_type)
+            var_base_type = var_arg.process_collection(var_base_type)
+            var_base_type = var_arg.process_choices(var_base_type)
 
-            if var_add_type is Self:
+            if var_base_type is Self:
                 raise TypeError(
                     "'add_args_to_parser' cannot be used with 'Self' type present"
                 )
 
-            # Add the variable to the parser.
-            _kwargs: Dict[str, Any] = {}
-            if var_name in getattr(cls, "__flags") and not var_positional:
-                _kwargs["dest"] = var_dest
-            if var_help is not None:
-                _kwargs["help"] = var_help
-            if var_nargs is not None:
-                _kwargs["nargs"] = var_nargs
-            if var_action is not None:
-                _kwargs["action"] = var_action
-            if var_choices is not None:
-                _kwargs["choices"] = var_choices
-
-            if var_name in base_defaults:
-                _kwargs["default"] = base_defaults[var_name]
-            elif var_required and not var_positional:
-                _kwargs["required"] = True
-            elif not var_positional:
-                _kwargs["default"] = argparse.SUPPRESS
-
-            if var_type_metavar is not None:
-                _kwargs["metavar"] = var_type_metavar
-            if var_add_type is not None:
-                _kwargs["type"] = var_add_type
-            if var_const is not None:
-                _kwargs["const"] = var_const
-            parser.add_argument(*var_flags, **_kwargs)
+            var_arg.metavar = getattr(var_base_type, "__metavar__", None)
+            var_arg.add_type = var_base_type
+            parser.add_argument(*var_arg.flags, **var_arg.get_add_kwargs())
 
     def __init__(self, **args):
         if self.__class__ is Corgy:

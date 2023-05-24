@@ -555,3 +555,79 @@ class TestCorgyCustomParsers(TestCase):
 
         c = C.parse_from_cmdline(parser)
         self.assertEqual(c, C(x=1, tc=(C(x=2), C(x=3), C(x=4))))
+
+    def test_custom_parser_allows_cmdline_parsing_heterogenous_collection(self):
+        class C(Corgy):
+            x: Tuple[int, float, str]
+
+            @corgyparser("x")
+            @staticmethod
+            def parsex(s):
+                s = s.split(":")
+                return (int(s[0]), float(s[1]), s[2])
+
+        parser = ArgumentParser()
+        orig_parse_args = ArgumentParser.parse_args
+        parser.parse_args = lambda: orig_parse_args(parser, ["--x", "2:3.0:4"])
+
+        c = C.parse_from_cmdline(parser)
+        self.assertEqual(c, C(x=(2, 3.0, "4")))
+
+    def test_custom_parser_allows_cmdline_parsing_heterogenous_literal(self):
+        class C(Corgy):
+            x: Literal[1, "2"]
+
+            @corgyparser("x")
+            @staticmethod
+            def parsex(s):
+                if s == "1":
+                    return 1
+                if s == "2":
+                    return "2"
+                raise ValueError(s)
+
+        for val in [1, "2"]:
+            with self.subTest(val=val):
+                valstr = str(val)
+                parser = ArgumentParser()
+                orig_parse_args = ArgumentParser.parse_args
+                # pylint: disable=cell-var-from-loop
+                parser.parse_args = lambda: orig_parse_args(parser, ["--x", valstr])
+
+                c = C.parse_from_cmdline(parser)
+                self.assertEqual(c, C(x=val))
+
+    def test_add_args_uses_correct_metavar_with_custom_parser_and_choices(self):
+        class T:
+            __metavar__ = "custom_t"
+
+        class T1(T):
+            ...
+
+        class T2(T):
+            ...
+
+        class C(Corgy):
+            t: Literal[T1, T2]  # type: ignore
+
+            @corgyparser("t")
+            @staticmethod
+            def parset(s):
+                if s == "t1":
+                    return T1
+                if s == "t2":
+                    return T2
+                raise ValueError(s)
+
+        parser = ArgumentParser()
+        parser.add_argument = MagicMock()
+        _parser_action = partial(CorgyParserAction, C.parset, [T1, T2])
+        with patch("corgy._corgy.partial", MagicMock(return_value=_parser_action)):
+            C.add_args_to_parser(parser)
+        parser.add_argument.assert_called_once_with(
+            "--t",
+            type=str,
+            action=_parser_action,
+            metavar="custom_t",
+            default=argparse.SUPPRESS,
+        )
