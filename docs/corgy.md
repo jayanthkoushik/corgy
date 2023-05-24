@@ -454,6 +454,43 @@ Note that choices specified in this way are not type-checked to ensure that they
 match the argument type; in the above example, `__choices__` could be set to
 `(1, "2")`.
 
+*Self*
+`Corgy` classes can have attributes of their own type, annotated using
+`typing.Self`.
+
+```python
+>>> if sys.version_info >= (3, 11):
+...     from typing import Self
+... else:
+...     from typing_extensions import Self
+```
+
+```python
+>>> class C(Corgy):
+...     x: int
+...     c: Self
+```
+
+```python
+>>> c = C(x=1)
+>>> c.c = C(x=2)
+>>> c
+C(x=1, c=C(x=2))
+```
+
+```python
+>>> class D(C):
+...     ...
+```
+
+```python
+>>> c.c = D(x=3)
+Traceback (most recent call last):
+    ...
+ValueError: error setting `c`: invalid value for type 'Self (bound to
+<class 'C'>)': D(x=3)
+```
+
 
 #### _classmethod_ add_args_to_parser(parser, name_prefix='', flatten_subgrps=False, defaults=None)
 Add the class’ `Corgy` attributes to the given parser.
@@ -486,6 +523,11 @@ Type annotations control how attributes are added to the parser. A number of
 special annotations are parsed and stripped from attribute types to determine
 the parameters for calling `ArgumentParser.add_argument`. These special
 annotations are described below.
+
+Note: `add_args_to_parser` cannot be used if the type annotation for any
+attribute of the class includes `Self`, unless a custom parser is defined
+for such attributes. See docs for `corgyparser` on how to define custom
+parsers.
 
 *Annotated*
 `typing.Annotated` can be used to add a help message for the argument:

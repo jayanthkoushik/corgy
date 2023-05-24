@@ -20,6 +20,11 @@ TupleType = Tuple
 SetType = Set
 ListType = List
 
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
+
 if sys.version_info >= (3, 9):
     from collections.abc import Sequence  # pylint: disable=reimported
     from typing import Annotated, Literal
@@ -891,6 +896,51 @@ class TestCorgyTypeChecking(TestCase):
         with self.assertRaises(ValueError):
             c.x = 1
 
+    def test_corgy_instance_handles_self_type(self):
+        class B(Corgy):
+            x: int
+
+        class C(B):
+            c: Self
+
+        class D(C):
+            ...
+
+        c = C(x=1, c=C(x=2))
+        with self.assertRaises(ValueError):
+            c.c = B(x=2)
+        with self.assertRaises(ValueError):
+            c.c = D(x=2)
+
+        d = D(x=1, c=D(x=2))
+        with self.assertRaises(ValueError):
+            d.c = C(x=2)
+        with self.assertRaises(ValueError):
+            d.c = B(x=2)
+
+    def test_corgy_instance_handles_nested_self_type(self):
+        class C(Corgy):
+            x: int
+            oc: Optional[Self]
+            lc: List[Self]
+
+        class D(C):
+            ...
+
+        c = C(x=1)
+
+        c.oc = None
+        c.oc = C(x=2)
+        with self.assertRaises(ValueError):
+            c.oc = D(x=2)
+
+        c.lc = []
+        c.lc = [C(x=2), C(x=3)]
+        with self.assertRaises(ValueError):
+            c.lc = [D(x=2)]
+        with self.assertRaises(ValueError):
+            c.lc = [C(x=2), D(x=3)]
+
 
 class TestCorgyInit(TestCase):
     def test_corgy_cls_init_assigns_values_to_attrs(self):
@@ -1155,6 +1205,31 @@ class TestCorgyAsDict(TestCase):
             {"x": ({"x": 1}, {"x": (1.1, [{"x": 10}, {"x": 20}, {"x": 30}], 2)})},
         )
 
+    def test_as_dict_handles_self_type(self):
+        class C(Corgy):
+            x: int
+            c: Self
+
+        c = C(x=1, c=C(x=2))
+        self.assertEqual(c.as_dict(recursive=False), {"x": 1, "c": C(x=2)})
+        self.assertEqual(c.as_dict(recursive=True), {"x": 1, "c": {"x": 2}})
+
+        c = C(x=1, c=C(x=2, c=C(x=3)))
+        self.assertEqual(
+            c.as_dict(recursive=True), {"x": 1, "c": {"x": 2, "c": {"x": 3}}}
+        )
+
+    def test_as_dict_handles_self_in_collections(self):
+        class C(Corgy):
+            x: int
+            lc: List[Self]
+
+        c = C(x=1, lc=[C(x=2), C(x=3, lc=[C(x=4, lc=[])])])
+        self.assertEqual(
+            c.as_dict(recursive=True),
+            {"x": 1, "lc": [{"x": 2}, {"x": 3, "lc": [{"x": 4, "lc": []}]}]},
+        )
+
 
 class TestCorgyFromDict(TestCase):
     def test_cls_from_dict_creates_instance_from_dict(self):
@@ -1392,6 +1467,25 @@ class TestCorgyFromDict(TestCase):
 
         self.assertEqual(C.from_dict({"x": 1, "g:x": 2}), C(x=1, g=G(x=2)))
 
+    def test_from_dict_handles_self_type(self):
+        class C(Corgy):
+            x: int
+            c: Self
+
+        self.assertEqual(C.from_dict({"x": 1, "c": {"x": 2}}), C(x=1, c=C(x=2)))
+
+    def test_from_dict_handles_nested_self_type(self):
+        class C(Corgy):
+            x: int
+            lc: List[Self]
+
+        self.assertEqual(
+            C.from_dict(
+                {"x": 1, "lc": [{"x": 2}, {"x": 3, "lc": [{"x": 4, "lc": []}]}]}
+            ),
+            C(x=1, lc=[C(x=2), C(x=3, lc=[C(x=4, lc=[])])]),
+        )
+
 
 class _LoadDictAsFromDictMeta(type):
     """Metaclass to create a version of `TestCorgyFromDict` for `load_dict`."""
@@ -1523,6 +1617,15 @@ class TestCorgyLoadDict(TestCase):
         c = C(x=1)
         with self.assertRaises(TypeError):
             c.load_dict({}, strict=True)
+
+    def test_load_dict_handles_self_type(self):
+        class C(Corgy):
+            x: int
+            c: Self
+
+        c = C(x=1, c=C(x=2))
+        c.load_dict({"c": {"x": 3}})
+        self.assertEqual(c, C(x=1, c=C(x=3)))
 
 
 class TestCorgyPrinting(TestCase):
@@ -2374,6 +2477,30 @@ class TestCorgyAddArgsToParser(TestCase):
         with self.assertRaises(TypeError):
             C.add_args_to_parser(self.parser)
 
+    def test_add_args_raises_if_using_self_type(self):
+        class C(Corgy):
+            x: int
+            c: Self
+
+        with self.assertRaises(TypeError):
+            C.add_args_to_parser(self.parser)
+
+    def test_add_args_raises_if_using_optional_self_type(self):
+        class C(Corgy):
+            x: int
+            oc: Optional[Self]
+
+        with self.assertRaises(TypeError):
+            C.add_args_to_parser(self.parser)
+
+    def test_add_args_raises_if_using_collection_with_self_type(self):
+        class C(Corgy):
+            x: int
+            lc: List[Self]
+
+        with self.assertRaises(TypeError):
+            C.add_args_to_parser(self.parser)
+
 
 class TestCorgyAddRequiredArgsToParser(TestCase):
     def setUp(self):
@@ -2878,6 +3005,15 @@ class TestCorgyTomlParsing(TestCase):
         f = BytesIO(b"x = [1, 2, 3]\n")
         c = C.parse_from_toml(f)
         self.assertEqual(c.x, 6)
+
+    def test_toml_file_parsing_handles_self_type(self):
+        class C(Corgy):
+            x: int
+            c: Self
+
+        f = BytesIO(b"x = 1\n[c]\nx = 2\n[c.c]\nx = 3")
+        c = C.parse_from_toml(f)
+        self.assertEqual(c, C(x=1, c=C(x=2, c=C(x=3))))
 
 
 class TestCorgyEquality(TestCase):

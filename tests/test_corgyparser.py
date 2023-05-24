@@ -8,6 +8,11 @@ from typing import ClassVar, Optional, Tuple
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
+
 if sys.version_info >= (3, 9):
     from typing import Annotated, Literal
 else:
@@ -514,3 +519,39 @@ class TestCorgyCustomParsers(TestCase):
         parser.add_argument.assert_called_once_with(
             "--x", type=str, action=_parser_action, required=True
         )
+
+    def test_custom_parser_allows_cmdline_parsing_with_self_type(self):
+        class C(Corgy):
+            x: int
+            c: Self
+
+            @corgyparser("c")
+            @staticmethod
+            def parsec(s):
+                return C(x=int(s))
+
+        parser = ArgumentParser()
+        orig_parse_args = ArgumentParser.parse_args
+        parser.parse_args = lambda: orig_parse_args(parser, ["--x", "1", "--c", "2"])
+
+        c = C.parse_from_cmdline(parser)
+        self.assertEqual(c, C(x=1, c=C(x=2)))
+
+    def test_custom_parser_allows_cmdline_parsing_with_nested_self_type(self):
+        class C(Corgy):
+            x: int
+            tc: Tuple[Self]
+
+            @corgyparser("tc")
+            @staticmethod
+            def parsetc(s):
+                return tuple(C(x=int(si)) for si in s.split(":"))
+
+        parser = ArgumentParser()
+        orig_parse_args = ArgumentParser.parse_args
+        parser.parse_args = lambda: orig_parse_args(
+            parser, ["--x", "1", "--tc", "2:3:4"]
+        )
+
+        c = C.parse_from_cmdline(parser)
+        self.assertEqual(c, C(x=1, tc=(C(x=2), C(x=3), C(x=4))))

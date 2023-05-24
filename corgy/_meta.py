@@ -6,6 +6,11 @@ from collections.abc import Sequence as AbstractSequence
 from contextlib import suppress
 from typing import Any, ClassVar, List, Optional, Sequence, Set, Tuple, Union
 
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
+
 if sys.version_info >= (3, 10):
     from types import UnionType
 
@@ -62,7 +67,24 @@ def is_literal_type(t) -> bool:
     return hasattr(t, "__origin__") and t.__origin__ is Literal
 
 
-def check_val_type(_val, _type, try_cast=False, try_load_corgy_dicts=False):
+def check_val_type(
+    _val, _type, try_cast=False, try_load_corgy_dicts=False, self_type=None
+):
+    if _type is Self:
+        if self_type is None:
+            raise TypeError(
+                f"error type checking '{_val!r}': "
+                f"'Self' not allowed in this context"
+            )
+        _type = self_type
+        instance_check = (
+            lambda _v, _t: type(_v) is _t  # pylint: disable=unidiomatic-typecheck
+        )
+        inst_check_err_type_str = f"Self (bound to {self_type})"
+    else:
+        instance_check = isinstance
+        inst_check_err_type_str = str(_type)
+
     _coll_type = get_concrete_collection_type(_type)
     if _coll_type is not None:
         if not isinstance(_val, _coll_type):
@@ -94,7 +116,11 @@ def check_val_type(_val, _type, try_cast=False, try_load_corgy_dicts=False):
             for _val_i in _val:
                 _cast_val_is.append(
                     check_val_type(
-                        _val_i, _base_types[0], try_cast, try_load_corgy_dicts
+                        _val_i,
+                        _base_types[0],
+                        try_cast,
+                        try_load_corgy_dicts,
+                        self_type,
                     )
                 )
         elif len(_base_types) == 2 and _base_types[1] is Ellipsis:
@@ -104,7 +130,11 @@ def check_val_type(_val, _type, try_cast=False, try_load_corgy_dicts=False):
             for _val_i in _val:
                 _cast_val_is.append(
                     check_val_type(
-                        _val_i, _base_types[0], try_cast, try_load_corgy_dicts
+                        _val_i,
+                        _base_types[0],
+                        try_cast,
+                        try_load_corgy_dicts,
+                        self_type,
                     )
                 )
         else:
@@ -117,7 +147,9 @@ def check_val_type(_val, _type, try_cast=False, try_load_corgy_dicts=False):
                 )
             for _val_i, _base_type_i in zip(_val, _base_types):
                 _cast_val_is.append(
-                    check_val_type(_val_i, _base_type_i, try_cast, try_load_corgy_dicts)
+                    check_val_type(
+                        _val_i, _base_type_i, try_cast, try_load_corgy_dicts, self_type
+                    )
                 )
 
         _val = _cast_type(_cast_val_is)
@@ -127,7 +159,9 @@ def check_val_type(_val, _type, try_cast=False, try_load_corgy_dicts=False):
         if _val is None:
             return None
         _base_type = _type.__args__[0]
-        return check_val_type(_val, _base_type, try_cast, try_load_corgy_dicts)
+        return check_val_type(
+            _val, _base_type, try_cast, try_load_corgy_dicts, self_type
+        )
 
     if is_literal_type(_type):
         if not hasattr(_type, "__args__") or _val not in _type.__args__:
@@ -146,7 +180,7 @@ def check_val_type(_val, _type, try_cast=False, try_load_corgy_dicts=False):
         return _type.from_dict(_val, try_cast)
 
     try:
-        _is_inst = isinstance(_val, _type)
+        _is_inst = instance_check(_val, _type)
     except TypeError:
         raise ValueError(f"invalid type: {_type}") from None
 
@@ -162,7 +196,9 @@ def check_val_type(_val, _type, try_cast=False, try_load_corgy_dicts=False):
         else:
             _cast = True
     if not _cast:
-        raise ValueError(f"invalid value for type '{_type}': {_val!r}")
+        raise ValueError(
+            f"invalid value for type '{inst_check_err_type_str}': {_val!r}"
+        )
     return _val
 
 
@@ -433,7 +469,7 @@ class CorgyMeta(type):
                 raise TypeError(f"cannot set `{var_name}`: object is frozen")
             _checkers = getattr(self, "__checkers")
             try:
-                check_val_type(val, var_type)
+                check_val_type(val, var_type, self_type=type(self))
                 if var_name in _checkers:
                     _checkers[var_name](val)
             except ValueError as e:

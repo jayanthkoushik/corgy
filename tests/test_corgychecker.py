@@ -1,6 +1,12 @@
+import sys
 from typing import ClassVar
 from unittest import TestCase
 from unittest.mock import MagicMock
+
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
 
 from corgy import Corgy, corgychecker
 
@@ -168,3 +174,20 @@ class TestCorgyCustomCheckers(TestCase):
         d.x = 2
         with self.assertRaises(ValueError):
             d.x = 1
+
+    def test_corgychecker_works_with_self_type(self):
+        class C(Corgy):
+            x: int
+            c: Self
+
+            @corgychecker("c")
+            @staticmethod
+            def check(v: Self):
+                if v.x % 2:
+                    raise ValueError
+
+        c = C()
+        c.x = 1
+        c.c = C(x=2)
+        with self.assertRaises(ValueError):
+            c.c = C(x=3)

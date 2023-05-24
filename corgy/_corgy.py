@@ -16,6 +16,11 @@ from functools import partial
 from importlib import import_module
 from typing import Any, Callable, Dict, IO, Mapping, Optional, Type, TypeVar, Union
 
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
+
 if sys.version_info >= (3, 9):
     from typing import Literal
 else:
@@ -438,6 +443,34 @@ class Corgy(metaclass=CorgyMeta):
     Note that choices specified in this way are not type-checked to ensure that they
     match the argument type; in the above example, `__choices__` could be set to
     `(1, "2")`.
+
+    *Self*
+    `Corgy` classes can have attributes of their own type, annotated using
+    `typing.Self`.
+
+        >>> if sys.version_info >= (3, 11):
+        ...     from typing import Self
+        ... else:
+        ...     from typing_extensions import Self
+
+        >>> class C(Corgy):
+        ...     x: int
+        ...     c: Self
+
+        >>> c = C(x=1)
+        >>> c.c = C(x=2)
+        >>> c
+        C(x=1, c=C(x=2))
+
+        >>> class D(C):
+        ...     ...
+
+        >>> c.c = D(x=3)  # doctest: +NORMALIZE_WHITESPACE
+        Traceback (most recent call last):
+            ...
+        ValueError: error setting `c`: invalid value for type 'Self (bound to
+        <class 'C'>)': D(x=3)
+
     """
 
     @classmethod
@@ -468,6 +501,11 @@ class Corgy(metaclass=CorgyMeta):
         special annotations are parsed and stripped from attribute types to determine
         the parameters for calling `ArgumentParser.add_argument`. These special
         annotations are described below.
+
+        Note: `add_args_to_parser` cannot be used if the type annotation for any
+        attribute of the class includes `Self`, unless a custom parser is defined
+        for such attributes. See docs for `corgyparser` on how to define custom
+        parsers.
 
         *Annotated*
         `typing.Annotated` can be used to add a help message for the argument::
@@ -909,6 +947,11 @@ class Corgy(metaclass=CorgyMeta):
             else:
                 var_add_type = var_base_type
 
+            if var_add_type is Self:
+                raise TypeError(
+                    "'add_args_to_parser' cannot be used with 'Self' type present"
+                )
+
             # Add the variable to the parser.
             _kwargs: Dict[str, Any] = {}
             if var_name in getattr(cls, "__flags") and not var_positional:
@@ -1071,7 +1114,7 @@ class Corgy(metaclass=CorgyMeta):
 
             if recursive:
                 attr_val = dictify_corgys(attr_val)
-                if flatten and isinstance(attr_type, CorgyMeta):
+                if flatten and (isinstance(attr_type, CorgyMeta) or attr_type is Self):
                     for _k, _v in attr_val.items():
                         _flat_key = f"{attr_name}:{_k}"
                         self_dict[_flat_key] = _v
@@ -1168,6 +1211,7 @@ class Corgy(metaclass=CorgyMeta):
                         cls_attrs[arg_name],
                         try_cast,
                         try_load_corgy_dicts=True,
+                        self_type=cls,
                     )
                 except ValueError as e:
                     raise ValueError(f"error setting `{arg_name}`: {e}") from None
@@ -1256,7 +1300,11 @@ class Corgy(metaclass=CorgyMeta):
             else:
                 try:
                     arg_new_val = check_val_type(
-                        arg_new_val, arg_type, try_cast, try_load_corgy_dicts=True
+                        arg_new_val,
+                        arg_type,
+                        try_cast,
+                        try_load_corgy_dicts=True,
+                        self_type=type(self),
                     )
                 except ValueError as e:
                     raise ValueError(f"error setting `{arg_name}`: {e}") from None
