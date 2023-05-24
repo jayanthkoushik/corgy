@@ -78,6 +78,7 @@ max-line-length = "88"
 
 [tool.pylint.'MESSAGES CONTROL']
 disable = """
+  duplicate-code,
   fixme,
   missing-docstring,
   invalid-name,
