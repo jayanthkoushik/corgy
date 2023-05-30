@@ -855,20 +855,48 @@ class TestCorgyHelpFormatterMultiArgs(TestCase):
 
     def test_corgy_help_formatter_handles_sub_parsers(self):
         self.parser.add_argument("--arg", type=str)
-        subparsers = self.parser.add_subparsers(help="sub commands")
-        subparsers.add_parser("x", formatter_class=CorgyHelpFormatter)
-        subparsers.add_parser("y", formatter_class=CorgyHelpFormatter)
+        subparsers = self.parser.add_subparsers(help="sub commands", required=True)
 
         self.assertEqual(
             self.parser.format_help(),
             # positional arguments:
-            #   CMD        sub commands ([x/y])
+            #   {x,y}    sub commands
             #
             # options:
             #   -h/--help  show this help message and exit
             #   --arg str  (default: None)
             f"positional arguments:\n"
-            f"  {_O('CMD')}        sub commands ([{_C('x')}/{_C('y')}])\n"
+            "  {}         sub commands\n"
+            f"\n"
+            f"options:\n"
+            f"  {_O('-h')}/{_O('--help')}  show this help message and exit\n"
+            f"  {_O('--arg')} {_M('str')}  ({_DNone()})\n",
+        )
+
+        subparser_x = subparsers.add_parser(
+            "x", formatter_class=CorgyHelpFormatter, help="x help"
+        )
+        subparser_y = subparsers.add_parser(
+            "y", formatter_class=CorgyHelpFormatter, help="y help"
+        )
+
+        subparser_x.add_argument("--xa", type=int, help="x arg help")
+        subparser_y.add_argument("--ya", type=int, help="y arg help")
+
+        self.assertEqual(
+            self.parser.format_help(),
+            # positional arguments:
+            #     {x,y}    sub commands
+            #     x        x help
+            #     y        y help
+            #
+            # options:
+            #   -h/--help  show this help message and exit
+            #   --arg str  (default: None)
+            f"positional arguments:\n"
+            "  {x,y}      sub commands\n"
+            f"    {_O('x')}        x help\n"
+            f"    {_O('y')}        y help\n"
             f"\n"
             f"options:\n"
             f"  {_O('-h')}/{_O('--help')}  show this help message and exit\n"
@@ -1225,6 +1253,32 @@ class TestCorgyHelpFormatterUsage(TestCase):
                 #   --arg str  (default: None)
                 f"options:\n" f"  {_O('--arg')} {_M('str')}  ({_DNone()})\n",
             )
+
+    def test_corgy_help_formatter_usage_handles_sub_parsers(self):
+        subparsers = self.parser.add_subparsers()
+        subparser1 = subparsers.add_parser("sub1", help="command 1")
+        subparser2 = subparsers.add_parser("sub2", help="command 2")
+        subparser1.add_argument("--x")
+        subparser2.add_argument("--y")
+
+        self.assertEqual(
+            self.parser.format_usage(),
+            # usage: {sub1,sub2} ...
+            "usage: {sub1,sub2} ...\n",
+        )
+
+    def test_corgy_help_formatter_usage_handles_sub_parsers_with_metavar(self):
+        subparsers = self.parser.add_subparsers(metavar="COMMAND")
+        subparser1 = subparsers.add_parser("sub1", help="command 1")
+        subparser2 = subparsers.add_parser("sub2", help="command 2")
+        subparser1.add_argument("--x")
+        subparser2.add_argument("--y")
+
+        self.assertEqual(
+            self.parser.format_usage(),
+            # usage: COMMAND ...
+            "usage: COMMAND ...\n",
+        )
 
 
 class _NoColorTestMeta(type):

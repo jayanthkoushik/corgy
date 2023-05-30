@@ -5,7 +5,7 @@ import inspect
 import re
 import sys
 import textwrap
-from argparse import Action, ArgumentParser, HelpFormatter
+from argparse import _SubParsersAction, Action, ArgumentParser, HelpFormatter
 from collections.abc import Sequence as AbstractSequence
 from functools import lru_cache, partial
 from importlib import import_module
@@ -439,6 +439,9 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
 
     def _format_action_invocation(self, action: Action) -> str:
         """Format the invocation part of an argument, e.g. `-x, --x int`."""
+        if isinstance(action, _SubParsersAction):
+            return super()._format_action_invocation(action)
+
         if action.option_strings:
             option_strings = action.option_strings
         else:
@@ -470,9 +473,8 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
 
     def _format_args(self, action: Action, default_metavar: Optional[str]) -> str:
         """Format the metavars."""
-        if action.nargs == argparse.PARSER:
-            # No metavars for a sub-command.
-            return ""
+        if isinstance(action, _SubParsersAction):
+            return super()._format_args(action, default_metavar or "")
 
         metavar = action.metavar or default_metavar or ""
 
@@ -546,8 +548,15 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         # e.g., `--x str`, but with the correct amount of spacing appended, for proper
         # alignment with the other arguments. The help is replaced with a dummy `\0`,
         # since with an empty help, there would be no extra spacing added.
+        if isinstance(action, _SubParsersAction):
+            return super()._format_action(action)
+
         with patch.object(action, "help", "\0"):
-            base_fmt = super()._format_action(action)
+            if isinstance(action, _SubParsersAction._ChoicesPseudoAction):
+                with patch.object(action, "metavar", ""):
+                    base_fmt = super()._format_action(action)
+            else:
+                base_fmt = super()._format_action(action)
         base_fmt = base_fmt[:-2]  # remove trailing `\0\n`
 
         # Create formatted choice list.
@@ -799,6 +808,9 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             # Disable colors for usage string.
             fmt = super()._format_usage(usage, *args, **kwargs)
 
+        # Count the number of trailing newlines in the usage string.
+        trail_nls_match = re.search(r"\n*$", fmt)
+        n_trail_nls = len(trail_nls_match.group()) if trail_nls_match else 0
         output_width = self.output_width or get_terminal_size().columns
         # Wrap usage to output width.
         fmt = textwrap.fill(
@@ -807,7 +819,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             subsequent_indent=" " * self._indent_increment,
             break_on_hyphens=False,
         )
-        return fmt + "\n"
+        return fmt + "\n" * max(1, n_trail_nls)
 
     def __init__(self, prog: str):
         # noqa: D107
