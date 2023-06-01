@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [9.1.1](https://github.com/jayanthkoushik/corgy/compare/v9.1.0...v9.1.1) (2023-06-01)
+
+
+### Bug Fixes
+
+* fallback to base formatting for subparsers in `CorgyHelpFormatter` ([87dede1](https://github.com/jayanthkoushik/corgy/commit/87dede132403735a584e2ed83de85b739877f86a))
+
 ## [9.1.0](https://github.com/jayanthkoushik/corgy/compare/v9.0.0...v9.1.0) (2023-05-24)
 
 
