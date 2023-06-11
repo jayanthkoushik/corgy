@@ -24,4 +24,4 @@ poetry run sphinx-build \
     -d docs/_build/.doctrees \
     docs/_build docs `ls docs/_build/*.rst`
 
-find docs -name '*.md' -exec perl -pi -e 's/ *$//' {} +
+find docs -maxdepth 1 -name '*.md' -exec perl -pi -e 's/ *$//' {} +
