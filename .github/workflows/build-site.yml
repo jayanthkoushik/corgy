@@ -28,5 +28,5 @@ jobs:
       run: echo "version=$( echo ${{ steps.tag.outputs.tag }} | sed -E 's/^v([0-9]+)\.([0-9]+)\..*$/\1.\2/' )" >> $GITHUB_OUTPUT
     - name: Deploy website with 'mike'
       run: |
-        poetry run mike deploy ${{ steps.version.outputs.version }} latest
-        git push origin gh-pages
+        poetry run mike set-default latest
+        poetry run mike deploy --update-aliases --push ${{ steps.version.outputs.version }} latest
