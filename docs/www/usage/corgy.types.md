@@ -1,6 +1,3 @@
----
-title: corgy.types
----
 ::: corgy.types
     options:
       show_root_heading: false

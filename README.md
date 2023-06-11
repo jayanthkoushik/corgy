@@ -1,6 +1,3 @@
----
-title: Home
----
 # corgy
 
 Corgy is a Python library that allows you to create feature rich data

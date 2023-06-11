@@ -8,6 +8,12 @@ copyright: "Copyright (c) 2021-2023 Jayanth Koushik"
 docs_dir: "docs/www"
 site_dir: "_site"
 
+nav:
+  - "Home": "index.md"
+  - "Usage":
+      - "corgy": "usage/corgy.md"
+      - "corgy.types": "usage/corgy.types.md"
+
 plugins:
   - search
   - offline
