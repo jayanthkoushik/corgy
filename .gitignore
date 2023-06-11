@@ -1,3 +1,4 @@
+_site/
 .tox
 poetry.lock
 __pycache__/
