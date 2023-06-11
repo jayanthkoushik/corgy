@@ -51,6 +51,8 @@ mypy = "~1.1.0"
 pydocstyle = "^6.1"
 sphinx = "^4.2"
 sphinx-markdown-builder = { git = "https://github.com/clayrisser/sphinx-markdown-builder" }
+
+[tool.poetry.group.webdocs.dependencies]
 mkdocstrings = { extras = ["python"], version = "^0.22.0" }
 mkdocs-material = "^9.1.15"
 mike = "^1.1.2"
