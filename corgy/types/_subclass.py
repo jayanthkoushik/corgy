@@ -56,9 +56,6 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
     passed as the `choices` argument to `ArgumentParser.add_argument`. Refer to the
     docstring of `__choices__` for more information.
 
-    Args:
-        name: Name of the sub-class.
-
     The behavior of sub-class type identification can be customized by setting class
     attributes (preferably on the type returned by the `[...]` syntax).
 
