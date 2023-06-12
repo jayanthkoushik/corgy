@@ -27,6 +27,7 @@ plugins:
             separate_signature: true
             show_symbol_type_heading: true
             show_symbol_type_toc: true
+            show_source: false
 
 markdown_extensions:
   - pymdownx.highlight
