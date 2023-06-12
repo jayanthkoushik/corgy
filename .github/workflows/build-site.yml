@@ -9,6 +9,8 @@ on:
     - 'docs/www/**'
     - 'README.md'
     - '.github/workflows/build-site.yml'
+    tags:
+    - 'v*'
 
 jobs:
   main:
