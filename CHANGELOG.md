@@ -2,16 +2,6 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-### [9.1.6](https://github.com/jayanthkoushik/corgy/compare/v9.1.5...v9.1.6) (2023-06-11)
-
-### [9.1.5](https://github.com/jayanthkoushik/corgy/compare/v9.1.4...v9.1.5) (2023-06-11)
-
-### [9.1.4](https://github.com/jayanthkoushik/corgy/compare/v9.1.3...v9.1.4) (2023-06-11)
-
-### [9.1.3](https://github.com/jayanthkoushik/corgy/compare/v9.1.2...v9.1.3) (2023-06-11)
-
-### [9.1.2](https://github.com/jayanthkoushik/corgy/compare/v9.1.1...v9.1.2) (2023-06-11)
-
 ### [9.1.1](https://github.com/jayanthkoushik/corgy/compare/v9.1.0...v9.1.1) (2023-06-01)
 
 
