@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [9.1.7](https://github.com/jayanthkoushik/corgy/compare/v9.1.1...v9.1.7) (2023-06-12)
+
+
+### Documentation
+
+* add website for docs
+
 ### [9.1.1](https://github.com/jayanthkoushik/corgy/compare/v9.1.0...v9.1.1) (2023-06-01)
 
 
