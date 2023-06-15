@@ -9,6 +9,7 @@ on:
     - 'docs/www/**'
     - 'README.md'
     - '.github/workflows/build-site.yml'
+    - 'mkdocs.yml'
     tags:
     - 'v*'
 
