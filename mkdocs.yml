@@ -44,6 +44,7 @@ theme:
   features:
     - navigation.instant
     - navigation.expand
+    - content.code.copy
   icon:
     logo: "material/dog-side"
   palette:
