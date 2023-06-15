@@ -14,7 +14,7 @@ include = [
   { path = "docs", format = "sdist" },
   { path = "CHANGELOG.md", format = "sdist" },
 ]
-exclude = ["docs/make.sh"]
+exclude = ["docs/make.sh", "docs/www"]
 
 keywords = [
   "data classes",
