@@ -1284,7 +1284,7 @@ class TestCorgyHelpFormatterUsage(TestCase):
 class _NoColorTestMeta(type):
     """Metaclass to create versions of test classes that don't use colors."""
 
-    def __new__(cls, name, bases, namespace, **kwds):  # pylint: disable=duplicate-code
+    def __new__(mcs, name, bases, namespace, **kwds):  # pylint: disable=duplicate-code
         for _item in dir(bases[0]):
             if not _item.startswith("test_"):
                 continue
@@ -1293,7 +1293,7 @@ class _NoColorTestMeta(type):
             namespace[new_test_fn_name] = test_fn
 
         bases = (TestCase,)  # to prevent duplication of tests in the base class
-        return super().__new__(cls, name, bases, namespace, **kwds)
+        return super().__new__(mcs, name, bases, namespace, **kwds)
 
 
 class TestCorgyHelpFormatterSingleArgsNoColor(

@@ -44,7 +44,10 @@ toml = ["tomli"]
 
 [tool.poetry.dev-dependencies]
 black = "^23.0"
-pylint = "~2.13.0"
+pylint = [
+  { version = "~2.13.0", python = "<3.7.2" },  # pylint 2.14 needs Python 3.7.2+
+  { version = "^2.17", python = ">=3.7.2" }
+]
 pre-commit = "^2.0"
 isort = "^5.1"
 mypy = "~1.1.0"
@@ -83,6 +86,7 @@ max-line-length = "88"
 
 [tool.pylint.'MESSAGES CONTROL']
 disable = """
+  unnecessary-lambda-assignment,
   duplicate-code,
   fixme,
   missing-docstring,

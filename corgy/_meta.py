@@ -215,7 +215,7 @@ class CorgyMeta(type):
 
     __slots__ = ()
 
-    def __new__(cls, name, bases, namespace, **kwds) -> CorgyMeta:
+    def __new__(mcs, name, bases, namespace, **kwds) -> CorgyMeta:
         cls_annotations = namespace.get("__annotations__", {})
         namespace["__annotations__"] = {}
         namespace["__defaults"] = {}
@@ -238,7 +238,7 @@ class CorgyMeta(type):
             for base in bases:
                 _base_annotations = getattr(base, "__annotations__", {})
                 namespace["__annotations__"].update(_base_annotations)
-                if isinstance(base, cls):
+                if isinstance(base, mcs):
                     # `base` is also a `Corgy` class.
                     namespace["__defaults"].update(getattr(base, "__defaults"))
                     namespace["__flags"].update(getattr(base, "__flags"))
@@ -303,7 +303,7 @@ class CorgyMeta(type):
         )
         _required_by_default = namespace["__required_by_default"]
 
-        tempnew = super().__new__(cls, name, bases, namespace)
+        tempnew = super().__new__(mcs, name, bases, namespace)
         type_hints = get_type_hints(tempnew, include_extras=True)
 
         if not type_hints:
@@ -349,7 +349,7 @@ class CorgyMeta(type):
                     )
 
                 if len(var_meta) > 1:
-                    if isinstance(var_type, cls):
+                    if isinstance(var_type, mcs):
                         # Custom flags are not allowed for groups.
                         raise TypeError(
                             f"invalid annotation for group `{var_name}`: "
@@ -421,7 +421,7 @@ class CorgyMeta(type):
                 del namespace["__defaults"][var_name]
 
             # Create `<var_name>` property.
-            namespace[var_name] = cls._create_var_property(
+            namespace[var_name] = mcs._create_var_property(
                 name, var_name, var_type, var_help
             )
             if _make_slots:
@@ -453,7 +453,7 @@ class CorgyMeta(type):
                     )
                     raise TypeError(f"invalid target for {_type}: {var_name}")
 
-        return super().__new__(cls, name, bases, namespace, **kwds)
+        return super().__new__(mcs, name, bases, namespace, **kwds)
 
     @staticmethod
     def _create_var_property(cls_name, var_name, var_type, var_doc) -> property:

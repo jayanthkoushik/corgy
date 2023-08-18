@@ -1490,7 +1490,7 @@ class TestCorgyFromDict(TestCase):
 class _LoadDictAsFromDictMeta(type):
     """Metaclass to create a version of `TestCorgyFromDict` for `load_dict`."""
 
-    def __new__(cls, name, bases, namespace, **kwds):
+    def __new__(mcs, name, bases, namespace, **kwds):
         for _item in dir(bases[0]):
             if not _item.startswith("test_") or _item.endswith("_required"):
                 continue
@@ -1499,7 +1499,7 @@ class _LoadDictAsFromDictMeta(type):
             namespace[new_test_fn_name] = test_fn
 
         bases = (TestCase,)  # to prevent duplication of tests
-        return super().__new__(cls, name, bases, namespace, **kwds)
+        return super().__new__(mcs, name, bases, namespace, **kwds)
 
 
 class TestCorgyLoadDictIndirect(TestCorgyFromDict, metaclass=_LoadDictAsFromDictMeta):

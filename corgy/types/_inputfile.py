@@ -51,7 +51,7 @@ class InputTextFile(TextIOWrapper):
     @classmethod
     def stdin_wrapper(cls) -> InputTextFile:
         """`sys.__stdin__` as `InputTextFile`."""
-        obj = cls.__new__(cls)
+        obj = cls.__new__(cls)  # pylint: disable=no-value-for-parameter
         TextIOWrapper.__init__(obj, sys.__stdin__.buffer, line_buffering=True)
         atexit.register(cls.close, obj)
         return obj
@@ -90,7 +90,7 @@ class InputBinFile(BufferedReader):
     @classmethod
     def stdin_wrapper(cls) -> Self:
         """`sys.__stdin__` as `InputBinFile`."""
-        obj = cls.__new__(cls)
+        obj = cls.__new__(cls)  # pylint: disable=no-value-for-parameter
         stream = FileIO(sys.__stdin__.fileno(), mode="rb")
         BufferedReader.__init__(obj, stream)
         atexit.register(cls.close, obj)

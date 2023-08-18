@@ -72,7 +72,7 @@ class OutputTextFile(TextIOWrapper):
 
     @classmethod
     def _stdoe_wrapper(cls, f: TextIOWrapper) -> Self:
-        obj = cls.__new__(cls)
+        obj = cls.__new__(cls)  # pylint: disable=no-value-for-parameter
         TextIOWrapper.__init__(obj, f.buffer, line_buffering=True)
         atexit.register(cls.close, obj)
         return obj
@@ -140,7 +140,7 @@ class OutputBinFile(BufferedWriter):
 
     @classmethod
     def _stdoe_wrapper(cls, f: TextIOWrapper) -> Self:
-        obj = cls.__new__(cls)
+        obj = cls.__new__(cls)  # pylint: disable=no-value-for-parameter
         stream = FileIO(f.fileno(), mode="wb")
         BufferedWriter.__init__(obj, stream)
         atexit.register(cls.close, obj)

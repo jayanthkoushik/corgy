@@ -302,7 +302,7 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         except AttributeError:
             try:
                 if isinstance(obj, type_):
-                    return type_.__str__(obj)
+                    return type_.__str__(obj)  # pylint: disable=unnecessary-dunder-call
             except TypeError:
                 pass
             return str(obj)
