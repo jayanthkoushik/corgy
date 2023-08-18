@@ -1109,6 +1109,19 @@ class Corgy(metaclass=CorgyMeta):
             for _attr in cls.__annotations__
         }
 
+    def is_attr_set(self, attr_name: str) -> bool:
+        """Check if a `Corgy` attribute is set.
+
+        Args:
+            attr_name: Name of the attribute to check.
+
+        Raises:
+            AttributeError: if the attribute is not a `Corgy` attribute.
+        """
+        if attr_name not in self.attrs():
+            raise AttributeError(f"unknown attribute: `{attr_name}`")
+        return hasattr(self, attr_name)
+
     def as_dict(self, recursive: bool = True, flatten: bool = False) -> Dict[str, Any]:
         """Return the object as a dictionary.
 

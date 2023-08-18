@@ -794,6 +794,22 @@ Example:
 ```
 
 
+#### is_attr_set(attr_name)
+Check if a `Corgy` attribute is set.
+
+
+* **Parameters**
+
+    **attr_name** – Name of the attribute to check.
+
+
+
+* **Raises**
+
+    **AttributeError** – if the attribute is not a `Corgy` attribute.
+
+
+
 #### as_dict(recursive=True, flatten=False)
 Return the object as a dictionary.
 

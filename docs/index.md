@@ -7,6 +7,7 @@
     * [`Corgy`](corgy.md#corgy.Corgy)
         * [`Corgy.add_args_to_parser()`](corgy.md#corgy.Corgy.add_args_to_parser)
         * [`Corgy.attrs()`](corgy.md#corgy.Corgy.attrs)
+        * [`Corgy.is_attr_set()`](corgy.md#corgy.Corgy.is_attr_set)
         * [`Corgy.as_dict()`](corgy.md#corgy.Corgy.as_dict)
         * [`Corgy.from_dict()`](corgy.md#corgy.Corgy.from_dict)
         * [`Corgy.load_dict()`](corgy.md#corgy.Corgy.load_dict)

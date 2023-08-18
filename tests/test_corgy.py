@@ -1040,6 +1040,45 @@ class TestCorgyAttrs(TestCase):
 
         self.assertEqual(B.attrs(), {"x": int, "y": str})
 
+    def test_is_attr_set_raises_if_attr_not_in_cls(self):
+        class A(Corgy):
+            x: int
+
+        a = A()
+        with self.assertRaises(AttributeError):
+            a.is_attr_set("y")
+
+    def test_is_attr_set_raises_for_non_corgy_attr(self):
+        class A(Corgy, corgy_make_slots=False):
+            x: int
+
+        a = A()
+        a.y = 1
+        with self.assertRaises(AttributeError):
+            a.is_attr_set("y")
+
+    def test_is_attr_set_returns_true_if_attr_set(self):
+        class A(Corgy):
+            x: int
+
+        a = A()
+        a.x = 1
+        self.assertTrue(a.is_attr_set("x"))
+
+    def test_is_attr_set_returns_false_if_attr_not_set(self):
+        class A(Corgy):
+            x: int
+
+        a = A()
+        self.assertFalse(a.is_attr_set("x"))
+
+    def test_is_attr_set_returns_true_for_default_value(self):
+        class A(Corgy):
+            x: int = 1
+
+        a = A()
+        self.assertTrue(a.is_attr_set("x"))
+
 
 class TestCorgyAsDict(TestCase):
     @classmethod
