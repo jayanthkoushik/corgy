@@ -152,6 +152,8 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     Note that you do not need to create an instance of the class; that is done by the
     parser itself. The following public attributes are available:
 
+    Color-related attributes:
+
     * `enable_colors`: If `None` (the default), colors are enabled if the `crayons`
       package is available, and the output is a tty. To explicitly enable or disable
       colors, set to `True` or `False`.
@@ -162,14 +164,13 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
       and `white`. Specifying the name in all caps will make the color bold. You can
       also use the special value `BOLD` to make the output bold without changing the
       color. The default value are `blue` for choices, `green` for keywords, `RED` for
-      metavars, `YELLOW` for defaults, and `BOLD` for options. Format:
+      metavars, `YELLOW` for defaults, and `BOLD` for options. Format::
 
-      .. code-block:: text
-         :dedent: 1
+             -a/--arg str       help for arg ({'a'/'b'/'c'} default: 'a')
+               |      |                          |            |      |
+             options  metavars                 choices      keywords defaults
 
-              -a/--arg str       help for arg ({'a'/'b'/'c'} default: 'a')
-                |      |                          |            |      |
-              options  metavars                 choices      keywords defaults
+    Layout-related attributes:
 
     * `output_width`: The number of columns used for the output. If `None` (the
       default), the current terminal width is used.
@@ -177,6 +178,8 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     * `max_help_position`: How far to the right (from the start), the help string can
       start from. If `None`, there is no limit. The default is to use half the current
       terminal width.
+
+    Marker-related attributes:
 
     * `marker_extras_<begin/end>`: The strings used to enclose the extra help text
       (choices, default values etc.). The defaults are `(` and `)`.
@@ -187,6 +190,8 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     * `marker_choices_sep`: The string used to separate individual choices in the choice
       list. The default is `/`.
 
+    Misc. attributes:
+
     * `show_full_help`: Whether to show the full help, including choices, indicators for
       required arguments, and the usage string. The default is `True`.
 
@@ -194,20 +199,20 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     on the argument type. The following attributes are recognized:
 
     * `__metavar__`: This can be set to a string on the argument type to override the
-        default metavar. Example::
+      default metavar. Example::
 
-            >>> class T:
-            ...     __metavar__ = "METAVAR"
+             >>> class T:
+             ...     __metavar__ = "METAVAR"
 
-            >>> parser = ArgumentParser(
-            ...     formatter_class=CorgyHelpFormatter,
-            ...     add_help=False,
-            ...     usage=argparse.SUPPRESS,
-            ... )
-            >>> _ = parser.add_argument("--arg", type=T)
-            >>> parser.print_help()
-            options:
-              --arg METAVAR  (default: None)
+             >>> parser = ArgumentParser(
+             ...     formatter_class=CorgyHelpFormatter,
+             ...     add_help=False,
+             ...     usage=argparse.SUPPRESS,
+             ... )
+             >>> _ = parser.add_argument("--arg", type=T)
+             >>> parser.print_help()
+             options:
+               --arg METAVAR  (default: None)
 
     """
 

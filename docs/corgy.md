@@ -322,14 +322,8 @@ supported:
 
 
 1. `collections.abc.Sequence` (`typing.Sequence` on Python < 3.9)
-
-
 2. `tuple` (`typing.Tuple` on Python < 3.9)
-
-
 3. `list` (`typing.List` on Python < 3.9)
-
-
 4. `set` (`typing.Set` on Python < 3.9)
 
 There are a few different ways to use these types, each resulting in different
@@ -500,19 +494,13 @@ Add the class’ `Corgy` attributes to the given parser.
 
 
     * **parser** – Argument parser/group to which the attributes will be added.
-
-
     * **name_prefix** – Prefix for argument names. Arguments will be named
     `--<name-prefix>:<attr-name>`. If custom flags are present,
     `--<name-prefix>:<flag>` will be used instead (one for each flag).
-
-
     * **flatten_subgrps** – Whether to add sub-groups to the main parser instead of
     creating argument groups. Note: sub-sub-groups are always added with
     this argument set to `True`, since `argparse` in unable to properly
     display nested group arguments.
-
-
     * **defaults** – Optional mapping with default values for arguments. Any value
     specified here will override default values specified in the class.
     Values for groups can be specified either as `Corgy` instances, or as
@@ -662,7 +650,7 @@ options:
 *Collection*
 Collection types are added to the parser by setting `nargs`. The value for
 `nargs` is determined by the collection type. Plain collections, such as
-`Sequence[int]`, will be added with `nargs=\*`; Non-empty collections, such as
+`Sequence[int]`, will be added with `nargs=*`; Non-empty collections, such as
 `Sequence[int, ...]`, will be added with `nargs=+`; Finally, fixed-length
 collections, such as `Sequence[int, int, int]`, will be added with `nargs` set
 to the length of the collection.
@@ -818,8 +806,6 @@ are omitted, unless they have default values.
 
     * **recursive** – whether to recursively call `as_dict` on attributes which are
     `Corgy` instances. Otherwise, they are returned as is.
-
-
     * **flatten** – whether to flatten group arguments into `:` separated strings.
     Only takes effect if `recursive` is `True`.
 
@@ -851,7 +837,7 @@ Examples:
 #### _classmethod_ from_dict(d, try_cast=False)
 Return a new instance of the class using a dictionary.
 
-This is roughly equivalent to `cls(\*\*d)`, with the main exception being that
+This is roughly equivalent to `cls(**d)`, with the main exception being that
 groups can be specified as dictionaries themselves, and will be processed
 recursively.
 
@@ -860,8 +846,6 @@ recursively.
 
 
     * **d** – Dictionary to create the instance from.
-
-
     * **try_cast** – Whether to try and cast values which don’t match attribute types.
 
 
@@ -916,11 +900,7 @@ corresponding attributes are ignored.
 
 
     * **d** – Dictionary to load.
-
-
     * **try_cast** – Whether to try and cast values which don’t match attribute types.
-
-
     * **strict** – If `True`, attributes with existing values that are not in the
     dictionary will be unset.
 
@@ -963,13 +943,9 @@ Return an instance of the class parsed from command line arguments.
 
     * **parser** – An instance of `argparse.ArgumentParser` or `None`. If `None`, a new
     instance is created.
-
-
     * **defaults** – A dictionary of default values for the attributes, passed to
     `add_args_to_parser`. Refer to the docs for `add_args_to_parser` for
     more details.
-
-
     * **parser_args** – Arguments to be passed to `argparse.ArgumentParser()`. Ignored
     if `parser` is not None.
 
@@ -989,8 +965,6 @@ Parse an object of the class from a toml file.
 
 
     * **toml_file** – A file-like object containing the class attributes in toml.
-
-
     * **defaults** – A dictionary of default values, overriding any values specified
     in the class.
 
@@ -1124,14 +1098,10 @@ Decorating the function with `@staticmethod` is optional, but prevents type erro
 
 
     * **var_names** – The attributes associated with the decorated parser.
-
-
     * **metavar** – Keyword only argument to set the metavar when adding the associated
     attribute(s) to an `ArgumentParser` instance.
-
-
     * **nargs** – Keyword only argument to set the number of arguments to be used for the
-    associated attribute(s). Must be `None`, `'\*'`, `'+'`, or a positive number.
+    associated attribute(s). Must be `None`, `'*'`, `'+'`, or a positive number.
     This value is passed as the `nargs` argument to
     `ArgumentParser.add_argument`, and controls the number of arguments that
     will be read from the command line, and passed to the parsing function.
@@ -1251,12 +1221,12 @@ To configure `CorgyHelpFormatter`, you can set a number of attributes on the cla
 Note that you do not need to create an instance of the class; that is done by the
 parser itself. The following public attributes are available:
 
+Color-related attributes:
+
 
 * `enable_colors`: If `None` (the default), colors are enabled if the `crayons`
 package is available, and the output is a tty. To explicitly enable or disable
 colors, set to `True` or `False`.
-
-
 * `color_<choices/keywords/metavars/defaults/options>`: These attributes control
 the colors used for various parts of the output (see below for reference).
 Available colors are `red`, `green`, `yellow`, `blue`, `black`, `magenta`, `cyan`,
@@ -1265,32 +1235,32 @@ also use the special value `BOLD` to make the output bold without changing the
 color. The default value are `blue` for choices, `green` for keywords, `RED` for
 metavars, `YELLOW` for defaults, and `BOLD` for options. Format:
 
-```text
-    -a/--arg str       help for arg ({'a'/'b'/'c'} default: 'a')
-      |      |                          |            |      |
-    options  metavars                 choices      keywords defaults
+```python
+-a/--arg str       help for arg ({'a'/'b'/'c'} default: 'a')
+  |      |                          |            |      |
+options  metavars                 choices      keywords defaults
 ```
+
+Layout-related attributes:
 
 
 * `output_width`: The number of columns used for the output. If `None` (the
 default), the current terminal width is used.
-
-
 * `max_help_position`: How far to the right (from the start), the help string can
 start from. If `None`, there is no limit. The default is to use half the current
 terminal width.
 
+Marker-related attributes:
+
 
 * `marker_extras_<begin/end>`: The strings used to enclose the extra help text
 (choices, default values etc.). The defaults are `(` and `)`.
-
-
 * `marker_choices_<begin/end>`: The strings used to enclose the list of choices for
 an argument. The defaults are `{` and `}`.
-
-
 * `marker_choices_sep`: The string used to separate individual choices in the choice
 list. The default is `/`.
+
+Misc. attributes:
 
 
 * `show_full_help`: Whether to show the full help, including choices, indicators for
@@ -1301,23 +1271,22 @@ on the argument type. The following attributes are recognized:
 
 
 * `__metavar__`: This can be set to a string on the argument type to override the
+default metavar. Example:
 
-    default metavar. Example:
+```python
+>>> class T:
+...     __metavar__ = "METAVAR"
 
-    ```python
-    >>> class T:
-    ...     __metavar__ = "METAVAR"
-
-    >>> parser = ArgumentParser(
-    ...     formatter_class=CorgyHelpFormatter,
-    ...     add_help=False,
-    ...     usage=argparse.SUPPRESS,
-    ... )
-    >>> _ = parser.add_argument("--arg", type=T)
-    >>> parser.print_help()
-    options:
-      --arg METAVAR  (default: None)
-    ```
+>>> parser = ArgumentParser(
+...     formatter_class=CorgyHelpFormatter,
+...     add_help=False,
+...     usage=argparse.SUPPRESS,
+... )
+>>> _ = parser.add_argument("--arg", type=T)
+>>> parser.print_help()
+options:
+  --arg METAVAR  (default: None)
+```
 
 
 #### _property_ using_colors()
@@ -1351,20 +1320,12 @@ added arguments.
 
 
     * **parser** – `ArgumentParser` instance to add the arguments to.
-
-
     * **short_help_flags** – Sequence of argument strings for the short help option.
     Default is `("-h", "--help")`.
-
-
     * **full_help_flags** – Sequence of argument strings for the full help option.
     Default is `("--helpfull")`.
-
-
     * **short_help_msg** – String to describe the short help option. Default is `"show
     help message and exit"`.
-
-
     * **full_help_msg** – String to describe the full help option. Default is `"show
     full help message and exit"`.
 
@@ -1388,3 +1349,19 @@ options:
 
 
 * [corgy.types package](corgy.types.md)
+
+
+    * [`OutputTextFile`](corgy.types.md#corgy.types.OutputTextFile)
+    * [`OutputBinFile`](corgy.types.md#corgy.types.OutputBinFile)
+    * [`LazyOutputTextFile`](corgy.types.md#corgy.types.LazyOutputTextFile)
+    * [`LazyOutputBinFile`](corgy.types.md#corgy.types.LazyOutputBinFile)
+    * [`InputTextFile`](corgy.types.md#corgy.types.InputTextFile)
+    * [`InputBinFile`](corgy.types.md#corgy.types.InputBinFile)
+    * [`SubClass`](corgy.types.md#corgy.types.SubClass)
+        * [`SubClass.which`](corgy.types.md#corgy.types.SubClass.which)
+        * [`SubClass.__choices__`](corgy.types.md#corgy.types.SubClass.__choices__)
+        * [`SubClass.__call__()`](corgy.types.md#corgy.types.SubClass.__call__)
+
+
+    * [`KeyValuePairs`](corgy.types.md#corgy.types.KeyValuePairs)
+    * [`InitArgs`](corgy.types.md#corgy.types.InitArgs)
