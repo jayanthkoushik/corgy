@@ -21,7 +21,7 @@
         <link rel="next" href="corgy.types.html">
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.15">
+      <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-9.1.21">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.26e3688c.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.eebd395e.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ecc896b0.min.css">
@@ -371,6 +371,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#corgy._corgy.Corgy.is_attr_set" class="md-nav__link">
+    is_attr_set()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#corgy._corgy.Corgy.load_dict" class="md-nav__link">
     load_dict()
   </a>
@@ -407,6 +414,47 @@
   <a href="#corgy.corgychecker" class="md-nav__link">
     corgychecker()
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#corgy.CorgyHelpFormatter" class="md-nav__link">
+    CorgyHelpFormatter
+  </a>
+  
+    <nav class="md-nav" aria-label="CorgyHelpFormatter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#corgy._helpfmt.CorgyHelpFormatter.using_colors" class="md-nav__link">
+    using_colors
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._helpfmt.CorgyHelpFormatter.FullHelpAction" class="md-nav__link">
+    FullHelpAction
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._helpfmt.CorgyHelpFormatter.ShortHelpAction" class="md-nav__link">
+    ShortHelpAction
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._helpfmt.CorgyHelpFormatter.add_short_full_helps" class="md-nav__link">
+    add_short_full_helps()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -507,6 +555,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#corgy._corgy.Corgy.is_attr_set" class="md-nav__link">
+    is_attr_set()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#corgy._corgy.Corgy.load_dict" class="md-nav__link">
     load_dict()
   </a>
@@ -543,6 +598,47 @@
   <a href="#corgy.corgychecker" class="md-nav__link">
     corgychecker()
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#corgy.CorgyHelpFormatter" class="md-nav__link">
+    CorgyHelpFormatter
+  </a>
+  
+    <nav class="md-nav" aria-label="CorgyHelpFormatter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#corgy._helpfmt.CorgyHelpFormatter.using_colors" class="md-nav__link">
+    using_colors
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._helpfmt.CorgyHelpFormatter.FullHelpAction" class="md-nav__link">
+    FullHelpAction
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._helpfmt.CorgyHelpFormatter.ShortHelpAction" class="md-nav__link">
+    ShortHelpAction
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._helpfmt.CorgyHelpFormatter.add_short_full_helps" class="md-nav__link">
+    add_short_full_helps()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1582,6 +1678,76 @@ B(x=1.1, a=A(x=&#39;one&#39;, g=G(x=1)))
 
 
 
+<h3 id="corgy._corgy.Corgy.is_attr_set" class="doc doc-heading">
+        <span class="doc doc-object-name doc-function-name">is_attr_set</span>
+
+
+<a href="#corgy._corgy.Corgy.is_attr_set" class="headerlink" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">is_attr_set</span><span class="p">(</span><span class="n">attr_name</span><span class="p">)</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Check if a <code>Corgy</code> attribute is set.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>attr_name</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Name of the attribute to check.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Raises:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code>AttributeError</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>if the attribute is not a <code>Corgy</code> attribute.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
 <h3 id="corgy._corgy.Corgy.load_dict" class="doc doc-heading">
         <span class="doc doc-object-name doc-function-name">load_dict</span>
 
@@ -2152,6 +2318,370 @@ by passing all attribute names directly::</p>
 
 </div>
 
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="corgy.CorgyHelpFormatter" class="doc doc-heading">
+        <span class="doc doc-object-name doc-class-name">corgy.CorgyHelpFormatter</span>
+
+
+<a href="#corgy.CorgyHelpFormatter" class="headerlink" title="Permanent link">#</a></h2>
+
+
+  <div class="doc doc-contents first">
+      <p class="doc doc-class-bases">
+        Bases: <code><span title="argparse.HelpFormatter">HelpFormatter</span></code></p>
+
+  
+      <p>Formatter class for <code>argparse</code> with a cleaner layout, and support for colors.</p>
+<p><code>Corgy.parse_from_cmdline</code> uses this formatter by default, unless a different
+<code>formatter_class</code> argument is provided. <code>CorgyHelpFormatter</code> can also be used
+independently of <code>Corgy</code>. Simply pass it as the <code>formatter_class</code> argument to
+<code>argparse.ArgumentParser()</code>::</p>
+<div class="highlight"><pre><span></span><code>&gt;&gt;&gt; import argparse
+&gt;&gt;&gt; from argparse import ArgumentParser
+&gt;&gt;&gt; from corgy import CorgyHelpFormatter
+
+&gt;&gt;&gt; parser = ArgumentParser(
+...     formatter_class=CorgyHelpFormatter,
+...     usage=argparse.SUPPRESS,
+... )
+&gt;&gt;&gt; _ = parser.add_argument(&quot;--x&quot;, type=int, required=True)
+&gt;&gt;&gt; _ = parser.add_argument(&quot;--y&quot;, type=str, nargs=&quot;*&quot;, required=True)
+&gt;&gt;&gt; parser.print_help()
+options:
+  -h/--help      show this help message and exit
+  --x int        (required)
+  --y [str ...]  (required)
+</code></pre></div>
+<p>To configure <code>CorgyHelpFormatter</code>, you can set a number of attributes on the class.
+Note that you do not need to create an instance of the class; that is done by the
+parser itself. The following public attributes are available:</p>
+<p>Color-related attributes:</p>
+<ul>
+<li>
+<p><code>enable_colors</code>: If <code>None</code> (the default), colors are enabled if the <code>crayons</code>
+  package is available, and the output is a tty. To explicitly enable or disable
+  colors, set to <code>True</code> or <code>False</code>.</p>
+</li>
+<li>
+<p><code>color_&lt;choices/keywords/metavars/defaults/options&gt;</code>: These attributes control
+  the colors used for various parts of the output (see below for reference).
+  Available colors are <code>red</code>, <code>green</code>, <code>yellow</code>, <code>blue</code>, <code>black</code>, <code>magenta</code>, <code>cyan</code>,
+  and <code>white</code>. Specifying the name in all caps will make the color bold. You can
+  also use the special value <code>BOLD</code> to make the output bold without changing the
+  color. The default value are <code>blue</code> for choices, <code>green</code> for keywords, <code>RED</code> for
+  metavars, <code>YELLOW</code> for defaults, and <code>BOLD</code> for options. Format::</p>
+<div class="highlight"><pre><span></span><code> -a/--arg str       help for arg ({&#39;a&#39;/&#39;b&#39;/&#39;c&#39;} default: &#39;a&#39;)
+   |      |                          |            |      |
+ options  metavars                 choices      keywords defaults
+</code></pre></div>
+</li>
+</ul>
+<p>Layout-related attributes:</p>
+<ul>
+<li>
+<p><code>output_width</code>: The number of columns used for the output. If <code>None</code> (the
+  default), the current terminal width is used.</p>
+</li>
+<li>
+<p><code>max_help_position</code>: How far to the right (from the start), the help string can
+  start from. If <code>None</code>, there is no limit. The default is to use half the current
+  terminal width.</p>
+</li>
+</ul>
+<p>Marker-related attributes:</p>
+<ul>
+<li>
+<p><code>marker_extras_&lt;begin/end&gt;</code>: The strings used to enclose the extra help text
+  (choices, default values etc.). The defaults are <code>(</code> and <code>)</code>.</p>
+</li>
+<li>
+<p><code>marker_choices_&lt;begin/end&gt;</code>: The strings used to enclose the list of choices for
+  an argument. The defaults are <code>{</code> and <code>}</code>.</p>
+</li>
+<li>
+<p><code>marker_choices_sep</code>: The string used to separate individual choices in the choice
+  list. The default is <code>/</code>.</p>
+</li>
+</ul>
+<p>Misc. attributes:</p>
+<ul>
+<li><code>show_full_help</code>: Whether to show the full help, including choices, indicators for
+  required arguments, and the usage string. The default is <code>True</code>.</li>
+</ul>
+<p>Formatting of individual arguments can be customized with magic attributes defined
+on the argument type. The following attributes are recognized:</p>
+<ul>
+<li><code>__metavar__</code>: This can be set to a string on the argument type to override the
+  default metavar. Example::<div class="highlight"><pre><span></span><code> &gt;&gt;&gt; class T:
+ ...     __metavar__ = &quot;METAVAR&quot;
+
+ &gt;&gt;&gt; parser = ArgumentParser(
+ ...     formatter_class=CorgyHelpFormatter,
+ ...     add_help=False,
+ ...     usage=argparse.SUPPRESS,
+ ... )
+ &gt;&gt;&gt; _ = parser.add_argument(&quot;--arg&quot;, type=T)
+ &gt;&gt;&gt; parser.print_help()
+ options:
+   --arg METAVAR  (default: None)
+</code></pre></div>
+</li>
+</ul>
+
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="corgy._helpfmt.CorgyHelpFormatter.using_colors" class="doc doc-heading">
+        <span class="doc doc-object-name doc-attribute-name">using_colors</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#corgy._helpfmt.CorgyHelpFormatter.using_colors" class="headerlink" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">using_colors</span><span class="p">:</span> <span class="nb">bool</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Whether colors are enabled.</p>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="corgy._helpfmt.CorgyHelpFormatter.FullHelpAction" class="doc doc-heading">
+        <span class="doc doc-object-name doc-class-name">FullHelpAction</span>
+
+
+<a href="#corgy._helpfmt.CorgyHelpFormatter.FullHelpAction" class="headerlink" title="Permanent link">#</a></h3>
+
+
+  <div class="doc doc-contents ">
+      <p class="doc doc-class-bases">
+        Bases: <code><span title="argparse.Action">Action</span></code></p>
+
+  
+      <p><code>argparse.Action</code> that displays the full help, and exits.</p>
+
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="corgy._helpfmt.CorgyHelpFormatter.ShortHelpAction" class="doc doc-heading">
+        <span class="doc doc-object-name doc-class-name">ShortHelpAction</span>
+
+
+<a href="#corgy._helpfmt.CorgyHelpFormatter.ShortHelpAction" class="headerlink" title="Permanent link">#</a></h3>
+
+
+  <div class="doc doc-contents ">
+      <p class="doc doc-class-bases">
+        Bases: <code><span title="argparse.Action">Action</span></code></p>
+
+  
+      <p><code>argparse.Action</code> that displays the short help, and exits.</p>
+
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="corgy._helpfmt.CorgyHelpFormatter.add_short_full_helps" class="doc doc-heading">
+        <span class="doc doc-object-name doc-function-name">add_short_full_helps</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#corgy._helpfmt.CorgyHelpFormatter.add_short_full_helps" class="headerlink" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">add_short_full_helps</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">short_help_flags</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;-h&#39;</span><span class="p">,</span> <span class="s1">&#39;--help&#39;</span><span class="p">),</span> <span class="n">full_help_flags</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;--helpfull&#39;</span><span class="p">),</span> <span class="n">short_help_msg</span><span class="o">=</span><span class="s1">&#39;show help message and exit&#39;</span><span class="p">,</span> <span class="n">full_help_msg</span><span class="o">=</span><span class="s1">&#39;show full help message and exit&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Add arguments for displaying the short or full help.</p>
+<p>The parser must be created with <code>add_help=False</code> to prevent a clash with the
+added arguments.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>parser</code></td>
+          <td>
+                <code><span title="argparse.ArgumentParser">ArgumentParser</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p><code>ArgumentParser</code> instance to add the arguments to.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>short_help_flags</code></td>
+          <td>
+                <code><span title="typing.Sequence">Sequence</span>[str]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Sequence of argument strings for the short help option.
+Default is <code>("-h", "--help")</code>.</p>
+            </div>
+          </td>
+          <td>
+                <code>(&#39;-h&#39;, &#39;--help&#39;)</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>full_help_flags</code></td>
+          <td>
+                <code><span title="typing.Sequence">Sequence</span>[str]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Sequence of argument strings for the full help option.
+Default is <code>("--helpfull")</code>.</p>
+            </div>
+          </td>
+          <td>
+                <code>(&#39;--helpfull&#39;)</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>short_help_msg</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>String to describe the short help option. Default is <code>"show
+help message and exit"</code>.</p>
+            </div>
+          </td>
+          <td>
+                <code>&#39;show help message and exit&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>full_help_msg</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>String to describe the full help option. Default is <code>"show
+full help message and exit"</code>.</p>
+            </div>
+          </td>
+          <td>
+                <code>&#39;show full help message and exit&#39;</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+      <p>Example::</p>
+<div class="highlight"><pre><span></span><code>&gt;&gt;&gt; parser = ArgumentParser(
+...     formatter_class=CorgyHelpFormatter,
+...     add_help=False,
+...     usage=argparse.SUPPRESS,
+... )
+&gt;&gt;&gt; CorgyHelpFormatter.add_short_full_helps(parser)
+&gt;&gt;&gt; parser.print_help()
+options:
+  -h/--help   show help message and exit
+  --helpfull  show full help message and exit
+</code></pre></div>
+
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
 
 
 
@@ -2192,10 +2722,10 @@ by passing all attribute names directly::</p>
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "navigation.expand", "content.code.copy"], "search": "../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "navigation.expand", "content.code.copy"], "search": "../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.b4d07000.min.js"></script>
+      <script src="../assets/javascripts/bundle.220ee61c.min.js"></script>
       
     
   </body>
