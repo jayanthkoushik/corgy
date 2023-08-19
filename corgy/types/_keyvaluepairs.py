@@ -13,7 +13,7 @@ __all__ = ("KeyValuePairs",)
 
 
 class _StrMapper(Protocol):
-    def __new__(cls, _: str):
+    def __new__(cls, _: str):  # pylint: disable=arguments-differ
         ...
 
 
