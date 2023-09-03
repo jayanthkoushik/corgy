@@ -18,14 +18,11 @@ class _SubClassMeta(type):
 class SubClass(Generic[_T], metaclass=_SubClassMeta):
     """Type representing a sub-class of a given class.
 
-    Example::
-
+    Examples:
         >>> from corgy.types import SubClass
-
         >>> class Base: ...
         >>> class Sub1(Base): ...
         >>> class Sub2(Base): ...
-
         >>> BaseSubType = SubClass[Base]   # type for a sub-class of `Base`
         >>> BaseSub = BaseSubType("Sub1")  # sub-class of `Base` named `Sub1`
         >>> base_sub = BaseSub()           # instance of a sub-class of `Base`
@@ -41,13 +38,12 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
     `SubClass[Base]("Sub1")()`.
 
     This class is useful for creating objects of a generic class, where the concrete
-    class is determined at runtime, e.g, by a command-line argument::
+    class is determined at runtime, e.g, by a command-line argument.
 
+    Examples:
         >>> from argparse import ArgumentParser
-
         >>> parser = ArgumentParser()
         >>> _ = parser.add_argument("--base-subcls", type=SubClass[Base])
-
         >>> args = parser.parse_args(["--base-subcls", "Sub1"])
         >>> base_obj = args.base_subcls()  # an instance of a sub-class of `Base`
 
@@ -60,17 +56,19 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
     attributes (preferably on the type returned by the `[...]` syntax).
 
     * `allow_base`: If `True`, the base class itself will be allowed as a valid
-        sub-class. The default is `False`. Example::
+        sub-class. The default is `False`.
 
-            >>> class Base: ...
-            >>> class Sub1(Base): ...
-            >>> class Sub2(Base): ...
-            >>> T = SubClass[Base]
-            >>> T.__choices__
-            (SubClass[Base]('Sub1'), SubClass[Base]('Sub2'))
-            >>> T.allow_base = True
-            >>> T.__choices__
-            (SubClass[Base]('Base'), SubClass[Base]('Sub1'), SubClass[Base]('Sub2'))
+    Examples:
+        >>> class Base: ...
+        >>> class Sub1(Base): ...
+        >>> class Sub2(Base): ...
+        >>> T = SubClass[Base]
+        >>> T.__choices__
+        (SubClass[Base]('Sub1'), SubClass[Base]('Sub2'))
+
+        >>> T.allow_base = True
+        >>> T.__choices__
+        (SubClass[Base]('Base'), SubClass[Base]('Sub1'), SubClass[Base]('Sub2'))
 
     * `use_full_names`: If `True`, the name passed to the constructor needs to be the
         full name of a sub-class, given by `cls.__module__ + "." + cls.__qualname__`. If
@@ -79,21 +77,24 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
 
     * `allow_indirect_subs`: If `True` (the default), indirect sub-classes, i.e.,
         sub-classes of the base through another sub-class, are allowed. If `False`,
-        only direct sub-classes of the base are allowed. Example::
+        only direct sub-classes of the base are allowed.
 
-            >>> class Base: ...
-            >>> class Sub1(Base): ...
-            >>> class Sub2(Sub1): ...
-            >>> T = SubClass[Base]
-            >>> T.__choices__
-            (SubClass[Base]('Sub1'), SubClass[Base]('Sub2'))
-            >>> T.allow_indirect_subs = False
-            >>> T.__choices__
-            (SubClass[Base]('Sub1'),)
+    Examples:
+        >>> class Base: ...
+        >>> class Sub1(Base): ...
+        >>> class Sub2(Sub1): ...
+        >>> T = SubClass[Base]
+        >>> T.__choices__
+        (SubClass[Base]('Sub1'), SubClass[Base]('Sub2'))
 
-    Note that the types returned by the `SubClass[...]` syntax are cached using the
-    base class type. So all instances of `SubClass[Base]` will return the same type,
-    and any attributes set on the type will be shared between all instances.
+        >>> T.allow_indirect_subs = False
+        >>> T.__choices__
+        (SubClass[Base]('Sub1'),)
+
+    Note:
+        The types returned by the `SubClass[...]` syntax are cached using the base class
+        type. So all instances of `SubClass[Base]` will return the same type, and any
+        attributes set on the type will be shared between all instances.
     """
 
     # The object cache is initialized inside `__class_getitem__`, so every concrete
@@ -234,16 +235,13 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
     def __call__(self, *args, **kwargs) -> _T:
         """Return an instance of the sub-class associated with this type.
 
-        Example::
-
+        Examples:
             >>> class Base: ...
             >>> class Sub1(Base):
             ...     def __init__(self, x):
             ...         print(f"initializing `Sub1` with 'x={x}'")
-
             >>> BaseSubType = SubClass[Base]
             >>> BaseSub = BaseSubType("Sub1")  # an instance of the `SubClass` type
-
             >>> base_sub = BaseSub(1)
             initializing `Sub1` with 'x=1'
 

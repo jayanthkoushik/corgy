@@ -73,33 +73,30 @@ def corgyparser(
             For all values other than `None`, the parsing function will receive a list
             of strings.
 
-    Example::
-
+    Examples:
         >>> import argparse
         >>> from argparse import ArgumentParser
         >>> from typing import Tuple
         >>> from corgy import Corgy, CorgyHelpFormatter, corgyparser
-
         >>> class A(Corgy):
         ...     time: Tuple[int, int, int]
         ...     @corgyparser("time", metavar="int:int:int")
         ...     @staticmethod
         ...     def parse_time(s):
         ...         return tuple(map(int, s.split(":")))
-
         >>> parser = ArgumentParser(
         ...     formatter_class=CorgyHelpFormatter,
         ...     add_help=False,
         ...     usage=argparse.SUPPRESS,
         ... )
-
         >>> A.add_args_to_parser(parser)
         >>> parser.parse_args(["--time", "1:2:3"])
         Namespace(time=(1, 2, 3))
 
     Multiple arguments can be passed to the decorator, and will all be associated with
-    the same parser::
+    the same parser.
 
+    Examples:
         >>> class A(Corgy):
         ...     x: int
         ...     y: int
@@ -109,8 +106,9 @@ def corgyparser(
         ...         return int(s)
 
     The `@corgyparser` decorator can also be chained to use the same parser for multiple
-    arguments::
+    arguments.
 
+    Examples:
         >>> class A(Corgy):
         ...     x: int
         ...     y: int
@@ -120,11 +118,13 @@ def corgyparser(
         ...     def parse_x_y(s):
         ...         return int(s)
 
-    Note: when chaining, the outer-most non-`None` value of `metavar` will be used.
+    Note:
+        When chaining, the outer-most non-`None` value of `metavar` will be used.
 
     Custom parsers can control the number of arguments they receive, independent of the
-    argument type::
+    argument type.
 
+    Examples:
         >>> class A(Corgy):
         ...     x: int
         ...     @corgyparser("x", nargs=3)
@@ -132,13 +132,11 @@ def corgyparser(
         ...     def parse_x(s):
         ...         # `s` will be a list of 3 strings.
         ...         return sum(map(int, s))
-
         >>> parser = ArgumentParser(
         ...     formatter_class=CorgyHelpFormatter,
         ...     add_help=False,
         ...     usage=argparse.SUPPRESS,
         ... )
-
         >>> A.add_args_to_parser(parser)
         >>> parser.parse_args(["--x", "1", "2", "3"])
         Namespace(x=6)

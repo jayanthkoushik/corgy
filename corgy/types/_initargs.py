@@ -13,14 +13,12 @@ _T = TypeVar("_T")
 class InitArgs(Corgy, Generic[_T], corgy_required_by_default=True):
     """Corgy wrapper around arguments of a class's `__init__`.
 
-    Example::
-
+    Examples:
         >>> import argparse
         >>> from argparse import ArgumentParser
         >>> from typing import Sequence
         >>> from corgy import CorgyHelpFormatter
         >>> from corgy.types import InitArgs
-
         >>> class Foo:
         ...     def __init__(
         ...         self,
@@ -29,7 +27,6 @@ class InitArgs(Corgy, Generic[_T], corgy_required_by_default=True):
         ...         c: float = 0.0,
         ...     ):
         ...         ...
-
         >>> FooInitArgs = InitArgs[Foo]
         >>> parser = ArgumentParser(
         ...     formatter_class=CorgyHelpFormatter,
@@ -42,7 +39,6 @@ class InitArgs(Corgy, Generic[_T], corgy_required_by_default=True):
           --a int        (required)
           --b [str ...]  (required)
           --c float      (default: 0.0)
-
         >>> args = parser.parse_args(["--a", "1", "--b", "one", "two"])
         >>> foo = Foo(args.a, args.b, args.c)
 

@@ -6,34 +6,43 @@ Corgy package for elegant data classes.
 ### _class_ corgy.Corgy(\*\*args)
 Base class for collections of attributes.
 
-To use, subclass `Corgy`, and declare attributes using type annotations:
+To use, subclass `Corgy`, and declare attributes using type annotations.
+
+### Examples
 
 ```python
 >>> from corgy import Corgy
-
 >>> class A(Corgy):
 ...     x: int
 ...     y: float
 ```
 
 At runtime, class `A` will have `x`, and `y` as properties, so that the class can be
-used similar to Python dataclasses:
+used similar to Python dataclasses.
+
+### Examples
 
 ```python
 >>> a = A()
 >>> a.x = 1
 >>> a.x
 1
+```
 
+```python
 >>> a.y
 Traceback (most recent call last):
    ...
 AttributeError: no value available for attribute `y`
+```
 
+```python
 >>> a.y = a.x + 1.1
 >>> a.y
 2.1
+```
 
+```python
 >>> del a.x  # unset x
 >>> a.x
 Traceback (most recent call last):
@@ -41,34 +50,46 @@ Traceback (most recent call last):
 AttributeError: no value available for attribute `x`
 ```
 
-Note that the class’s `__init__` method only accepts keyword arguments, and ignores
-arguments without a corresponding attribute. The following are all valid:
+**NOTE**: The class’s `__init__` method only accepts keyword arguments, and ignores
+arguments without a corresponding attribute. The following are all valid.
+
+### Examples
 
 ```python
 >>> A(x=1, y=2.1)
 A(x=1, y=2.1)
+```
 
+```python
 >>> A(x=1, z=3)  # y is not set, and z is ignored
 A(x=1)
+```
 
+```python
 >>> A(**{"x": 1, "y": 2.1, "z": 3})
 A(x=1, y=2.1)
 ```
 
-Attribute values are type-checked, and `ValueError` is raised on type mismatch:
+Attribute values are type-checked, and `ValueError` is raised on type mismatch.
+
+### Examples
 
 ```python
 >>> a = A(x="1")
 Traceback (most recent call last):
     ...
 ValueError: error setting `x`: invalid value for type '<class 'int'>': '1'
+```
 
+```python
 >>> a = A()
 >>> a.x = "1"
 Traceback (most recent call last):
     ...
 ValueError: error setting `x`: invalid value for type '<class 'int'>': '1'
+```
 
+```python
 >>> class A(Corgy):
 ...     x: int = "1"
 Traceback (most recent call last):
@@ -78,17 +99,17 @@ ValueError: default value type mismatch for 'x'
 
 Any type which supports type checking with `isinstance` can be used as an
 attribute type (along with some special type annotations that are discussed below).
-This includes other corgy classes:
+This includes other corgy classes.
+
+### Examples
 
 ```python
 >>> class A(Corgy):
 ...     x: int
 ...     y: float
-
 >>> class B(Corgy):
 ...     x: int
 ...     a: A
-
 >>> b = B(x=1)
 >>> b.a = A()
 >>> b.a.x = 10
@@ -98,13 +119,14 @@ B(x=1, a=A(x=10))
 
 `Corgy` classes have their `__slots__` set to the annotated attributes. So, if you
 want to use additional attributes not tracked by `Corgy`, define them (and only
-them) in `__slots__`:
+them) in `__slots__`.
+
+### Examples
 
 ```python
 >>> class A(Corgy):
 ...     __slots__ = ("x",)
 ...     y: int
-
 >>> a = A()
 >>> a.y = 1  # `Corgy` attribute
 >>> a.x = 2  # custom attribute
@@ -115,12 +137,13 @@ A(y=1)
 To allow arbitrary instance attributes, add `__dict__` to `__slots__`. Names added
 through custom `__slots__` are not processed by `Corgy`. Alternatively, to disable
 setting `__slots__` completely, set `corgy_make_slots` to `False` in the class
-definition:
+definition.
+
+### Examples
 
 ```python
 >>> class A(Corgy, corgy_make_slots=False):
 ...     y: int
-
 >>> a = A()
 >>> a.y = 1  # `Corgy` attribute
 >>> a.x = 2  # custom attribute
@@ -129,48 +152,56 @@ A(y=1)
 ```
 
 Names marked with the `ClassVar` type will be added as class variables, and will
-not be available as `Corgy` attributes:
+not be available as `Corgy` attributes.
+
+### Examples
 
 ```python
 >>> from typing import ClassVar
-
 >>> class A(Corgy):
 ...     x: ClassVar[int] = 3
-
 >>> A.x
 3
+```
+
+```python
 >>> A.x = 4
 >>> A.x
 4
+```
+
+```python
 >>> a = A()
 >>> a.x
 4
+```
+
+```python
 >>> a.x = 5
 Traceback (most recent call last):
     ...
 AttributeError: 'A' object attribute 'x' is read-only
 ```
 
-Also note that class variables need to be assigned to a value during definition, and
-this value will not be type checked by `Corgy`.
+**NOTE**: Class variables need to be assigned to a value during definition, and this
+value will not be type checked by `Corgy`.
 
 Inheritance works as expected, whether base classes are themselves `Corgy` classes
 or not, with sub-classes inheriting the attributes of the base class, and overriding
-any redefined attributes:
+any redefined attributes.
+
+### Examples
 
 ```python
 >>> class A:
 ...     x: int
-
 >>> class B(Corgy, A):
 ...     y: float = 1.0
 ...     z: str
-
 >>> class C(B):
 ...     y: float = 2.0
 ...     z: str
 ...     w: float
-
 >>> c = C()
 >>> print(c)
 C(x=<unset>, y=2.0, z=<unset>, w=<unset>)
@@ -178,16 +209,16 @@ C(x=<unset>, y=2.0, z=<unset>, w=<unset>)
 
 Tracking of base class attributes can be disabled by setting `corgy_track_bases` to
 `False` in the class definition. Properties will still be inherited following
-standard inheritance rules, but `Corgy` will ignore them:
+standard inheritance rules, but `Corgy` will ignore them.
+
+### Examples
 
 ```python
 >>> class A:
 ...     x: int
-
 >>> class B(Corgy, A, corgy_track_bases=False):
 ...     y: float = 1.0
 ...     z: str
-
 >>> b = B()
 >>> print(b)
 B(y=1.0, z=<unset>)
@@ -195,12 +226,13 @@ B(y=1.0, z=<unset>)
 
 `Corgy` instances can be frozen (preventing any further changes) using the `freeze`
 method. This method can be called automatically after `__init__` by by setting
-`corgy_freeze_after_init` to `True` in the class definition:
+`corgy_freeze_after_init` to `True` in the class definition.
+
+### Examples
 
 ```python
 >>> class A(Corgy, corgy_freeze_after_init=True):
 ...    x: int
-
 >>> a = A(x=1)
 >>> a.x = 2
 Traceback (most recent call last):
@@ -218,7 +250,9 @@ used, you can import them from `typing_extensions` (which is available on PyPI).
 `typing.Annotated` can be used to add additional metadata to attributes, akin to
 doc strings. It is primarily used to control how attributes are added to
 `ArgumentParser` instances. `typing.Annotated` is stripped on class creation,
-leaving only the base type:
+leaving only the base type.
+
+### Examples
 
 ```python
 >>> import sys
@@ -226,10 +260,8 @@ leaving only the base type:
 ...     from typing import Annotated, Literal
 ... else:
 ...     from typing_extensions import Annotated, Literal
-
 >>> class A(Corgy):
 ...     x: Annotated[int, "this is x"]
-
 >>> A.attrs()
 {'x': <class 'int'>}
 ```
@@ -239,16 +271,20 @@ Refer to the docs for `Corgy.add_args_to_parser` for details on usage.
 
 *Required/NotRequired*
 By default, `Corgy` attributes are not required, and can be unset. This can be
-changed by setting `corgy_required_by_default` to `True` in the class definition:
+changed by setting `corgy_required_by_default` to `True` in the class definition.
+
+### Examples
 
 ```python
 >>> class A(Corgy, corgy_required_by_default=True):
 ...     x: int
-
 >>> A()
 Traceback (most recent call last):
     ...
 ValueError: missing required attribute: `x`
+```
+
+```python
 >>> a = A(x=1)
 >>> del a.x
 Traceback (most recent call last):
@@ -257,39 +293,40 @@ TypeError: attribute `x` cannot be unset
 ```
 
 Attributes can also explicitly be marked as required/not-required using
-`corgy.Required` and `corgy.NotRequired` annotations:
+`corgy.Required` and `corgy.NotRequired` annotations.
+
+### Examples
 
 ```python
 >>> from corgy import Required, NotRequired
-
 >>> class A(Corgy):
 ...     x: Required[int]
 ...     y: NotRequired[int]
 ...     z: int  # not required by default
-
 >>> a = A(x=1)
 >>> print(a)
 A(x=1, y=<unset>, z=<unset>)
+```
 
+```python
 >>> class B(Corgy, corgy_required_by_default=True):
 ...     x: Required[int]
 ...     y: NotRequired[int]
 ...     z: int
-
 >>> b = B(x=1, z=2)
 >>> print(b)
 B(x=1, y=<unset>, z=2)
 ```
 
 *Optional*
-Annotating an attribute with `typing.Optional` allows it to be `None`:
+Annotating an attribute with `typing.Optional` allows it to be `None`.
+
+### Examples
 
 ```python
 >>> from typing import Optional
-
 >>> class A(Corgy):
 ...     x: Optional[int]
-
 >>> a = A()
 >>> a.x = None
 ```
@@ -297,18 +334,22 @@ Annotating an attribute with `typing.Optional` allows it to be `None`:
 In Python >= 3.10, instead of using `typing.Annotated`, `| None` can be used, i.e.,
 `x: int | None` for example.
 
-Note that `Optional` is not the same as `NotRequired`. `Optional` allows an
-attribute to be `None`, while `NotRequired` allows an attribute to be unset.
-A `Required` `Optional` attribute will need a value (which can be `None`):
+**NOTE**: `Optional` is not the same as `NotRequired`. `Optional` allows an attribute to
+be `None`, while `NotRequired` allows an attribute to be unset. A `Required`
+`Optional` attribute will need a value (which can be `None`).
+
+### Examples
 
 ```python
 >>> class A(Corgy):
 ...     x: Required[Optional[int]]
-
 >>> A()
 Traceback (most recent call last):
     ...
 ValueError: missing required attribute: `x`
+```
+
+```python
 >>> a = A(x=None)
 >>> print(a)
 A(x=None)
@@ -328,17 +369,17 @@ supported:
 
 There are a few different ways to use these types, each resulting in different
 validation conditions. The simplest case is a plain (possibly empty) collection of a
-single type:
+single type.
+
+### Examples
 
 ```python
 >>> from typing import List, Sequence, Set, Tuple
-
 >>> class A(Corgy):
 ...     x: Sequence[int]
 ...     y: Tuple[str]
 ...     z: Set[float]
 ...     w: List[int]
-
 >>> a = A()
 >>> a.x = [1, 2]
 >>> a.y = ("1", "2")
@@ -346,14 +387,20 @@ single type:
 >>> a.w = [1, 2]
 >>> a
 A(x=[1, 2], y=('1', '2'), z={1.0, 2.0}, w=[1, 2])
+```
 
+```python
 >>> a.x = [1, "2"]
 Traceback (most recent call last):
     ...
 ValueError: error setting `x`: invalid value for type '<class 'int'>': '2'
+```
 
+```python
 >>> a.x = (1, 2)      # `Sequence` accepts any sequence type
+```
 
+```python
 >>> # `Tuple` only accepts tuples
 >>> a.y = ["1", "2"]
 Traceback (most recent call last):
@@ -363,18 +410,19 @@ ValueError: error setting `y`: invalid value for type 'typing.Tuple[str]':
 ```
 
 The collection length can be controlled by the arguments of the type annotation.
-Note, however, that `typing.Sequence/typing.List/typing.Set` do not
-accept multiple arguments, and so, cannot be used if collection length has to be
-specified. On Python < 3.9, only `typing.Tuple` can be used for controlling
-collection lengths.
+
+**NOTE**: `typing.Sequence/typing.List/typing.Set` do not accept multiple arguments,
+and so, cannot be used if collection length has to be specified. On
+Python < 3.9, only `typing.Tuple` can be used to control collection lengths.
 
 To specify that a collection must be non-empty, use ellipsis (`...`) as the second
-argument of the type:
+argument of the type.
+
+### Examples
 
 ```python
 >>> class A(Corgy):
 ...     x: Tuple[int, ...]
-
 >>> a = A()
 >>> a.x = tuple()
 Traceback (most recent call last):
@@ -383,19 +431,22 @@ ValueError: error setting `x`: expected non-empty collection for type
 'typing.Tuple[int, ...]'
 ```
 
-Collections can also be restricted to be of a fixed length:
+Collections can also be restricted to be of a fixed length.
+
+### Examples
 
 ```python
 >>> class A(Corgy):
 ...     x: Tuple[int, str]
 ...     y: Tuple[int, int, int]
-
 >>> a = A()
 >>> a.x = (1, 1)
 Traceback (most recent call last):
     ...
 ValueError: error setting `x`: invalid value for type '<class 'str'>': 1
+```
 
+```python
 >>> a.y = (1, 1)
 Traceback (most recent call last):
     ...
@@ -405,12 +456,13 @@ ValueError: error setting `y`: invalid value for type
 
 *Literals*
 `typing.Literal` can be used to specify that an attribute takes one of a fixed set
-of values:
+of values.
+
+### Examples
 
 ```python
 >>> class A(Corgy):
 ...     x: Literal[0, 1, "2"]
-
 >>> a = A()
 >>> a.x = 0
 >>> a.x = "2"
@@ -426,15 +478,15 @@ Type annotations can be nested; for instance,
 where each element is either 0, 1, or 2.
 
 A fixed set of attribute values can also be specified by adding a `__choices__`
-attribute to the argument type, containing a collection of choices:
+attribute to the argument type, containing a collection of choices.
+
+### Examples
 
 ```python
 >>> class T(int):
 ...     __choices__ = (1, 2)
-
 >>> class A(Corgy):
 ...     x: T
-
 >>> a = A()
 >>> a.x = 1
 >>> a.x = 3
@@ -444,28 +496,23 @@ ValueError: error setting `x`: invalid value for type '<class 'T'>': 3:
 expected one of: (1, 2)
 ```
 
-Note that choices specified in this way are not type-checked to ensure that they
-match the argument type; in the above example, `__choices__` could be set to
-`(1, "2")`.
+**NOTE**: Choices specified in this way are not type-checked to ensure that they match the
+argument type; in the above example, `__choices__` could be set to `(1, "2")`.
 
 *Self*
 `Corgy` classes can have attributes of their own type, annotated using
 `typing.Self`.
+
+### Examples
 
 ```python
 >>> if sys.version_info >= (3, 11):
 ...     from typing import Self
 ... else:
 ...     from typing_extensions import Self
-```
-
-```python
 >>> class C(Corgy):
 ...     x: int
 ...     c: Self
-```
-
-```python
 >>> c = C(x=1)
 >>> c.c = C(x=2)
 >>> c
@@ -475,9 +522,6 @@ C(x=1, c=C(x=2))
 ```python
 >>> class D(C):
 ...     ...
-```
-
-```python
 >>> c.c = D(x=3)
 Traceback (most recent call last):
     ...
@@ -498,7 +542,7 @@ Add the class’ `Corgy` attributes to the given parser.
     `--<name-prefix>:<attr-name>`. If custom flags are present,
     `--<name-prefix>:<flag>` will be used instead (one for each flag).
     * **flatten_subgrps** – Whether to add sub-groups to the main parser instead of
-    creating argument groups. Note: sub-sub-groups are always added with
+    creating argument groups. Note that sub-sub-groups are always added with
     this argument set to `True`, since `argparse` in unable to properly
     display nested group arguments.
     * **defaults** – Optional mapping with default values for arguments. Any value
@@ -512,28 +556,26 @@ special annotations are parsed and stripped from attribute types to determine
 the parameters for calling `ArgumentParser.add_argument`. These special
 annotations are described below.
 
-Note: `add_args_to_parser` cannot be used if the type annotation for any
-attribute of the class includes `Self`, unless a custom parser is defined
-for such attributes. See docs for `corgyparser` on how to define custom
-parsers.
+**NOTE**: `add_args_to_parser` cannot be used if the type annotation for any attribute
+of the class includes `Self`, unless a custom parser is defined for such
+attributes. See docs for `corgyparser` on how to define custom parsers.
 
 *Annotated*
-`typing.Annotated` can be used to add a help message for the argument:
+`typing.Annotated` can be used to add a help message for the argument.
+
+### Examples
 
 ```python
 >>> import argparse
 >>> from argparse import ArgumentParser
 >>> from corgy import CorgyHelpFormatter
-
 >>> class A(Corgy):
 ...     x: Annotated[int, "help for x"]
-
 >>> parser = ArgumentParser(
 ...     formatter_class=CorgyHelpFormatter,
 ...     add_help=False,
 ...     usage=argparse.SUPPRESS,
 ... )
-
 >>> A.add_args_to_parser(parser)
 >>> parser.print_help()
 options:
@@ -543,19 +585,19 @@ options:
 This annotation can also be used to modify the parser flags for the argument. By
 default, the attribute name is used, prefixed with `--`, and with `_` replaced
 by `-`. If the custom flag does not have a leading `-`, a positional argument
-will be created:
+will be created.
+
+### Examples
 
 ```python
 >>> class A(Corgy):
 ...     x: Annotated[int, "help for x", ["-x", "--ex"]]
 ...     y: Annotated[int, "help for y", ["y"]]
-
 >>> parser = ArgumentParser(
 ...     formatter_class=CorgyHelpFormatter,
 ...     add_help=False,
 ...     usage=argparse.SUPPRESS,
 ... )
-
 >>> A.add_args_to_parser(parser)
 >>> parser.print_help()
 positional arguments:
@@ -573,22 +615,21 @@ message (which must be a string), and the third is a sequence of flags.
 Every corgy attribute is either required or not required. The default status
 depends on the class parameter `corgy_required_by_default` (`False` by default).
 Attributes can also be explicitly marked as required or not required, and will
-control whether the argument will be added with `required=True`:
+control whether the argument will be added with `required=True`.
+
+### Examples
 
 ```python
 >>> from corgy import Required, NotRequired
-
 >>> class A(Corgy):
 ...     x: Required[int]
 ...     y: NotRequired[int]
 ...     z: int
-
 >>> parser = ArgumentParser(
 ...     formatter_class=CorgyHelpFormatter,
 ...     add_help=False,
 ...     usage=argparse.SUPPRESS,
 ... )
-
 >>> A.add_args_to_parser(parser)
 >>> parser.print_help()
 options:
@@ -598,7 +639,9 @@ options:
 ```
 
 Attributes which are not required, and don’t have a default value are added
-with `default=argparse.SUPPRESS`, and so will not be in the parsed namespace:
+with `default=argparse.SUPPRESS`, and so will not be in the parsed namespace.
+
+### Examples
 
 ```python
 >>> parser.parse_args(["--x", "1", "--y", "2"])
@@ -610,18 +653,17 @@ Attributes marked with `typing.Optional` are allowed to be `None`. The
 arguments for these attributes can be passed with no values (i.e. `--x`
 instead of `--x=1` or `--x 1`) to indicate that the value should be `None`.
 
-Note: Attributes with default values are also “optional” in the sense that
-they can be omitted from the command line. However, they are not the same as
+**NOTE**: Attributes with default values are also “optional” in the sense that they
+can be omitted from the command line. However, they are not the same as
 attributes marked with `Optional`, since the former are not allowed to be
 `None`. Furthermore, `Required` `Optional` attributes without default values
 _will_ need to be passed on the command line (possibly with no values).
 
+### Examples
+
 ```python
 >>> class A(Corgy):
 ...     x: Required[Optional[int]]
-```
-
-```python
 >>> parser = ArgumentParser()
 >>> A.add_args_to_parser(parser)
 >>> parser.parse_args(["--x"])
@@ -629,18 +671,18 @@ Namespace(x=None)
 ```
 
 *Boolean*
-`bool` types (when not in a collection) are converted to a pair of options:
+`bool` types (when not in a collection) are converted to a pair of options.
+
+### Examples
 
 ```python
 >>> class A(Corgy):
 ...     arg: bool
-
 >>> parser = ArgumentParser(
 ...     formatter_class=CorgyHelpFormatter,
 ...     add_help=False,
 ...     usage=argparse.SUPPRESS,
 ... )
-
 >>> A.add_args_to_parser(parser)
 >>> parser.print_help()
 options:
@@ -662,13 +704,14 @@ cannot be added.
 
 Arguments for optional collections will also accept no values to indicate
 `None`. Due to this, it is not possible to parse an empty collection for
-an optional collection argument:
+an optional collection argument.
+
+### Examples
 
 ```python
 >>> class A(Corgy):
 ...     x: Optional[Sequence[int]]
 ...     y: Sequence[int]
-
 >>> parser = ArgumentParser()
 >>> A.add_args_to_parser(parser)
 >>> parser.parse_args(["--x", "--y"])
@@ -680,22 +723,21 @@ For `Literal` types, the provided values are passed to the `choices` argument
 of `ArgumentParser.add_argument`. All values must be of the same type, which
 will be inferred from the type of the first value. If the first value has a
 `__bases__` attribute, the type will be inferred as the first base type, and
-all other choices must be subclasses of that type:
+all other choices must be subclasses of that type.
+
+### Examples
 
 ```python
 >>> class T: ...
 >>> class T1(T): ...
 >>> class T2(T): ...
-
 >>> class A(Corgy):
 ...     x: Literal[T1, T2]
-
 >>> parser = ArgumentParser(
 ...     formatter_class=CorgyHelpFormatter,
 ...     add_help=False,
 ...     usage=argparse.SUPPRESS,
 ... )
-
 >>> A.add_args_to_parser(parser)
 >>> parser.print_help()
 options:
@@ -710,51 +752,57 @@ performed, and the base attribute type will be used as the argument type.
 A special case for `Literal` types is when there is only one choice. In this
 case, the argument is added as a `store_const` action, with the value as the
 `const` argument. A further special case is when the choice is `True/False`,
-in which case the action is `store_true`/`store_false` respectively:
+in which case the action is `store_true`/`store_false` respectively.
+
+### Examples
 
 ```python
 >>> class A(Corgy):
 ...     x: Literal[True]
 ...     y: Literal[False]
 ...     z: Literal[42]
-
 >>> parser = ArgumentParser()
 >>> A.add_args_to_parser(parser)
 >>> parser.parse_args(["--x"])  # Note that `y` and `z` are absent
 Namespace(x=True)
+```
+
+```python
 >>> parser.parse_args(["--y"])
 Namespace(y=False)
+```
+
+```python
 >>> parser.parse_args(["--z"])
 Namespace(z=42)
 ```
 
-Note: This special case only applies to `Literal` types, and not types which
+**NOTE**: This special case only applies to `Literal` types, and not types which
 define `__choices__`.
 
 *Corgy*
 Attributes which are themselves `Corgy` types are treated as argument groups.
 Group arguments are added to the command line parser with the group attribute
-name prefixed. Note that groups will ignore any custom flags when computing the
-prefix; elements within the group will use custom flags, but because they are
-prefixed with `--`, they will not be positional.
+name prefixed.
 
-Example:
+**NOTE**: Groups will ignore any custom flags when computing the prefix; elements
+within the group will use custom flags, but because they are prefixed with
+`--`, they will not be positional.
+
+### Examples
 
 ```python
 >>> class G(Corgy):
 ...     x: int = 0
 ...     y: float
-
 >>> class A(Corgy):
 ...     x: int
 ...     g: G
-
 >>> parser = ArgumentParser(
 ...     formatter_class=CorgyHelpFormatter,
 ...     add_help=False,
 ...     usage=argparse.SUPPRESS,
 ... )
-
 >>> A.add_args_to_parser(parser)
 >>> parser.print_help()
 options:
@@ -782,13 +830,12 @@ with custom parsers, set the `metavar` argument of `corgyparser`.
 #### _classmethod_ attrs()
 Return a dictionary mapping attributes of the class to their types.
 
-Example:
+### Examples
 
 ```python
 >>> class A(Corgy):
 ...     x: Annotated[int, "x"]
 ...     y: Sequence[str]
-
 >>> A.attrs()
 {'x': <class 'int'>, 'y': typing.Sequence[str]}
 ```
@@ -826,25 +873,31 @@ are omitted, unless they have default values.
     Only takes effect if `recursive` is `True`.
 
 
-Examples:
+### Examples
 
 ```python
 >>> class G(Corgy):
 ...     x: int
-
 >>> g = G(x=1)
 >>> g.as_dict()
 {'x': 1}
+```
 
+```python
 >>> class A(Corgy):
 ...     x: str
 ...     g: G
-
 >>> a = A(x="one", g=g)
 >>> a.as_dict(recursive=False)
 {'x': 'one', 'g': G(x=1)}
+```
+
+```python
 >>> a.as_dict()
 {'x': 'one', 'g': {'x': 1}}
+```
+
+```python
 >>> a.as_dict(flatten=True)
 {'x': 'one', 'g:x': 1}
 ```
@@ -865,22 +918,29 @@ recursively.
     * **try_cast** – Whether to try and cast values which don’t match attribute types.
 
 
-Example:
+### Examples
 
 ```python
 >>> class G(Corgy):
 ...     x: int
-
 >>> class A(Corgy):
 ...     x: str
 ...     g: G
-
 >>> A.from_dict({"x": "one", "g": G(x=1)})
 A(x='one', g=G(x=1))
+```
+
+```python
 >>> A.from_dict({"x": "one", "g": {"x": 1}})
 A(x='one', g=G(x=1))
+```
+
+```python
 >>> A.from_dict({"x": "one", "g": {"x": "1"}}, try_cast=True)
 A(x='one', g=G(x=1))
+```
+
+```python
 >>> G.from_dict({"x": "1"})
 Traceback (most recent call last):
     ...
@@ -888,16 +948,19 @@ ValueError: error setting `x`: invalid value for type '<class 'int'>': '1'
 ```
 
 Group attributes can also be passed directly in the dictionary by prefixing
-their names with the group name and a colon:
+their names with the group name and a colon.
+
+### Examples
 
 ```python
 >>> A.from_dict({"x": "one", "g:x": 1})
 A(x='one', g=G(x=1))
+```
 
+```python
 >>> class B(Corgy):
 ...     x: float
 ...     a: A
-
 >>> B.from_dict({"x": 1.1, "a:x": "one", "a:g:x": 1})
 B(x=1.1, a=A(x='one', g=G(x=1)))
 ```
@@ -921,7 +984,7 @@ corresponding attributes are ignored.
     dictionary will be unset.
 
 
-Example:
+### Examples
 
 ```python
 >>> class A(Corgy):
@@ -934,16 +997,25 @@ Example:
 A(x=1, y='two')
 >>> _i == id(a)
 True
+```
+
+```python
 >>> a.load_dict({"y": "three"}, strict=True)
 >>> a
 A(y='three')
 >>> _i == id(a)
 True
+```
+
+```python
 >>> a = A()
 >>> a.load_dict({"x": "1"})
 Traceback (most recent call last):
     ...
 ValueError: error setting `x`: invalid value for type '<class 'int'>': '1'
+```
+
+```python
 >>> a.load_dict({"x": "1"}, try_cast=True)
 >>> a
 A(x=1)
@@ -991,25 +1063,22 @@ Parse an object of the class from a toml file.
     **TOMLDecodeError** – Error parsing the toml file.
 
 
-Example:
+### Examples
 
 ```python
+>>> from io import BytesIO
 >>> class G(Corgy):
 ...     x: int
 ...     y: Sequence[int]
-
 >>> class A(Corgy):
 ...     x: str
 ...     g: G
-
->>> from io import BytesIO
 >>> f = BytesIO(b'''
 ...     x = 'one'
 ...     [g]
 ...     x = 1
 ...     y = [1, 2, 3]
 ... ''')
-
 >>> A.parse_from_toml(f)
 A(x='one', g=G(x=1, y=[1, 2, 3]))
 ```
@@ -1018,13 +1087,12 @@ A(x='one', g=G(x=1, y=[1, 2, 3]))
 #### freeze()
 Freeze the object, preventing any further changes to attributes.
 
-Example:
+### Examples
 
 ```python
 >>> class A(Corgy):
 ...     x: int
 ...     y: int
-
 >>> a = A(x=1, y=2)
 >>> a.x = 2
 >>> a.freeze()
@@ -1032,6 +1100,9 @@ Example:
 Traceback (most recent call last):
     ...
 TypeError: cannot set `x`: object is frozen
+```
+
+```python
 >>> del a.y
 Traceback (most recent call last):
     ...
@@ -1057,11 +1128,10 @@ be of type corresponding to one of the assigned attributes.
     **var_names** – The attributes associated with the decorated checker.
 
 
-Example:
+### Examples
 
 ```python
 >>> from corgy import Corgy, corgychecker
-
 >>> class A(Corgy):
 ...     x: int
 ...     @corgychecker("x")
@@ -1069,7 +1139,6 @@ Example:
 ...     def check_x(val):
 ...         if val % 2:
 ...             raise ValueError(f"'{val}' is not even")
-
 >>> a = A()
 >>> a.x = 2
 >>> a.x = 3
@@ -1079,11 +1148,12 @@ ValueError: error setting `x`: '3' is not even
 ```
 
 Multiple attributes can use the same checker, either by chaining `corgychecker`, or
-by passing all attribute names directly:
+by passing all attribute names directly.
+
+### Examples
 
 ```python
 >>> from typing import Sequence
-
 >>> class A(Corgy):
 ...     x: int
 ...     y: float
@@ -1125,34 +1195,33 @@ Decorating the function with `@staticmethod` is optional, but prevents type erro
     of strings.
 
 
-Example:
+### Examples
 
 ```python
 >>> import argparse
 >>> from argparse import ArgumentParser
 >>> from typing import Tuple
 >>> from corgy import Corgy, CorgyHelpFormatter, corgyparser
-
 >>> class A(Corgy):
 ...     time: Tuple[int, int, int]
 ...     @corgyparser("time", metavar="int:int:int")
 ...     @staticmethod
 ...     def parse_time(s):
 ...         return tuple(map(int, s.split(":")))
-
 >>> parser = ArgumentParser(
 ...     formatter_class=CorgyHelpFormatter,
 ...     add_help=False,
 ...     usage=argparse.SUPPRESS,
 ... )
-
 >>> A.add_args_to_parser(parser)
 >>> parser.parse_args(["--time", "1:2:3"])
 Namespace(time=(1, 2, 3))
 ```
 
 Multiple arguments can be passed to the decorator, and will all be associated with
-the same parser:
+the same parser.
+
+### Examples
 
 ```python
 >>> class A(Corgy):
@@ -1165,7 +1234,9 @@ the same parser:
 ```
 
 The `@corgyparser` decorator can also be chained to use the same parser for multiple
-arguments:
+arguments.
+
+### Examples
 
 ```python
 >>> class A(Corgy):
@@ -1178,10 +1249,12 @@ arguments:
 ...         return int(s)
 ```
 
-Note: when chaining, the outer-most non-`None` value of `metavar` will be used.
+**NOTE**: When chaining, the outer-most non-`None` value of `metavar` will be used.
 
 Custom parsers can control the number of arguments they receive, independent of the
-argument type:
+argument type.
+
+### Examples
 
 ```python
 >>> class A(Corgy):
@@ -1191,13 +1264,11 @@ argument type:
 ...     def parse_x(s):
 ...         # `s` will be a list of 3 strings.
 ...         return sum(map(int, s))
-
 >>> parser = ArgumentParser(
 ...     formatter_class=CorgyHelpFormatter,
 ...     add_help=False,
 ...     usage=argparse.SUPPRESS,
 ... )
-
 >>> A.add_args_to_parser(parser)
 >>> parser.parse_args(["--x", "1", "2", "3"])
 Namespace(x=6)
@@ -1213,13 +1284,14 @@ Formatter class for `argparse` with a cleaner layout, and support for colors.
 `Corgy.parse_from_cmdline` uses this formatter by default, unless a different
 `formatter_class` argument is provided. `CorgyHelpFormatter` can also be used
 independently of `Corgy`. Simply pass it as the `formatter_class` argument to
-`argparse.ArgumentParser()`:
+`argparse.ArgumentParser()`.
+
+### Examples
 
 ```python
 >>> import argparse
 >>> from argparse import ArgumentParser
 >>> from corgy import CorgyHelpFormatter
-
 >>> parser = ArgumentParser(
 ...     formatter_class=CorgyHelpFormatter,
 ...     usage=argparse.SUPPRESS,
@@ -1234,8 +1306,9 @@ options:
 ```
 
 To configure `CorgyHelpFormatter`, you can set a number of attributes on the class.
-Note that you do not need to create an instance of the class; that is done by the
-parser itself. The following public attributes are available:
+
+**NOTE**: You do not need to create an instance of the class; that is done by the parser
+itself. The following public attributes are available:
 
 Color-related attributes:
 
@@ -1287,12 +1360,13 @@ on the argument type. The following attributes are recognized:
 
 
 * `__metavar__`: This can be set to a string on the argument type to override the
-default metavar. Example:
+default metavar.
+
+### Examples
 
 ```python
 >>> class T:
 ...     __metavar__ = "METAVAR"
-
 >>> parser = ArgumentParser(
 ...     formatter_class=CorgyHelpFormatter,
 ...     add_help=False,
@@ -1346,7 +1420,7 @@ added arguments.
     full help message and exit"`.
 
 
-Example:
+### Examples
 
 ```python
 >>> parser = ArgumentParser(

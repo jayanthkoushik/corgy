@@ -33,10 +33,8 @@ class KeyValuePairs(  # type: ignore[misc]
 ):
     """Dictionary sub-class that is initialized from a string of key-value pairs.
 
-    Example::
-
+    Examples:
         >>> from corgy.types import KeyValuePairs
-
         >>> MapType = KeyValuePairs[str, int]
         >>> print(MapType("a=1,b=2"))
         {'a': 1, 'b': 2}
@@ -60,9 +58,11 @@ class KeyValuePairs(  # type: ignore[misc]
 
     * item_separator: The string that separates keys and values. The default is `=`.
 
-    Note that types returned by the `KeyValuePairs[...]` syntax are cached using the
-    key and value types::
+    Note:
+        Types returned by the `KeyValuePairs[...]` syntax are cached using the key and
+        value types.
 
+    Examples:
         >>> MapType = KeyValuePairs[str, int]
         >>> MapType.sequence_separator = ";"
         >>> MapType2 = KeyValuePairs[str, int]  # same as `MapType`

@@ -35,10 +35,8 @@ def corgychecker(
     Args:
         var_names: The attributes associated with the decorated checker.
 
-    Example::
-
+    Examples:
         >>> from corgy import Corgy, corgychecker
-
         >>> class A(Corgy):
         ...     x: int
         ...     @corgychecker("x")
@@ -46,7 +44,6 @@ def corgychecker(
         ...     def check_x(val):
         ...         if val % 2:
         ...             raise ValueError(f"'{val}' is not even")
-
         >>> a = A()
         >>> a.x = 2
         >>> a.x = 3
@@ -55,10 +52,10 @@ def corgychecker(
         ValueError: error setting `x`: '3' is not even
 
     Multiple attributes can use the same checker, either by chaining `corgychecker`, or
-    by passing all attribute names directly::
+    by passing all attribute names directly.
 
+    Examples:
         >>> from typing import Sequence
-
         >>> class A(Corgy):
         ...     x: int
         ...     y: float

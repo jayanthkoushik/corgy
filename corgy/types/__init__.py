@@ -4,8 +4,7 @@ An object of the types defined in this module can be created by calling the resp
 type class with a single string argument. `ValueError` is raised if the argument can not
 be converted to the desired type.
 
-Examples::
-
+Examples:
     >>> from corgy.types import KeyValuePairs
     >>> StrIntMapType = KeyValuePairs[str, int]
     >>> str_int_map = StrIntMapType("a=1,b=2")
@@ -15,7 +14,6 @@ Examples::
     >>> class A: ...
     >>> class B(A): ...
     >>> class C(A): ...
-
     >>> from corgy.types import SubClass
     >>> ASubClsType = SubClass[A]
     >>> a_subcls = ASubClsType("B")

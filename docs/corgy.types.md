@@ -6,7 +6,7 @@ An object of the types defined in this module can be created by calling the resp
 type class with a single string argument. `ValueError` is raised if the argument can not
 be converted to the desired type.
 
-Examples:
+### Examples
 
 ```python
 >>> from corgy.types import KeyValuePairs
@@ -14,18 +14,21 @@ Examples:
 >>> str_int_map = StrIntMapType("a=1,b=2")
 >>> print(str_int_map)
 {'a': 1, 'b': 2}
+```
 
+```python
 >>> class A: ...
 >>> class B(A): ...
 >>> class C(A): ...
-
 >>> from corgy.types import SubClass
 >>> ASubClsType = SubClass[A]
 >>> a_subcls = ASubClsType("B")
 >>> a_subcls_obj = a_subcls()
 >>> a_subcls_obj
 <B object at 0x106cd93d0>
+```
 
+```python
 >>> import argparse
 >>> from argparse import ArgumentParser
 >>> from corgy import CorgyHelpFormatter
@@ -143,15 +146,13 @@ to `False` respectively.
 ### _class_ corgy.types.SubClass(name)
 Type representing a sub-class of a given class.
 
-Example:
+### Examples
 
 ```python
 >>> from corgy.types import SubClass
-
 >>> class Base: ...
 >>> class Sub1(Base): ...
 >>> class Sub2(Base): ...
-
 >>> BaseSubType = SubClass[Base]   # type for a sub-class of `Base`
 >>> BaseSub = BaseSubType("Sub1")  # sub-class of `Base` named `Sub1`
 >>> base_sub = BaseSub()           # instance of a sub-class of `Base`
@@ -168,14 +169,14 @@ can be called to create an instance of the sub-class, e.g.,
 `SubClass[Base]("Sub1")()`.
 
 This class is useful for creating objects of a generic class, where the concrete
-class is determined at runtime, e.g, by a command-line argument:
+class is determined at runtime, e.g, by a command-line argument.
+
+### Examples
 
 ```python
 >>> from argparse import ArgumentParser
-
 >>> parser = ArgumentParser()
 >>> _ = parser.add_argument("--base-subcls", type=SubClass[Base])
-
 >>> args = parser.parse_args(["--base-subcls", "Sub1"])
 >>> base_obj = args.base_subcls()  # an instance of a sub-class of `Base`
 ```
@@ -191,19 +192,24 @@ attributes (preferably on the type returned by the `[...]` syntax).
 
 * `allow_base`: If `True`, the base class itself will be allowed as a valid
 
-    sub-class. The default is `False`. Example:
+    sub-class. The default is `False`.
 
-    ```python
-    >>> class Base: ...
-    >>> class Sub1(Base): ...
-    >>> class Sub2(Base): ...
-    >>> T = SubClass[Base]
-    >>> T.__choices__
-    (SubClass[Base]('Sub1'), SubClass[Base]('Sub2'))
-    >>> T.allow_base = True
-    >>> T.__choices__
-    (SubClass[Base]('Base'), SubClass[Base]('Sub1'), SubClass[Base]('Sub2'))
-    ```
+### Examples
+
+```python
+>>> class Base: ...
+>>> class Sub1(Base): ...
+>>> class Sub2(Base): ...
+>>> T = SubClass[Base]
+>>> T.__choices__
+(SubClass[Base]('Sub1'), SubClass[Base]('Sub2'))
+```
+
+```python
+>>> T.allow_base = True
+>>> T.__choices__
+(SubClass[Base]('Base'), SubClass[Base]('Sub1'), SubClass[Base]('Sub2'))
+```
 
 
 * `use_full_names`: If `True`, the name passed to the constructor needs to be the
@@ -216,23 +222,28 @@ attributes (preferably on the type returned by the `[...]` syntax).
 * `allow_indirect_subs`: If `True` (the default), indirect sub-classes, i.e.,
 
     sub-classes of the base through another sub-class, are allowed. If `False`,
-    only direct sub-classes of the base are allowed. Example:
+    only direct sub-classes of the base are allowed.
 
-    ```python
-    >>> class Base: ...
-    >>> class Sub1(Base): ...
-    >>> class Sub2(Sub1): ...
-    >>> T = SubClass[Base]
-    >>> T.__choices__
-    (SubClass[Base]('Sub1'), SubClass[Base]('Sub2'))
-    >>> T.allow_indirect_subs = False
-    >>> T.__choices__
-    (SubClass[Base]('Sub1'),)
-    ```
+### Examples
 
-Note that the types returned by the `SubClass[...]` syntax are cached using the
-base class type. So all instances of `SubClass[Base]` will return the same type,
-and any attributes set on the type will be shared between all instances.
+```python
+>>> class Base: ...
+>>> class Sub1(Base): ...
+>>> class Sub2(Sub1): ...
+>>> T = SubClass[Base]
+>>> T.__choices__
+(SubClass[Base]('Sub1'), SubClass[Base]('Sub2'))
+```
+
+```python
+>>> T.allow_indirect_subs = False
+>>> T.__choices__
+(SubClass[Base]('Sub1'),)
+```
+
+**NOTE**: The types returned by the `SubClass[...]` syntax are cached using the base class
+type. So all instances of `SubClass[Base]` will return the same type, and any
+attributes set on the type will be shared between all instances.
 
 
 #### _property_ which()
@@ -249,17 +260,15 @@ sub-class of the base-class associated with this type.
 #### \__call__(\*args, \*\*kwargs)
 Return an instance of the sub-class associated with this type.
 
-Example:
+### Examples
 
 ```python
 >>> class Base: ...
 >>> class Sub1(Base):
 ...     def __init__(self, x):
 ...         print(f"initializing `Sub1` with 'x={x}'")
-
 >>> BaseSubType = SubClass[Base]
 >>> BaseSub = BaseSubType("Sub1")  # an instance of the `SubClass` type
-
 >>> base_sub = BaseSub(1)
 initializing `Sub1` with 'x=1'
 ```
@@ -268,11 +277,10 @@ initializing `Sub1` with 'x=1'
 ### _class_ corgy.types.KeyValuePairs(values)
 Dictionary sub-class that is initialized from a string of key-value pairs.
 
-Example:
+### Examples
 
 ```python
 >>> from corgy.types import KeyValuePairs
-
 >>> MapType = KeyValuePairs[str, int]
 >>> print(MapType("a=1,b=2"))
 {'a': 1, 'b': 2}
@@ -300,8 +308,10 @@ This can be changed by setting the following class attributes:
 
 * item_separator: The string that separates keys and values. The default is `=`.
 
-Note that types returned by the `KeyValuePairs[...]` syntax are cached using the
-key and value types:
+**NOTE**: Types returned by the `KeyValuePairs[...]` syntax are cached using the key and
+value types.
+
+### Examples
 
 ```python
 >>> MapType = KeyValuePairs[str, int]
@@ -319,7 +329,7 @@ that the dictionary is not type-checked and is used as-is.
 ### _class_ corgy.types.InitArgs(\*\*args)
 Corgy wrapper around arguments of a class’s `__init__`.
 
-Example:
+### Examples
 
 ```python
 >>> import argparse
@@ -327,7 +337,6 @@ Example:
 >>> from typing import Sequence
 >>> from corgy import CorgyHelpFormatter
 >>> from corgy.types import InitArgs
-
 >>> class Foo:
 ...     def __init__(
 ...         self,
@@ -336,7 +345,6 @@ Example:
 ...         c: float = 0.0,
 ...     ):
 ...         ...
-
 >>> FooInitArgs = InitArgs[Foo]
 >>> parser = ArgumentParser(
 ...     formatter_class=CorgyHelpFormatter,
@@ -349,7 +357,6 @@ options:
   --a int        (required)
   --b [str ...]  (required)
   --c float      (default: 0.0)
-
 >>> args = parser.parse_args(["--a", "1", "--b", "one", "two"])
 >>> foo = Foo(args.a, args.b, args.c)
 ```
