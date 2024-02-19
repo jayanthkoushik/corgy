@@ -308,6 +308,11 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             return obj.__name__  # type: ignore
         except AttributeError:
             try:
+                # Enum values.
+                return obj.name  # type: ignore
+            except AttributeError:
+                pass
+            try:
                 if isinstance(obj, type_):
                     return type_.__str__(obj)  # pylint: disable=unnecessary-dunder-call
             except TypeError:

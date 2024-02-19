@@ -10,6 +10,7 @@ from argparse import (
     ArgumentTypeError,
 )
 from collections.abc import Sequence as AbstractSequence
+from enum import Enum
 from io import BytesIO
 from typing import ClassVar, List, Optional, Sequence, Set, Tuple
 from unittest import skipIf, TestCase
@@ -38,6 +39,7 @@ else:
 import corgy
 from corgy import Corgy, CorgyHelpFormatter, corgyparser, NotRequired, Required
 from corgy._actions import BooleanOptionalAction, OptionalTypeAction
+from corgy._enum import EnumWrapper
 from corgy._meta import CorgyMeta, get_concrete_collection_type
 
 if sys.version_info >= (3, 11):
@@ -2540,6 +2542,65 @@ class TestCorgyAddArgsToParser(TestCase):
         with self.assertRaises(TypeError):
             C.add_args_to_parser(self.parser)
 
+    def test_add_args_adds_enum_with_wrapper(self):
+        class E(Enum):
+            A = 1
+            B = 2
+
+        class C(Corgy):
+            x: E
+
+        enum_wrapper = EnumWrapper(E)
+        with patch("corgy._corgy.EnumWrapper", MagicMock(return_value=enum_wrapper)):
+            C.add_args_to_parser(self.parser)
+            self.parser.add_argument.assert_called_once_with(
+                "--x", type=enum_wrapper, metavar="E", required=True, choices=(E.A, E.B)
+            )
+
+    def test_add_args_respects_enum_metavar(self):
+        class E(Enum):
+            __metavar__ = "MyEnum"
+            A = 1
+            B = 2
+
+        class C(Corgy):
+            x: E
+
+        enum_wrapper = EnumWrapper(E)
+        with patch("corgy._corgy.EnumWrapper", MagicMock(return_value=enum_wrapper)):
+            C.add_args_to_parser(self.parser)
+            self.parser.add_argument.assert_called_once_with(
+                "--x",
+                type=enum_wrapper,
+                metavar="MyEnum",
+                required=True,
+                choices=(E.A, E.B),
+            )
+
+    def test_add_args_handles_enum_coll(self):
+        class E(Enum):
+            A = 1
+            B = 2
+
+        enum_wrapper = EnumWrapper(E)
+        with patch("corgy._corgy.EnumWrapper", MagicMock(return_value=enum_wrapper)):
+            for _type in COLLECTION_TYPES:
+                with self.subTest(type=_type):
+
+                    class C(Corgy):
+                        x: _type[E]
+
+                    self.setUp()
+                    C.add_args_to_parser(self.parser)
+                    self.parser.add_argument.assert_called_once_with(
+                        "--x",
+                        type=enum_wrapper,
+                        metavar="E",
+                        nargs="*",
+                        required=True,
+                        choices=(E.A, E.B),
+                    )
+
 
 class TestCorgyAddRequiredArgsToParser(TestCase):
     def setUp(self):
@@ -2908,6 +2969,27 @@ class TestCorgyCmdlineParsing(TestCase):
         self.parser.parse_args = lambda: self.orig_parse_args(self.parser, [])
         c = C.parse_from_cmdline(self.parser)
         self.assertFalse(hasattr(c, "x"))
+
+    def test_parse_from_cmdline_handles_enum(self):
+        def _raise_error(msg):
+            raise ArgumentTypeError(None, msg)
+
+        class E(Enum):
+            A = 1
+            B = 2
+
+        class C(Corgy):
+            x: E
+
+        self.parser.parse_args = lambda: self.orig_parse_args(self.parser, ["--x", "A"])
+        c = C.parse_from_cmdline(self.parser)
+        self.assertEqual(c.x, E.A)
+
+        self.setUp()
+        self.parser.parse_args = lambda: self.orig_parse_args(self.parser, ["--x", "C"])
+        self.parser.error = _raise_error
+        with self.assertRaises(ArgumentTypeError):
+            C.parse_from_cmdline(self.parser)
 
 
 @skipIf(tomli is None, "`tomli` package not found")

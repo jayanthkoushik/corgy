@@ -718,6 +718,31 @@ an optional collection argument.
 Namespace(x=None, y=[])
 ```
 
+*Enum*
+`Enum` types work as expected; the members of the enum are passed to the
+`choices` argument of `ArgumentParser.add_argument`.
+
+### Examples
+
+```python
+>>> from enum import Enum
+>>> class Color(Enum):
+...     RED = 1
+...     GREEN = 2
+...     BLUE = 3
+>>> class A(Corgy):
+...     x: Color
+>>> parser = ArgumentParser(
+...     formatter_class=CorgyHelpFormatter,
+...     add_help=False,
+...     usage=argparse.SUPPRESS,
+... )
+>>> A.add_args_to_parser(parser)
+>>> parser.print_help()
+options:
+  --x Color  ({RED/GREEN/BLUE} optional)
+```
+
 *Literal*
 For `Literal` types, the provided values are passed to the `choices` argument
 of `ArgumentParser.add_argument`. All values must be of the same type, which

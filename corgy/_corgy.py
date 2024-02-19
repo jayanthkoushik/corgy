@@ -39,6 +39,7 @@ else:
 
 from ._actions import BooleanOptionalAction, OptionalTypeAction
 from ._corgyparser import CorgyParserAction
+from ._enum import EnumWrapper, is_enum_type
 from ._helpfmt import CorgyHelpFormatter
 from ._meta import (
     check_val_type,
@@ -655,6 +656,28 @@ class Corgy(metaclass=CorgyMeta):
             >>> parser.parse_args(["--x", "--y"])
             Namespace(x=None, y=[])
 
+        *Enum*
+        `Enum` types work as expected; the members of the enum are passed to the
+        `choices` argument of `ArgumentParser.add_argument`.
+
+        Examples:
+            >>> from enum import Enum
+            >>> class Color(Enum):
+            ...     RED = 1
+            ...     GREEN = 2
+            ...     BLUE = 3
+            >>> class A(Corgy):
+            ...     x: Color
+            >>> parser = ArgumentParser(
+            ...     formatter_class=CorgyHelpFormatter,
+            ...     add_help=False,
+            ...     usage=argparse.SUPPRESS,
+            ... )
+            >>> A.add_args_to_parser(parser)
+            >>> parser.print_help()
+            options:
+              --x Color  ({RED/GREEN/BLUE} optional)
+
         *Literal*
         For `Literal` types, the provided values are passed to the `choices` argument
         of `ArgumentParser.add_argument`. All values must be of the same type, which
@@ -854,6 +877,10 @@ class Corgy(metaclass=CorgyMeta):
                 return type_
 
             def process_choices(self, type_) -> Any:
+                if is_enum_type(type_):
+                    # Wrap enum types in `EnumWrapper`, which provides `__choices__`.
+                    type_ = EnumWrapper(type_)
+
                 _is_literal_type = is_literal_type(type_)
                 if _is_literal_type:
                     # Determine if the first choice has `__bases__`, in which case
