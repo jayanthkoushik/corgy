@@ -1476,6 +1476,7 @@ options:
         * [`SubClass.name`](corgy.types.md#corgy.types.SubClass.name)
         * [`SubClass.which`](corgy.types.md#corgy.types.SubClass.which)
         * [`SubClass.__choices__`](corgy.types.md#corgy.types.SubClass.__choices__)
+        * [`SubClass.choice_names()`](corgy.types.md#corgy.types.SubClass.choice_names)
         * [`SubClass.__call__()`](corgy.types.md#corgy.types.SubClass.__call__)
 
 

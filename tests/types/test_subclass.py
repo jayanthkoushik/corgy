@@ -131,10 +131,23 @@ class TestSubClass(TestCase):
         self.assertSetEqual(
             set(type_.__choices__), {type_("B"), type_("C"), type_("D")}
         )
+        self.assertSetEqual(set(type_.choice_names()), {"B", "C", "D"})
         type_.allow_base = True
         self.assertSetEqual(
             set(type_.__choices__), {type_("A"), type_("B"), type_("C"), type_("D")}
         )
+        self.assertSetEqual(set(type_.choice_names()), {"A", "B", "C", "D"})
+        type_.allow_base = False
+        type_.allow_indirect_subs = False
+        self.assertSetEqual(set(type_.__choices__), {type_("B"), type_("C")})
+        self.assertSetEqual(set(type_.choice_names()), {"B", "C"})
+        type_.use_full_names = True
+        B_full_name = B.__module__ + "." + B.__qualname__
+        C_full_name = C.__module__ + "." + C.__qualname__
+        self.assertSetEqual(
+            set(type_.__choices__), {type_(B_full_name), type_(C_full_name)}
+        )
+        self.assertSetEqual(set(type_.choice_names()), {B_full_name, C_full_name})
 
     def test_subclass_metavar(self):
         type_ = SubClass[int]

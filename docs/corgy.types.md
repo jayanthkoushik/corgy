@@ -261,6 +261,10 @@ Each item in the tuple is an instance of `SubClass`, and corresponds to a valid
 sub-class of the base-class associated with this type.
 
 
+#### _classmethod_ choice_names()
+Return a tuple of names of valid sub-classes of the base class.
+
+
 #### \__call__(\*args, \*\*kwargs)
 Return an instance of the sub-class associated with this type.
 

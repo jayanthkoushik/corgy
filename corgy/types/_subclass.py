@@ -214,6 +214,13 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
             choices.append(obj)
         return tuple(choices)
 
+    @classmethod
+    def choice_names(cls) -> Tuple[str, ...]:
+        """Return a tuple of names of valid sub-classes of the base class."""
+        return tuple(
+            cls._subclass_name(subcls) for subcls in cls._generate_base_subclasses()
+        )
+
     def __new__(cls, name: str) -> SubClass[_T]:  # pylint: disable=arguments-differ
         cls._ensure_base_set()
 
