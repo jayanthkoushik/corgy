@@ -282,3 +282,16 @@ class TestSubClass(TestCase):
                 _AT = pickle.load(_f)
 
             self.assertEqual(_AT, _type(b_full_name))
+
+    def test_subclass_name_property(self):
+        class A:
+            ...
+
+        class B(A):
+            ...
+
+        type_ = SubClass[A]
+        self.assertEqual(type_("B").name, "B")
+        type_.use_full_names = True
+        b_full_name = B.__module__ + "." + B.__qualname__
+        self.assertEqual(type_(b_full_name).name, b_full_name)

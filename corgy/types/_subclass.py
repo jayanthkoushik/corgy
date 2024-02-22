@@ -185,6 +185,11 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
         return subcls.__name__
 
     @property
+    def name(self) -> str:
+        """Return the name of the sub-class associated with this type."""
+        return self._subclass_name(self._subcls)
+
+    @property
     def which(self) -> Type[_T]:
         """Return the class represented by the `SubClass` instance."""
         return self._subcls

@@ -1473,6 +1473,7 @@ options:
     * [`InputTextFile`](corgy.types.md#corgy.types.InputTextFile)
     * [`InputBinFile`](corgy.types.md#corgy.types.InputBinFile)
     * [`SubClass`](corgy.types.md#corgy.types.SubClass)
+        * [`SubClass.name`](corgy.types.md#corgy.types.SubClass.name)
         * [`SubClass.which`](corgy.types.md#corgy.types.SubClass.which)
         * [`SubClass.__choices__`](corgy.types.md#corgy.types.SubClass.__choices__)
         * [`SubClass.__call__()`](corgy.types.md#corgy.types.SubClass.__call__)

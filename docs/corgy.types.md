@@ -246,6 +246,10 @@ type. So all instances of `SubClass[Base]` will return the same type, and any
 attributes set on the type will be shared between all instances.
 
 
+#### _property_ name()
+Return the name of the sub-class associated with this type.
+
+
 #### _property_ which()
 Return the class represented by the `SubClass` instance.
 
