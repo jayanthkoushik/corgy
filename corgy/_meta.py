@@ -234,6 +234,7 @@ class CorgyMeta(type):
             _track_bases = kwds.pop("corgy_track_bases")
         except KeyError:
             _track_bases = True
+        corgy_base_annotations = set()  # annotations of base `Corgy` classes
         if _track_bases:
             for base in bases:
                 _base_annotations = getattr(base, "__annotations__", {})
@@ -256,6 +257,7 @@ class CorgyMeta(type):
                     # Add not required attributes to temp set.
                     _base_required = getattr(base, "__required")
                     for _var_name in _base_annotations:
+                        corgy_base_annotations.add(_var_name)
                         if _var_name not in _base_required:
                             _not_required.add(_var_name)
                 else:
@@ -421,9 +423,16 @@ class CorgyMeta(type):
                 del namespace["__defaults"][var_name]
 
             # Create `<var_name>` property.
-            namespace[var_name] = mcs._create_var_property(
-                name, var_name, var_type, var_help
-            )
+            if not (
+                # Don't create a new property if `<var_name>` appears in a
+                # base `Corgy` class, and is not updated by this class.
+                var_name in corgy_base_annotations
+                and var_name not in cls_annotations
+            ):
+                namespace[var_name] = mcs._create_var_property(
+                    var_name, var_type, var_help
+                )
+
             if _make_slots:
                 if f"__{var_name}" in namespace["__slots__"]:
                     raise TypeError(
@@ -456,15 +465,17 @@ class CorgyMeta(type):
         return super().__new__(mcs, name, bases, namespace, **kwds)
 
     @staticmethod
-    def _create_var_property(cls_name, var_name, var_type, var_doc) -> property:
+    def _create_var_property(var_name, var_type, var_doc) -> property:
         # Properties are stored in private instance variables prefixed with `__`, and
         # must be accessed as `_<cls>__<var_name>`.
         def var_fget(self):
+            cls_name = self.__class__.__name__
             with suppress(AttributeError):
                 return getattr(self, f"_{cls_name.lstrip('_')}__{var_name}")
             raise AttributeError(f"no value available for attribute `{var_name}`")
 
         def var_fset(self, val):
+            cls_name = self.__class__.__name__
             if getattr(self, f"_{cls_name.lstrip('_')}__frozen"):
                 raise TypeError(f"cannot set `{var_name}`: object is frozen")
             _checkers = getattr(self, "__checkers")
@@ -478,6 +489,7 @@ class CorgyMeta(type):
             setattr(self, f"_{cls_name.lstrip('_')}__{var_name}", val)
 
         def var_fdel(self):
+            cls_name = self.__class__.__name__
             if getattr(self, f"_{cls_name.lstrip('_')}__frozen"):
                 raise TypeError(f"cannot delete `{var_name}`: object is frozen")
             if var_name in getattr(self, "__required"):
