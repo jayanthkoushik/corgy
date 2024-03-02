@@ -2,8 +2,6 @@ name: Build and deploy project webiste
 
 on:
   push:
-    branches:
-    - master
     paths:
     - 'corgy/**.py'
     - 'docs/www/**'
