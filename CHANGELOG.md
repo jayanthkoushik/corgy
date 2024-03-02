@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [9.2.0](https://github.com/jayanthkoushik/corgy/compare/v9.1.7...v9.2.0) (2024-03-02)
+
+
+### Features
+
+* add `choice_names` class method to `types.SubClass` ([a64a249](https://github.com/jayanthkoushik/corgy/commit/a64a2499c1918ef06e25e972c77961282dc2c502))
+* add `Corgy.is_attr_set` method ([f5b84f6](https://github.com/jayanthkoushik/corgy/commit/f5b84f6b193ddc7782957c97d4df6503da17ca74))
+* add `name` property to `types.SubClass` ([0d688a3](https://github.com/jayanthkoushik/corgy/commit/0d688a3d4d0dd78f544fc011cf833de72eef34f9))
+* prevent inherited properties from being re-created ([185ba02](https://github.com/jayanthkoushik/corgy/commit/185ba0299602ccc6b337c4d09bbc989a70b24360))
+* support enum types in `Corgy.add_args_to_parser` ([5389ec7](https://github.com/jayanthkoushik/corgy/commit/5389ec775495773efbcf4ed7de2c40ff75f38a4e))
+
 ### [9.1.7](https://github.com/jayanthkoushik/corgy/compare/v9.1.1...v9.1.7) (2023-06-12)
 
 
