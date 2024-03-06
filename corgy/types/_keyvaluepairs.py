@@ -141,7 +141,7 @@ class KeyValuePairs(  # type: ignore[misc]
         for value in values.split(self.sequence_separator):
             try:
                 kstr, vstr = value.split(self.item_separator, maxsplit=1)
-            except:
+            except:  # noqa: E722
                 raise ValueError(
                     f"`{value}` is not a valid `{self.item_separator}` separated pair"
                 ) from None

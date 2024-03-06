@@ -27,6 +27,11 @@ repos:
     entry: poetry run pylint
     language: system
     types: [python]
+  - id: flake8
+    name: style check python files
+    entry: poetry run flake8
+    language: system
+    types: [python]
   - id: mypy
     name: type check python files
     entry: poetry run mypy .
