@@ -8,8 +8,9 @@ _T = TypeVar("_T")
 
 
 class _SubClassMeta(type):
-    # Python < 3.9 does not support `classmethod` combined with `property`,
-    # so we need to define class properties as properties on the metaclass.
+    # Python < 3.9 does not support `classmethod` combined with
+    # `property`, so we need to define class properties as properties on
+    # the metaclass.
     @property
     def __choices__(cls):
         return cls._choices()
@@ -23,40 +24,49 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
         >>> class Base: ...
         >>> class Sub1(Base): ...
         >>> class Sub2(Base): ...
-        >>> BaseSubType = SubClass[Base]   # type for a sub-class of `Base`
-        >>> BaseSub = BaseSubType("Sub1")  # sub-class of `Base` named `Sub1`
-        >>> base_sub = BaseSub()           # instance of a sub-class of `Base`
+        >>> # Type for a sub-class of `Base`:
+        >>> BaseSubType = SubClass[Base]
+        >>> # Sub-class of `Base` named `Sub1`:
+        >>> BaseSub = BaseSubType("Sub1")
+        >>> # Instance of a sub-class of `Base`:
+        >>> base_sub = BaseSub()
         >>> base_sub  # doctest: +SKIP
         <Sub1 object at 0x100ea40a0>
 
-    This class cannot be called directly. It first needs to be associated with a base
-    class, using the `SubClass[Base]` syntax. This returns a new `SubClass` type, which
-    is associated with `Base`. The returned type is callable, and accepts the name of a
-    sub-class of `Base`. So, `SubClass[Base]("Sub1")` returns a `SubClass` type instance
-    corresponding to the sub-class `Sub1` of `Base`. Finally, the `SubClass` instance
-    can be called to create an instance of the sub-class, e.g.,
-    `SubClass[Base]("Sub1")()`.
+    This class cannot be called directly. It first needs to be
+    associated with a base class, using the `SubClass[Base]` syntax.
+    This returns a new `SubClass` type, which is associated with `Base`.
+    The returned type is callable, and accepts the name of a sub-class
+    of `Base`. So, `SubClass[Base]("Sub1")` returns a `SubClass` type
+    instance corresponding to the sub-class `Sub1` of `Base`. Finally,
+    the `SubClass` instance can be called to create an instance of the
+    sub-class, e.g., `SubClass[Base]("Sub1")()`.
 
-    This class is useful for creating objects of a generic class, where the concrete
-    class is determined at runtime, e.g, by a command-line argument.
+    This class is useful for creating objects of a generic class, where
+    the concrete class is determined at runtime, e.g, by a command-line
+    argument.
 
     Examples:
         >>> from argparse import ArgumentParser
         >>> parser = ArgumentParser()
-        >>> _ = parser.add_argument("--base-subcls", type=SubClass[Base])
+        >>> _ = parser.add_argument(
+        ...     "--base-subcls", type=SubClass[Base]
+        ... )
         >>> args = parser.parse_args(["--base-subcls", "Sub1"])
-        >>> base_obj = args.base_subcls()  # an instance of a sub-class of `Base`
+        >>> base_obj = args.base_subcls()  # `Base` sub-class instance
 
-    For further convenience when parsing command-line arguments, the class provides a
-    `__choices__` property, which returns a tuple of all valid sub-classes, and can be
-    passed as the `choices` argument to `ArgumentParser.add_argument`. Refer to the
-    docstring of `__choices__` for more information.
+    For further convenience when parsing command-line arguments, the
+    class provides a `__choices__` property, which returns a tuple of
+    all valid sub-classes, and can be passed as the `choices` argument
+    to `ArgumentParser.add_argument`. Refer to the docstring of
+    `__choices__` for more information.
 
-    The behavior of sub-class type identification can be customized by setting class
-    attributes (preferably on the type returned by the `[...]` syntax).
+    The behavior of sub-class type identification can be customized by
+    setting class attributes (preferably on the type returned by the
+    `[...]` syntax).
 
-    * `allow_base`: If `True`, the base class itself will be allowed as a valid
-        sub-class. The default is `False`.
+    * `allow_base`: If `True`, the base class itself will be allowed as
+        a valid sub-class. The default is `False`.
 
     Examples:
         >>> class Base: ...
@@ -67,17 +77,21 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
         (SubClass[Base]('Sub1'), SubClass[Base]('Sub2'))
 
         >>> T.allow_base = True
-        >>> T.__choices__
-        (SubClass[Base]('Base'), SubClass[Base]('Sub1'), SubClass[Base]('Sub2'))
+        >>> T.__choices__  # doctest: +NORMALIZE_WHITESPACE
+        (SubClass[Base]('Base'), SubClass[Base]('Sub1'),
+        SubClass[Base]('Sub2'))
 
-    * `use_full_names`: If `True`, the name passed to the constructor needs to be the
-        full name of a sub-class, given by `cls.__module__ + "." + cls.__qualname__`. If
-        `False` (the default), the name needs to just be `cls.__name__`. This is useful
-        if the sub-classes are not uniquely identified by just their names.
+    * `use_full_names`: If `True`, the name passed to the constructor
+        needs to be the full name of a sub-class, given by
+        `cls.__module__ + "." + cls.__qualname__`. If `False` (the
+        default), the name needs to just be `cls.__name__`. This is
+        useful if the sub-classes are not uniquely identified by just
+        their names.
 
-    * `allow_indirect_subs`: If `True` (the default), indirect sub-classes, i.e.,
-        sub-classes of the base through another sub-class, are allowed. If `False`,
-        only direct sub-classes of the base are allowed.
+    * `allow_indirect_subs`: If `True` (the default), indirect
+        sub-classes, i.e., sub-classes of the base through another
+        sub-class, are allowed. If `False`, only direct sub-classes of
+        the base are allowed.
 
     Examples:
         >>> class Base: ...
@@ -92,15 +106,17 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
         (SubClass[Base]('Sub1'),)
 
     Note:
-        The types returned by the `SubClass[...]` syntax are cached using the base class
-        type. So all instances of `SubClass[Base]` will return the same type, and any
-        attributes set on the type will be shared between all instances.
+        The types returned by the `SubClass[...]` syntax are cached
+        using the base class type. So all instances of `SubClass[Base]`
+        will return the same type, and any attributes set on the type
+        will be shared between all instances.
     """
 
-    # The object cache is initialized inside `__class_getitem__`, so every concrete
-    # sub-type has its own object cache. The cache uses the sub-class name, along with
-    # the class config attributes as key, so that the cache is invalidated when any
-    # of the config attributes change.
+    # The object cache is initialized inside `__class_getitem__`, so
+    # every concrete sub-type has its own object cache. The cache uses
+    # the sub-class name, along with the class config attributes as key,
+    # so that the cache is invalidated when any of the config attributes
+    # change.
     _object_cache: Dict[Tuple[str, bool, bool, bool], "SubClass[_T]"]
 
     allow_base: bool
@@ -186,7 +202,7 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
 
     @property
     def name(self) -> str:
-        """Return the name of the sub-class associated with this type."""
+        """Return the name of the sub-class associated with this type."""  # noqa
         return self._subclass_name(self._subcls)
 
     @property
@@ -197,10 +213,11 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
     @classmethod  # type: ignore
     @property
     def __choices__(cls) -> Tuple[SubClass[_T], ...]:
-        """Return a tuple of `SubClass` instances for valid sub-classes of the base.
+        """Return a tuple of `SubClass` instances for valid sub-classes.
 
-        Each item in the tuple is an instance of `SubClass`, and corresponds to a valid
-        sub-class of the base-class associated with this type.
+        Each item in the tuple is an instance of `SubClass`, and
+        corresponds to a valid sub-class of the base-class associated
+        with this type.
         """
         # For Sphinx.
 
@@ -216,7 +233,7 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
 
     @classmethod
     def choice_names(cls) -> Tuple[str, ...]:
-        """Return a tuple of names of valid sub-classes of the base class."""
+        """Return a tuple of valid sub-class names."""
         return tuple(
             cls._subclass_name(subcls) for subcls in cls._generate_base_subclasses()
         )
@@ -245,7 +262,7 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
         return obj
 
     def __call__(self, *args, **kwargs) -> _T:
-        """Return an instance of the sub-class associated with this type.
+        """Return an instance of the sub-class associated with the type.
 
         Examples:
             >>> class Base: ...
@@ -253,7 +270,7 @@ class SubClass(Generic[_T], metaclass=_SubClassMeta):
             ...     def __init__(self, x):
             ...         print(f"initializing `Sub1` with 'x={x}'")
             >>> BaseSubType = SubClass[Base]
-            >>> BaseSub = BaseSubType("Sub1")  # an instance of the `SubClass` type
+            >>> BaseSub = BaseSubType("Sub1")  # `SubClass` instance
             >>> base_sub = BaseSub(1)
             initializing `Sub1` with 'x=1'
 

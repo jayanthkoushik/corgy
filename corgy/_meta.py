@@ -32,7 +32,7 @@ def is_union_type(t) -> bool:
 
 
 def is_optional_type(t) -> bool:
-    """Check if the argument is an optional type (i.e. union with None)."""
+    """Check if the argument is an optional type (i.e. union with None)."""  # noqa
     if is_union_type(t):
         _t_args = getattr(t, "__args__", [])
         return len(_t_args) == 2 and _t_args[1] is type(None)
@@ -40,7 +40,10 @@ def is_optional_type(t) -> bool:
 
 
 def get_concrete_collection_type(type_) -> Optional[type]:
-    """Get the base type for objects annotated with the given collection type."""
+    """Get base type for objects annotated with given collection type."""  # noqa
+    # Add a dummy pass to stop pydocstyle complain about blank line
+    # after docstring.
+    pass  # pylint: disable=unnecessary-pass
 
     def _is_one_of(_t, *_targets) -> bool:
         """Check if a type is any of the target types."""
@@ -124,7 +127,8 @@ def check_val_type(
                     )
                 )
         elif len(_base_types) == 2 and _base_types[1] is Ellipsis:
-            # Same as the previous condition, but `_val` must be non-empty.
+            # Same as the previous condition, but `_val` must be
+            # non-empty.
             if not _val:
                 raise ValueError(f"expected non-empty collection for type '{_type}'")
             for _val_i in _val:
@@ -138,8 +142,8 @@ def check_val_type(
                     )
                 )
         else:
-            # There should be a one-to-one correspondence between items in `_val` and
-            # items in `_type`.
+            # There should be a one-to-one correspondence between items
+            # in `_val` and items in `_type`.
             if len(_val) != len(_base_types):
                 raise ValueError(
                     f"invalid value for type '{_type}': {_val!r}: "
@@ -205,11 +209,12 @@ def check_val_type(
 class CorgyMeta(type):
     """Metaclass for `Corgy`.
 
-    Modifies class creation by parsing type annotations, and creating properties for
-    each annotated attribute. Default values and custom parsers are stored in the
-    `__defaults` and `__parsers` attributes. Custom flags, if present, are stored in
-    the `__flags` attribute. `Required` and `NotRequired` annotations are extracted,
-    and required attributes are stored in `__required`. Attribute value checkers, if
+    Modifies class creation by parsing type annotations, and creating
+    properties for each annotated attribute. Default values and custom
+    parsers are stored in the `__defaults` and `__parsers` attributes.
+    Custom flags, if present, are stored in the `__flags` attribute.
+    `Required` and `NotRequired` annotations are extracted, and required
+    attributes are stored in `__required`. Attribute value checkers, if
     present, are stored in `__checkers`.
     """
 
@@ -225,8 +230,8 @@ class CorgyMeta(type):
         namespace["__checkers"] = {}
         namespace["__required"] = set()
 
-        # Temp set of not required attributes--to handle inheritance from
-        # non-`Corgy` classes.
+        # Temp set of not required attributes--to handle inheritance
+        # from non-`Corgy` classes.
         _not_required = set()
 
         # See if `corgy_track_bases` is specified (default `True`).
@@ -270,12 +275,13 @@ class CorgyMeta(type):
                         except AttributeError:
                             pass
 
-        # Add current annotations last, so that they override base values.
+        # Add current annotations last, so that they override base
+        # values.
         namespace["__annotations__"].update(cls_annotations)
 
-        # Extract `corgy_` class parameters. Values set in `kwds` take preference,
-        # followed by base class values (in reverse order), and finally the parameter
-        # default.
+        # Extract `corgy_` class parameters. Values set in `kwds` take
+        # preference, followed by base class values (in reverse order),
+        # and finally the parameter default.
 
         # Extract `corgy_make_slots` (default `True`)
         namespace["__make_slots"] = kwds.pop(
@@ -326,10 +332,12 @@ class CorgyMeta(type):
                 var_type = var_ano.__origin__
 
                 # Check if `_REQUIRED` or `_NOT_REQUIRED` is present.
-                # `Required` and `NotRequired` are defined as `Annotated[., _REQUIRED]`,
-                # and `Annotated[., _NOT_REQUIRED]`, respectively. Since nested
-                # `Annotated` types get flattened, `_REQUIRED` and `_NOT_REQUIRED` will
-                # be the last element in `var_meta`.
+                # `Required` and `NotRequired` are defined as
+                # `Annotated[., _REQUIRED]`, and `Annotated[.,
+                # _NOT_REQUIRED]`, respectively. Since nested
+                # `Annotated` types get flattened, `_REQUIRED` and
+                # `_NOT_REQUIRED` will be the last element in
+                # `var_meta`.
                 if var_ano.__metadata__[-1] in (REQUIRED, NOT_REQUIRED):
                     var_ano_required = var_ano.__metadata__[-1] is REQUIRED
                     var_meta = var_ano.__metadata__[:-1]
@@ -342,7 +350,8 @@ class CorgyMeta(type):
                 var_meta = None
 
             if var_meta:
-                # `<var_name>: Annotated[<var_type>, <var_help>, [<var_flags>]]`.
+                # `<var_name>: Annotated[<var_type>, <var_help>,
+                # [<var_flags>]]`.
                 var_help = var_meta[0]
                 if not isinstance(var_help, str):
                     raise TypeError(
@@ -385,7 +394,8 @@ class CorgyMeta(type):
             if var_ano_required is not None:
                 _var_required = var_ano_required
             elif var_name not in cls_annotations:
-                # Variable was defined in a base class, and is not redefined.
+                # Variable was defined in a base class, and is not
+                # redefined.
                 if var_name in namespace["__required"]:
                     _var_required = True
                 elif var_name in _not_required:
@@ -399,7 +409,8 @@ class CorgyMeta(type):
             if _var_required:
                 namespace["__required"].add(var_name)
             else:
-                # Remove from `__required`, in case it was required in a base class.
+                # Remove from `__required`, in case it was required in a
+                # base class.
                 namespace["__required"].discard(var_name)
 
             namespace["__annotations__"][var_name] = var_type
@@ -419,13 +430,15 @@ class CorgyMeta(type):
                     ) from e
                 namespace["__defaults"][var_name] = namespace[var_name]
             elif var_name in namespace["__defaults"] and var_name in cls_annotations:
-                # Variable had a default value in a base class, but does not anymore.
+                # Variable had a default value in a base class, but does
+                # not anymore.
                 del namespace["__defaults"][var_name]
 
             # Create `<var_name>` property.
             if not (
-                # Don't create a new property if `<var_name>` appears in a
-                # base `Corgy` class, and is not updated by this class.
+                # Don't create a new property if `<var_name>` appears in
+                # a base `Corgy` class, and is not updated by this
+                # class.
                 var_name in corgy_base_annotations
                 and var_name not in cls_annotations
             ):
@@ -466,8 +479,8 @@ class CorgyMeta(type):
 
     @staticmethod
     def _create_var_property(var_name, var_type, var_doc) -> property:
-        # Properties are stored in private instance variables prefixed with `__`, and
-        # must be accessed as `_<cls>__<var_name>`.
+        # Properties are stored in private instance variables prefixed
+        # with `__`, and must be accessed as `_<cls>__<var_name>`.
         def var_fget(self):
             cls_name = self.__class__.__name__
             with suppress(AttributeError):

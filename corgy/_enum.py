@@ -14,8 +14,9 @@ def is_enum_type(t) -> bool:
 class EnumWrapper:
     """Wrapper for an `Enum` type.
 
-    This type is used for command line argument parsing; it converts a string
-    representation of an enum value to the corresponding enum value.
+    This type is used for command line argument parsing; it converts a
+    string representation of an enum value to the corresponding enum
+    value.
     """
 
     enum_type: type[Enum]

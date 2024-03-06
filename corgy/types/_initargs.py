@@ -39,19 +39,23 @@ class InitArgs(Corgy, Generic[_T], corgy_required_by_default=True):
           --a int        (required)
           --b [str ...]  (required)
           --c float      (default: 0.0)
-        >>> args = parser.parse_args(["--a", "1", "--b", "one", "two"])
+        >>> args = parser.parse_args(
+        ...     ["--a", "1", "--b", "one", "two"]
+        ... )
         >>> foo = Foo(args.a, args.b, args.c)
 
-    This is a generic class, and on using the `InitArgs[Cls]` syntax, a concrete
-    `Corgy` class is created, which has attributes corresponding to the arguments of
-    `Cls.__init__`, with types inferred from annotations. The returned class can be used
-    as any other `Corgy` class, including as a type annotation within another `Corgy`
-    class.
+    This is a generic class, and on using the `InitArgs[Cls]` syntax, a
+    concrete `Corgy` class is created, which has attributes
+    corresponding to the arguments of `Cls.__init__`, with types
+    inferred from annotations. The returned class can be used as any
+    other `Corgy` class, including as a type annotation within another
+    `Corgy` class.
 
-    All arguments of the `__init__` method must be annotated, following the same rules
-    as for other `Corgy` classes. Positional only arguments are not supported, since
-    they are not associated with an argument name. `TypeError` is raised if either of
-    these conditions is not met.
+    All arguments of the `__init__` method must be annotated, following
+    the same rules as for other `Corgy` classes. Positional only
+    arguments are not supported, since they are not associated with an
+    argument name. `TypeError` is raised if either of these conditions
+    is not met.
     """
 
     __slots__ = ()

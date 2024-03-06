@@ -4,8 +4,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
-# Functions to create temporary files and directories created in the home
-# directory, or at a path specified by an environment variable.
+# Functions to create temporary files and directories created in the
+# home directory, or at a path specified by an environment variable.
 
 
 @contextmanager
@@ -37,8 +37,8 @@ def temp_dir_in_home(testcase: TestCase):
 
 @contextmanager
 def temp_env_var_file(testcase: TestCase):
-    """Get a temporary file and set an environment variable to its name."""
-    # Get a random string to use as the environment variable name
+    """Get a temp file and set an env var to its name."""
+    # Get a random string to use as the environment variable name.
     env_var = f"CORGY_TEMP_{os.urandom(8).hex()}"
     with TemporaryDirectory() as d:
         fpath = os.path.join(d, "temp.file")
@@ -53,8 +53,8 @@ def temp_env_var_file(testcase: TestCase):
 
 @contextmanager
 def temp_env_var_dir(testcase: TestCase):
-    """Get a temporary directory and set an environment variable to its name."""
-    # Get a random string to use as the environment variable name
+    """Get a temp directory and set an env var to its name."""
+    # Get a random string to use as the environment variable name.
     env_var = f"CORGY_TEMP_{os.urandom(8).hex()}"
     with TemporaryDirectory() as d:
         os.environ[env_var] = d

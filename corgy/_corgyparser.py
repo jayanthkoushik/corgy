@@ -16,8 +16,8 @@ __all__ = ("corgyparser",)
 class CorgyParser(NamedTuple):
     """Class to represent custom parsers.
 
-    This class is returned by the `@corgyparser` decorator, and is used by `Corgy` to
-    keep track of parsers.
+    This class is returned by the `@corgyparser` decorator, and is used
+    by `Corgy` to keep track of parsers.
     """
 
     var_names: List[str]
@@ -54,24 +54,26 @@ def corgyparser(
     metavar: Optional[str] = None,
     nargs: Union[None, Literal["*", "+"], int] = None,
 ) -> Callable[[Union[Callable[[str], Any], CorgyParser]], CorgyParser]:
-    """Decorate a function as a custom parser for one or more attributes.
+    """Decorate a function as a custom attribute parser.
 
-    To use a custom function for parsing a `Corgy` attribute, use this decorator.
-    Parsing functions must be static, and should only accept a single argument.
-    Decorating the function with `@staticmethod` is optional, but prevents type errors.
-    `@corgyparser` must be the final decorator in the decorator chain.
+    To use a custom function for parsing a `Corgy` attribute, use this
+    decorator. Parsing functions must be static, and should only accept
+    a single argument. Decorating the function with `@staticmethod` is
+    optional, but prevents type errors.  `@corgyparser` must be the
+    final decorator in the decorator chain.
 
     Args:
         var_names: The attributes associated with the decorated parser.
-        metavar: Keyword only argument to set the metavar when adding the associated
-            attribute(s) to an `ArgumentParser` instance.
-        nargs: Keyword only argument to set the number of arguments to be used for the
-            associated attribute(s). Must be `None`, `'*'`, `'+'`, or a positive number.
-            This value is passed as the `nargs` argument to
-            `ArgumentParser.add_argument`, and controls the number of arguments that
-            will be read from the command line, and passed to the parsing function.
-            For all values other than `None`, the parsing function will receive a list
-            of strings.
+        metavar: Keyword only argument to set the metavar when adding
+            the associated attribute(s) to an `ArgumentParser` instance.
+        nargs: Keyword only argument to set the number of arguments to
+            be used for the associated attribute(s). Must be `None`,
+            `'*'`, `'+'`, or a positive number. This value is passed as
+            the `nargs` argument to `ArgumentParser.add_argument`, and
+            controls the number of arguments that will be read from the
+            command line, and passed to the parsing function. For all
+            values other than `None`, the parsing function will receive
+            a list of strings.
 
     Examples:
         >>> import argparse
@@ -93,8 +95,8 @@ def corgyparser(
         >>> parser.parse_args(["--time", "1:2:3"])
         Namespace(time=(1, 2, 3))
 
-    Multiple arguments can be passed to the decorator, and will all be associated with
-    the same parser.
+    Multiple arguments can be passed to the decorator, and will all be
+    associated with the same parser.
 
     Examples:
         >>> class A(Corgy):
@@ -105,8 +107,8 @@ def corgyparser(
         ...     def parse_x_y(s):
         ...         return int(s)
 
-    The `@corgyparser` decorator can also be chained to use the same parser for multiple
-    arguments.
+    The `@corgyparser` decorator can also be chained to use the same
+    parser for multiple arguments.
 
     Examples:
         >>> class A(Corgy):
@@ -119,10 +121,11 @@ def corgyparser(
         ...         return int(s)
 
     Note:
-        When chaining, the outer-most non-`None` value of `metavar` will be used.
+        When chaining, the outer-most non-`None` value of `metavar` will
+        be used.
 
-    Custom parsers can control the number of arguments they receive, independent of the
-    argument type.
+    Custom parsers can control the number of arguments they receive,
+    independent of the argument type.
 
     Examples:
         >>> class A(Corgy):
@@ -141,8 +144,8 @@ def corgyparser(
         >>> parser.parse_args(["--x", "1", "2", "3"])
         Namespace(x=6)
 
-    When chaining, `nargs` must be the same for all decorators, otherwise `TypeError` is
-    raised.
+    When chaining, `nargs` must be the same for all decorators,
+    otherwise `TypeError` is raised.
     """
     if not all(isinstance(_var_name, str) for _var_name in var_names):
         raise TypeError(

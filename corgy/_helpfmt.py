@@ -20,10 +20,10 @@ from ._meta import get_concrete_collection_type, is_optional_type
 
 __all__ = ("CorgyHelpFormatter",)
 
-# These placeholders are used to replace special characters and words, so they can be
-# identified later for colorizing, without clashes with the help text. The code-points
-# are non-character points from `U+FDD0` to `U+FDEF`, which are guaranteed to never be
-# used for a character.
+# These placeholders are used to replace special characters and words,
+# so they can be identified later for colorizing, without clashes with
+# the help text. The code-points are non-character points from `U+FDD0`
+# to `U+FDEF`, which are guaranteed to never be used for a character.
 _PLACEHOLDER_OPTION_STR = "\ufdd0"
 _PLACEHOLDER_METAVAR = "\ufdd1"
 _PLACEHOLDER_DEFAULT_VAL = "\ufdd2"
@@ -39,8 +39,8 @@ _PLACEHOLDER_METAVARS_BEGIN = "\ufddb"
 _PLACEHOLDER_METAVARS_END = "\ufddc"
 _PLACEHOLDER_METAVARS_REPEAT = "\ufddd"
 
-# These markers are used by `argparse` to indicate metavar sequences, e.g.,
-# `[int ...]`, `int [int ...]`.
+# These markers are used by `argparse` to indicate metavar sequences,
+# e.g., `[int ...]`, `int [int ...]`.
 _MARKER_METAVARS_BEGIN = "["
 _MARKER_METAVARS_END = "]"
 _MARKER_METAVARS_REPEAT = "..."
@@ -50,10 +50,11 @@ class ColorHelper:
     """Wrapper around `crayons` library to colorize text.
 
     Args:
-        use_colors: Whether to enable colored output. If `None`, coloring is enabled
-            if the `crayons` library is available, and the output is a tty.
-        skip_tty_check: Whether to skip checking if the output is a tty. Only used if
-            `use_colors` is None.
+        use_colors: Whether to enable colored output. If `None`,
+            coloring is enabled if the `crayons` library is available,
+            and the output is a tty.
+        skip_tty_check: Whether to skip checking if the output is a tty.
+            Only used if `use_colors` is None.
     """
 
     __slots__ = ("crayons",)
@@ -80,16 +81,16 @@ class ColorHelper:
 
         Args:
             text: Text to colorize.
-            color: Name of a valid `crayons` color. If the name is all caps, the text
-                will be made bold. Special string `BOLD` will only make the text bold,
-                without coloring.
+            color: Name of a valid `crayons` color. If the name is all
+                caps, the text will be made bold. Special string `BOLD`
+                will only make the text bold, without coloring.
         """
         if not self.crayons:
             return text
 
         if color == "BOLD":
-            # `crayons` does not support only making text bold, so we have to use
-            # `colorama` directly.
+            # `crayons` does not support only making text bold, so we
+            # have to use `colorama` directly.
             colorama = getattr(self.crayons, "colorama")
             return colorama.Style.BRIGHT + text + colorama.Style.NORMAL
 
@@ -104,17 +105,18 @@ class ColorHelper:
 
 
 class _CorgyHelpFormatterMeta(type):
-    """Metaclass for `CorgyHelpFormatter` which adds a `__setattr__` method.
+    """Metaclass for `CorgyHelpFormatter` which adds `__setattr__`.
 
-    The method prevents new attributes from being set, primarily to prevent potential
-    user errors caused by using an incorrect name to configure the class.
+    The method prevents new attributes from being set, primarily to
+    prevent potential user errors caused by using an incorrect name to
+    configure the class.
     """
 
     __slots__ = ()
 
     def __setattr__(cls, name, value):
-        # Note: `__setattr__` applies to instances of the class, so `cls` here is a
-        # class created using this metaclass.
+        # Note: `__setattr__` applies to instances of the class, so
+        # `cls` here is a class created using this metaclass.
         if name not in cls.__dict__:
             raise AttributeError(
                 f"cannot set attribute `{name}` on class `{cls.__name__}`: if you are"
@@ -125,11 +127,12 @@ class _CorgyHelpFormatterMeta(type):
 
 
 class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
-    """Formatter class for `argparse` with a cleaner layout, and support for colors.
+    """Formatter class for `argparse` with cleaner layout and colors.
 
-    `Corgy.parse_from_cmdline` uses this formatter by default, unless a different
-    `formatter_class` argument is provided. `CorgyHelpFormatter` can also be used
-    independently of `Corgy`. Simply pass it as the `formatter_class` argument to
+    `Corgy.parse_from_cmdline` uses this formatter by default, unless a
+    different `formatter_class` argument is provided.
+    `CorgyHelpFormatter` can also be used independently of `Corgy`.
+    Simply pass it as the `formatter_class` argument to
     `argparse.ArgumentParser()`.
 
     Examples:
@@ -141,67 +144,76 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         ...     usage=argparse.SUPPRESS,
         ... )
         >>> _ = parser.add_argument("--x", type=int, required=True)
-        >>> _ = parser.add_argument("--y", type=str, nargs="*", required=True)
+        >>> _ = parser.add_argument(
+        ...     "--y", type=str, nargs="*", required=True
+        ... )
         >>> parser.print_help()
         options:
           -h/--help      show this help message and exit
           --x int        (required)
           --y [str ...]  (required)
 
-    To configure `CorgyHelpFormatter`, you can set a number of attributes on the class.
+    To configure `CorgyHelpFormatter`, you can set a number of
+    attributes on the class.
 
     Note:
-        You do not need to create an instance of the class; that is done by the parser
-        itself. The following public attributes are available:
+        You do not need to create an instance of the class; that is done
+        by the parser itself. The following public attributes are
+        available:
 
     Color-related attributes:
 
-    * `enable_colors`: If `None` (the default), colors are enabled if the `crayons`
-      package is available, and the output is a tty. To explicitly enable or disable
-      colors, set to `True` or `False`.
+    * `enable_colors`: If `None` (the default), colors are enabled if
+        the `crayons` package is available, and the output is a tty. To
+        explicitly enable or disable colors, set to `True` or `False`.
 
-    * `color_<choices/keywords/metavars/defaults/options>`: These attributes control
-      the colors used for various parts of the output (see below for reference).
-      Available colors are `red`, `green`, `yellow`, `blue`, `black`, `magenta`, `cyan`,
-      and `white`. Specifying the name in all caps will make the color bold. You can
-      also use the special value `BOLD` to make the output bold without changing the
-      color. The default value are `blue` for choices, `green` for keywords, `RED` for
-      metavars, `YELLOW` for defaults, and `BOLD` for options. Format::
+    * `color_<choices/keywords/metavars/defaults/options>`: These
+        attributes control the colors used for various parts of the
+        output (see below for reference). Available colors are `red`,
+        `green`, `yellow`, `blue`, `black`, `magenta`, `cyan`, and
+        `white`. Specifying the name in all caps will make the color
+        bold. You can also use the special value `BOLD` to make the
+        output bold without changing the color. The default value are
+        `blue` for choices, `green` for keywords, `RED` for metavars,
+        `YELLOW` for defaults, and `BOLD` for options. Format::
 
-             -a/--arg str       help for arg ({'a'/'b'/'c'} default: 'a')
+             -a/--arg str       help for arg ({'a'/'b'/'c'} default: 'a')  # noqa
                |      |                          |            |      |
              options  metavars                 choices      keywords defaults
 
     Layout-related attributes:
 
-    * `output_width`: The number of columns used for the output. If `None` (the
-      default), the current terminal width is used.
+    * `output_width`: The number of columns used for the output. If
+        `None` (the default), the current terminal width is used.
 
-    * `max_help_position`: How far to the right (from the start), the help string can
-      start from. If `None`, there is no limit. The default is to use half the current
-      terminal width.
+    * `max_help_position`: How far to the right (from the start), the
+        help string can start from. If `None`, there is no limit. The
+        default is to use half the current terminal width.
 
     Marker-related attributes:
 
-    * `marker_extras_<begin/end>`: The strings used to enclose the extra help text
-      (choices, default values etc.). The defaults are `(` and `)`.
+    * `marker_extras_<begin/end>`: The strings used to enclose the extra
+        help text (choices, default values etc.). The defaults are
+        `(` and `)`.
 
-    * `marker_choices_<begin/end>`: The strings used to enclose the list of choices for
-      an argument. The defaults are `{` and `}`.
+    * `marker_choices_<begin/end>`: The strings used to enclose the list
+        of choices for an argument. The defaults are `{` and `}`.
 
-    * `marker_choices_sep`: The string used to separate individual choices in the choice
-      list. The default is `/`.
+    * `marker_choices_sep`: The string used to separate individual
+        choices in the choice list. The default is `/`.
 
     Misc. attributes:
 
-    * `show_full_help`: Whether to show the full help, including choices, indicators for
-      required arguments, and the usage string. The default is `True`.
+    * `show_full_help`: Whether to show the full help, including
+        choices, indicators for required arguments, and the usage
+        string. The default is `True`.
 
-    Formatting of individual arguments can be customized with magic attributes defined
-    on the argument type. The following attributes are recognized:
+    Formatting of individual arguments can be customized with magic
+    attributes defined on the argument type. The following attributes
+    are recognized:
 
-    * `__metavar__`: This can be set to a string on the argument type to override the
-      default metavar.
+    * `__metavar__`: This can be set to a string on the argument type to
+        override the default metavar.
 
     Examples:
         >>> class T:
@@ -244,7 +256,8 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         """Whether colors are enabled."""
         return self._color_helper.crayons is not None
 
-    # Regex to match a choice within a choice list, e.g., `b` in `{a/b/c}`.
+    # Regex to match a choice within a choice list, e.g., `b` in
+    # `{a/b/c}`.
     _pattern_choice = re.compile(
         f"(?<={_PLACEHOLDER_CHOICES_BEGIN}|{_PLACEHOLDER_CHOICES_SEP}).*?"
         f"(?={_PLACEHOLDER_CHOICES_END}|{_PLACEHOLDER_CHOICES_SEP})",
@@ -260,9 +273,10 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     @staticmethod
     @lru_cache(maxsize=None)
     def _pattern_placeholder_text(placeholder: str) -> re.Pattern:
-        """Regex to match text which has been replaced by the given placeholder."""
-        # Due to wrapping, the placeholder text may be split across multiple lines. So,
-        # the regex looks for a continuous string of `placeholder` or whitespace.
+        """Regex to match text replaced by the given placeholder."""
+        # Due to wrapping, the placeholder text may be split across
+        # multiple lines. So, the regex looks for a continuous string of
+        # `placeholder` or whitespace.
         return re.compile(rf"({placeholder}[{placeholder}\s]*)", re.DOTALL)
 
     @staticmethod
@@ -270,15 +284,17 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         if isinstance(obj, (AbstractSequence, set)) and not isinstance(
             obj, (str, bytes)
         ):
-            # `obj` is a collection: recursively apply `_stringify` on its elements.
-            # `obj` has to be checked before `type_`, because the type may not be a
-            # collection type when `nargs` is used to get multiple arguments.
+            # `obj` is a collection: recursively apply `_stringify` on
+            # its elements.  `obj` has to be checked before `type_`,
+            # because the type may not be a collection type when `nargs`
+            # is used to get multiple arguments.
             _coll_type = get_concrete_collection_type(type_)
             if _coll_type is not None and isinstance(
                 getattr(type_, "__args__", None), AbstractSequence
             ):
-                # `type_` is also a collection, so unwrap it to get the base type. This
-                # happens in case of nested types like `Sequence[Sequence[int]]`.
+                # `type_` is also a collection, so unwrap it to get the
+                # base type. This happens in case of nested types like
+                # `Sequence[Sequence[int]]`.
                 _base_types = type_.__args__
                 if len(_base_types) == 2 and _base_types[1] is Ellipsis:
                     _base_types = _base_types[:1]
@@ -297,9 +313,9 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             return _seq_start + ", ".join(_part_strs) + _seq_end
 
         if is_optional_type(type_):
-            # type_ is `Optional`; so unwrap to get the base type. This case happens
-            # in cases like `Sequence[Optional[int]]`, where `Optional` is not the
-            # outermost type.
+            # type_ is `Optional`; so unwrap to get the base type. This
+            # case happens in cases like `Sequence[Optional[int]]`,
+            # where `Optional` is not the outermost type.
             if obj is None:
                 return "None"
             return CorgyHelpFormatter._stringify(obj, type_.__args__[0])
@@ -321,14 +337,15 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
 
     @staticmethod
     def _get_stringify_type_for_default(action):
-        """Get the type that should be used to stringify `action.default`."""
+        """Get type for stringifying `action.default`."""
         _stringify_type = action.type
         if isinstance(action.nargs, int) or action.nargs in (
             argparse.ZERO_OR_MORE,
             argparse.ONE_OR_MORE,
         ):
-            # If the argument specifies nargs, and the default value is a,
-            # collection, wrap the action type with the default collection type.
+            # If the argument specifies nargs, and the default value is
+            # a, collection, wrap the action type with the default
+            # collection type.
             if isinstance(action.default, tuple):
                 _stringify_type = Tuple[action.type]  # type: ignore
             elif isinstance(action.default, AbstractSequence):
@@ -338,22 +355,25 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     def _sub_non_ws_with_colored_repl(
         self, match: re.Match, replacement: Optional[str], color: str
     ) -> str:
-        """Replace non-whitespace characters in the match using colored replacement.
+        """Replace non-ws characters in match using colored replacement.
 
-        For example, if the match is `aaa   aaaa a`, and the replacement is `bbbbbbbb`,
-        the result will be `bbb   bbbb b` (with the `b`s colored).
+        For example, if the match is `aaa   aaaa a`, and the replacement
+        is `bbbbbbbb`, the result will be `bbb   bbbb b` (with the `b`s
+        colored).
 
         Args:
             match: The match to substitute into.
-            replacement: The replacement to use. If it is shorter than the
-                non-whitespace part of the match, it is repeated. If it is `None`, the
-                match is replaced with a colored version of itself.
+            replacement: The replacement to use. If it is shorter than
+                the non-whitespace part of the match, it is repeated. If
+                it is `None`, the match is replaced with a colored
+                version of itself.
         """
         text = match.group(0)
         text_pieces = re.split(r"(\S+)", text)
         repl_idx = 0
         for i, text_piece in enumerate(text_pieces):
-            # Since we split on non-whitespace, every other piece is text.
+            # Since we split on non-whitespace, every other piece is
+            # text.
             if i % 2:
                 if replacement is None:
                     repl_piece = text_piece
@@ -374,8 +394,9 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     def _get_default_metavar_for_type(type_, using_colors) -> str:
         """Metavar to use if none is explicitly provided.
 
-        Special attribute `__metavar__` can be added to any type, to use a custom
-        metavar for that type. Other types use the name of type itself.
+        Special attribute `__metavar__` can be added to any type, to use
+        a custom metavar for that type. Other types use the name of type
+        itself.
         """
         if type_:
             custom_metavar = getattr(type_, "__metavar__", None)
@@ -396,8 +417,8 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 isinstance(getattr(type_, "__args__", None), AbstractSequence)
                 and type_ is not Sequence
             ):
-                # `action.type` is a collection. So, create a metavar list based on the
-                # base type(s).
+                # `action.type` is a collection. So, create a metavar
+                # list based on the base type(s).
                 _type_args = getattr(type_, "__args__")
                 if len(_type_args) == 1 or (
                     len(_type_args) == 2 and _type_args[1] is Ellipsis
@@ -429,7 +450,8 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 return " ".join(_part_metavars)
 
             if is_optional_type(type_):
-                # `action.type` is optional. So, return '[<base metavar>]'.
+                # `action.type` is optional. So, return
+                # '[<base metavar>]'.
                 _base_type = getattr(type_, "__args__")[0]
                 _s = (
                     marker_metavars_begin
@@ -450,22 +472,24 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         return self._get_default_metavar_for_type(action.type, self.using_colors)
 
     def _format_action_invocation(self, action: Action) -> str:
-        """Format the invocation part of an argument, e.g. `-x, --x int`."""
+        """Format invocation of an argument, e.g. `-x, --x int`."""
         if isinstance(action, _SubParsersAction):
             return super()._format_action_invocation(action)
 
         if action.option_strings:
             option_strings = action.option_strings
         else:
-            # If no option strings are present, (positional arguments), use
-            # `action.dest`. However, this can be `argparse.SUPPRESS` for sub-actions,
-            # in which case use the word `CMD`.
+            # If no option strings are present, (positional arguments),
+            # use `action.dest`. However, this can be
+            # `argparse.SUPPRESS` for sub-actions, in which case use the
+            # word `CMD`.
             option_strings = [
                 action.dest if action.dest != argparse.SUPPRESS else "CMD"
             ]
 
         if self.using_colors:
-            # Create placeholders for the option strings, and store originals.
+            # Create placeholders for the option strings, and store
+            # originals.
             placeholder_option_strings: Sequence[str] = [
                 _PLACEHOLDER_OPTION_STR * len(option_string)
                 for option_string in option_strings
@@ -474,8 +498,9 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         else:
             placeholder_option_strings = option_strings
 
-        # Combine the option strings so that they are shown like `-s/--long ARGS`,
-        # rather than `-s ARGS, --long ARGS` (the default).
+        # Combine the option strings so that they are shown like
+        # `-s/--long ARGS`, rather than `-s ARGS, --long ARGS` (the
+        # default).
         with patch.object(
             action,
             "option_strings",
@@ -491,14 +516,16 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         metavar = action.metavar or default_metavar or ""
 
         if self.using_colors:
-            # Create a placeholder for the metavar, and store it in the action.
+            # Create a placeholder for the metavar, and store it in the
+            # action.
             placeholder_metavar: Union[str, Tuple[str, ...]]
 
             def _placeholderize_metavar(_m):
-                # Colors should not be applied to metavar extras, e.g., in
-                # `[int ...]`, only `int` must be colored. So, this function
-                # replaces non-extra characters with `_PLACEHOLDER_METAVAR`, and
-                # returns the modified metavar and the replaced characters.
+                # Colors should not be applied to metavar extras, e.g.,
+                # in `[int ...]`, only `int` must be colored. So, this
+                # function replaces non-extra characters with
+                # `_PLACEHOLDER_METAVAR`, and returns the modified
+                # metavar and the replaced characters.
                 _modded, _repl = [], []
                 for _char in _m:
                     if _char in [
@@ -519,13 +546,14 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 )
             else:
                 placeholder_metavar, metavar = _placeholderize_metavar(metavar)
-            # Store the non-extra characters in the action, so they can be colorized
-            # and substituted into the placeholder later.
+            # Store the non-extra characters in the action, so they can
+            # be colorized and substituted into the placeholder later.
             setattr(action, "_corgy_metavar", metavar)
         else:
             placeholder_metavar = metavar
 
-        # For `corgy._corgy.OptionalTypeAction`s, use the true `nargs` for formatting.
+        # For `corgy._corgy.OptionalTypeAction`s, use the true `nargs`
+        # for formatting.
         _fmt_nargs = (
             action._base_nargs
             if isinstance(action, OptionalTypeAction)
@@ -533,8 +561,9 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         )
         with patch.multiple(action, nargs=_fmt_nargs, metavar=placeholder_metavar):
             if action.nargs == argparse.ZERO_OR_MORE:
-                # Python 3.9+ shows '*' argumets of a single type as `[<base_type> ...]`
-                # instead of `[<base_type> [<base_type> ...]]`. This code backports that
+                # Python 3.9+ shows '*' argumets of a single type as
+                # `[<base_type> ...]` instead of `[<base_type>
+                # [<base_type> ...]]`. This code backports that
                 # functionality.
                 _mv = self._metavar_formatter(action, "")(1)
                 if len(_mv) == 2:
@@ -552,14 +581,16 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         The superclass implementation produces an output like
         `  --arg ARG   arg help`.
 
-        This implementation includes the default value, and choices (if present). Text
-        is added to indicate if the argument is required, or optional. The argument type
-        is used as the metavar, and colors are used for semantic highlighting.
+        This implementation includes the default value, and choices (if
+        present). Text is added to indicate if the argument is required,
+        or optional. The argument type is used as the metavar, and
+        colors are used for semantic highlighting.
         """
-        # First, generate base format without help text. This is the invocation part,
-        # e.g., `--x str`, but with the correct amount of spacing appended, for proper
-        # alignment with the other arguments. The help is replaced with a dummy `\0`,
-        # since with an empty help, there would be no extra spacing added.
+        # First, generate base format without help text. This is the
+        # invocation part, e.g., `--x str`, but with the correct amount
+        # of spacing appended, for proper alignment with the other
+        # arguments. The help is replaced with a dummy `\0`, since with
+        # an empty help, there would be no extra spacing added.
         if isinstance(action, _SubParsersAction):
             return super()._format_action(action)
 
@@ -592,9 +623,9 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
 
         # Compute qualifier (`required`/`optional`/`default`).
         if not action.option_strings:
-            # The argument is positional, so it can't be optional, and doesn't have a
-            # default value. No extra help text is required, and the extra space added
-            # above is removed here.
+            # The argument is positional, so it can't be optional, and
+            # doesn't have a default value. No extra help text is
+            # required, and the extra space added above is removed here.
             if choice_list_fmt:
                 choice_list_fmt = choice_list_fmt[:-1]
             arg_qualifier = ""
@@ -609,9 +640,9 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 arg_qualifier = ""
         elif action.default is argparse.SUPPRESS:
             if action.nargs == 0:
-                # The argument takes no values, so no need to explicitly indicate that
-                # it is optional. For example, help and version actions are obviously
-                # optional.
+                # The argument takes no values, so no need to explicitly
+                # indicate that it is optional. For example, help and
+                # version actions are obviously optional.
                 arg_qualifier = ""
             else:
                 arg_qualifier = (
@@ -652,7 +683,8 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
         else:
             extra_help = ""
 
-        # Wrap the text according to `output_width` and `max_help_position`.
+        # Wrap the text according to `output_width` and
+        # `max_help_position`.
         output_width = self.output_width or get_terminal_size().columns
         max_help_position = self.max_help_position or output_width
         if len(base_fmt) + self._current_indent < min(output_width, max_help_position):
@@ -663,8 +695,9 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             indent = " " * len(base_fmt)
             base_after_wrap = False  # see below
         else:
-            # In this case, the help text cannot start on the first line. So, the help
-            # is separately wrapped, and the base format is preprended to it. Example:
+            # In this case, the help text cannot start on the first
+            # line. So, the help is separately wrapped, and the base
+            # format is preprended to it. Example:
             #     --very-very-long-arg-name str
             #         the help begins on the next line
             #         and can extend up to `help_width`.
@@ -672,7 +705,8 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             indent = " " * (self._current_indent + 2 * self._indent_increment)
             base_after_wrap = True  # whether to prepend `base_fmt` after wrapping
 
-            # Since the base format is prepended, it needs to be separately wrapped
+            # Since the base format is prepended, it needs to be
+            # separately wrapped
             base_fmt = base_fmt.lstrip()
             base_fmt = textwrap.fill(
                 base_fmt,
@@ -682,7 +716,8 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
                 break_on_hyphens=False,
             )
 
-        # Combine the base format with the help string and the choice list.
+        # Combine the base format with the help string and the choice
+        # list.
         fmt = "" if base_after_wrap else base_fmt
         if action.help:
             fmt += action.help
@@ -738,11 +773,13 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             if isinstance(metavars, str):
                 metavars = (metavars,)
             if isinstance(action.nargs, int) and action.nargs > 0:
-                # When `nargs` is a number, the metavar part is formatted as a space
-                # separated sequence. So, all the metavars are captured together by the
-                # regex (which allows whitespace between placeholders). So, we combine
-                # the metavars into a single string, which will be passed to
-                # `_sub_non_ws_with_colored_repl` to replace the entire metavar part.
+                # When `nargs` is a number, the metavar part is
+                # formatted as a space separated sequence. So, all the
+                # metavars are captured together by the regex (which
+                # allows whitespace between placeholders). So, we
+                # combine the metavars into a single string, which will
+                # be passed to `_sub_non_ws_with_colored_repl` to
+                # replace the entire metavar part.
                 metavars = ("".join(metavars),)
 
             pattern = self._pattern_placeholder_text(_PLACEHOLDER_METAVAR)
@@ -805,9 +842,9 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
             super().add_usage(*args, **kwargs)
             return
 
-        # Only add usage if called directly from `ArgumentParser.format_usage`. This
-        # prevents usage from being shown inside help output when `show_full_help` is
-        # `False`.
+        # Only add usage if called directly from
+        # `ArgumentParser.format_usage`. This prevents usage from being
+        # shown inside help output when `show_full_help` is `False`.
         current_frame = inspect.currentframe()
         while current_frame:
             if current_frame.f_code.co_name == "format_usage":
@@ -836,7 +873,8 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     def __init__(self, prog: str):
         # noqa: D107
         self._color_helper = ColorHelper(self.use_colors)
-        # Wrapping is managed by this class, so pass `sys.maxsize` to the superclass.
+        # Wrapping is managed by this class, so pass `sys.maxsize` to
+        # the superclass.
         super().__init__(prog, max_help_position=sys.maxsize, width=sys.maxsize)
 
     class ShortHelpAction(Action):
@@ -866,19 +904,19 @@ class CorgyHelpFormatter(HelpFormatter, metaclass=_CorgyHelpFormatterMeta):
     ):
         """Add arguments for displaying the short or full help.
 
-        The parser must be created with `add_help=False` to prevent a clash with the
-        added arguments.
+        The parser must be created with `add_help=False` to prevent a
+        clash with the added arguments.
 
         Args:
             parser: `ArgumentParser` instance to add the arguments to.
-            short_help_flags: Sequence of argument strings for the short help option.
-                Default is `("-h", "--help")`.
-            full_help_flags: Sequence of argument strings for the full help option.
-                Default is `("--helpfull")`.
-            short_help_msg: String to describe the short help option. Default is `"show
-                help message and exit"`.
-            full_help_msg: String to describe the full help option. Default is `"show
-                full help message and exit"`.
+            short_help_flags: Sequence of argument strings for the short
+                help option. Default is `("-h", "--help")`.
+            full_help_flags: Sequence of argument strings for the full
+                help option. Default is `("--helpfull")`.
+            short_help_msg: String to describe the short help option.
+                Default is `"show help message and exit"`.
+            full_help_msg: String to describe the full help option.
+                Default is `"show full help message and exit"`.
 
         Examples:
             >>> parser = ArgumentParser(

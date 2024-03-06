@@ -7,8 +7,8 @@ __all__ = ("corgychecker",)
 class CorgyChecker(NamedTuple):
     """Class to represent custom checkers.
 
-    This class is returned by the `@corgychecker` decorator, and is used by `Corgy` to
-    keep track of checkers.
+    This class is returned by the `@corgychecker` decorator, and is used
+    by `Corgy` to keep track of checkers.
     """
 
     var_names: List[str]
@@ -21,16 +21,19 @@ class CorgyChecker(NamedTuple):
 def corgychecker(
     *var_names: str,
 ) -> Callable[[Union[Callable, CorgyChecker]], CorgyChecker]:
-    """Decorate a function as a custom checker for one or more attributes.
+    """Decorate a function as a custom attribute checker.
 
-    To use a custom function for checking the value of a `Corgy` attribute, use this
-    decorator. Checking functions must be static, and should only accept a single
-    argument, the value to be checked. They should raise `ValueError` to indicate value
-    mismatch. Decorating the function with `@staticmethod` is optional, but prevents
-    type errors. `@corgychecker` must be the final decorator in the decorator chain.
+    To use a custom function for checking the value of a `Corgy`
+    attribute, use this decorator. Checking functions must be static,
+    and should only accept a single argument, the value to be checked.
+    They should raise `ValueError` to indicate value mismatch.
+    Decorating the function with `@staticmethod` is optional, but
+    prevents type errors. `@corgychecker` must be the final decorator in
+    the decorator chain.
 
-    Custom checkers are called _after_ type checking, so the values passed to them will
-    be of type corresponding to one of the assigned attributes.
+    Custom checkers are called _after_ type checking, so the values
+    passed to them will be of type corresponding to one of the assigned
+    attributes.
 
     Args:
         var_names: The attributes associated with the decorated checker.
@@ -51,8 +54,8 @@ def corgychecker(
            ...
         ValueError: error setting `x`: '3' is not even
 
-    Multiple attributes can use the same checker, either by chaining `corgychecker`, or
-    by passing all attribute names directly.
+    Multiple attributes can use the same checker, either by chaining
+    `corgychecker`, or by passing all attribute names directly.
 
     Examples:
         >>> from typing import Sequence

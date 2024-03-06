@@ -25,9 +25,9 @@ class InputTextFile(TextIOWrapper):
     Args:
         path: Path to a file.
 
-    The file must exist, and will be opened in text mode (`r`). `ValueError` is
-    raised if this fails. An `atexit` handler will be registered to close the file on
-    program termination.
+    The file must exist, and will be opened in text mode (`r`).
+    `ValueError` is raised if this fails. An `atexit` handler will be
+    registered to close the file on program termination.
     """
 
     __metavar__ = "file"
@@ -64,10 +64,11 @@ class InputBinFile(BufferedReader):
     Args:
         path: Path to a file.
 
-    This class is a thin wrapper around `BufferedReader` that accepts a path, instead
-    of a file stream. The file must exist, and will be opened in binary mode.
-    `ValueError` is raised if this fails. An `atexit` handler will be registered
-    to close the file on program termination.
+    This class is a thin wrapper around `BufferedReader` that accepts a
+    path, instead of a file stream. The file must exist, and will be
+    opened in binary mode.  `ValueError` is raised if this fails. An
+    `atexit` handler will be registered to close the file on program
+    termination.
     """
 
     __metavar__ = "file"

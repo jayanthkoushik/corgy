@@ -1,8 +1,8 @@
 """Types for use with `corgy` (or standalone with `argparse`).
 
-An object of the types defined in this module can be created by calling the respective
-type class with a single string argument. `ValueError` is raised if the argument can not
-be converted to the desired type.
+An object of the types defined in this module can be created by calling
+the respective type class with a single string argument. `ValueError` is
+raised if the argument can not be converted to the desired type.
 
 Examples:
     >>> from corgy.types import KeyValuePairs

@@ -24,8 +24,8 @@ def load_tests(loader, tests, ignore):
             tests.addTest(DocFileSuite(file, package=mod))
 
     if sys.version_info < (3, 11):
-        # Skip README doctest for Python 3.11+ since `typing_extensions` is
-        # not installed as a dependency.
+        # Skip README doctest for Python 3.11+ since `typing_extensions`
+        # is not installed as a dependency.
         for file in DOCTEST_FILES:
             tests.addTest(DocFileSuite(file))
 

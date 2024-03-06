@@ -146,7 +146,7 @@ class TestCorgyMeta(TestCase):
 
         with self.assertRaises(TypeError):
 
-            class _C(Corgy):  # pylint: disable=unused-variable
+            class _C(Corgy):  # pylint: disable=unused-variable # noqa
                 x: int
                 __x: int  # pylint: disable=unused-private-member
 
@@ -268,7 +268,7 @@ class TestCorgyMeta(TestCase):
         for _x in ["x1", "x2"]:
             with self.subTest(var=_x):
                 with self.assertRaises(AttributeError):
-                    _x_default = getattr(corgy_inst, _x)
+                    _x_default = getattr(corgy_inst, _x)  # noqa
 
     def test_corgy_instance_attrs_can_be_unset_with_del(self):
         corgy_inst = self._CorgyCls(x2=1)
@@ -1529,7 +1529,7 @@ class TestCorgyFromDict(TestCase):
 
 
 class _LoadDictAsFromDictMeta(type):
-    """Metaclass to create a version of `TestCorgyFromDict` for `load_dict`."""
+    """Metaclass to modify `TestCorgyFromDict` for `load_dict`."""
 
     def __new__(mcs, name, bases, namespace, **kwds):
         for _item in dir(bases[0]):
@@ -1726,8 +1726,8 @@ class TestCorgyAddArgsToParser(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        # Patch `CorgyMeta.__new__` to make `corgy_required_by_default` `True` if
-        # not specified.
+        # Patch `CorgyMeta.__new__` to make `corgy_required_by_default`
+        # `True` if not specified.
         _old_new = CorgyMeta.__new__
 
         def _new(cls, name, bases, namespace, **kwargs):

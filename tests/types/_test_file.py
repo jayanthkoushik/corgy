@@ -10,7 +10,8 @@ from ._specialtmps import temp_env_var_file, temp_file_in_home
 
 
 class TestFileWrapper:
-    # The main class is defined inside to prevent `unittest` from discovering it.
+    # The main class is defined inside to prevent `unittest` from
+    # discovering it.
     class TestFile(TestCase):
         type: Union[
             Type[OutputTextFile],
@@ -58,7 +59,8 @@ class TestFileWrapper:
                 self.assertNotEqual(str(o), str(fpath))
                 self.assertEqual(str(o), os.path.join("~", fpath.name))
                 o.close()
-                # Remove the file created by the test, and the '~' directory.
+                # Remove the file created by the test, and the '~'
+                # directory.
                 os.remove(os.path.join(".", "~", fpath.name))
                 os.rmdir(os.path.join(".", "~"))
 

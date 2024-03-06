@@ -46,10 +46,11 @@ class OutputTextFile(TextIOWrapper):
     Args:
         path: Path to a file.
 
-    The file will be created if it does not exist (including any parent directories),
-    and opened in text mode (`w`). Existing files will be truncated. `ValueError`
-    is raised if any of the operations fail. An `atexit` handler will be registered to
-    close the file on program termination.
+    The file will be created if it does not exist (including any parent
+    directories), and opened in text mode (`w`). Existing files will be
+    truncated. `ValueError` is raised if any of the operations fail. An
+    `atexit` handler will be registered to close the file on program
+    termination.
     """
 
     __metavar__ = "file"
@@ -92,8 +93,9 @@ class OutputTextFile(TextIOWrapper):
 class LazyOutputTextFile(OutputTextFile):
     """`OutputTextFile` sub-class that does not auto-initialize.
 
-    Useful for "default" files, which only need to be created if an alternative is not
-    provided. `init` must be called on instances before they can be used.
+    Useful for "default" files, which only need to be created if an
+    alternative is not provided. `init` must be called on instances
+    before they can be used.
     """
 
     __slots__ = ("_path",)
@@ -114,11 +116,12 @@ class OutputBinFile(BufferedWriter):
     Args:
         path: Path to a file.
 
-    This class is a thin wrapper around `BufferedWriter` that accepts a path, instead
-    of a file stream. The file will be created if it does not exist (including any
-    parent directories), and opened in binary mode. Existing files will be truncated.
-    `ValueError` is raised if any of the operations fail. An `atexit` handler
-    will be registered to close the file on program termination.
+    This class is a thin wrapper around `BufferedWriter` that accepts a
+    path, instead of a file stream. The file will be created if it does
+    not exist (including any parent directories), and opened in binary
+    mode. Existing files will be truncated.  `ValueError` is raised if
+    any of the operations fail. An `atexit` handler will be registered
+    to close the file on program termination.
     """
 
     __metavar__ = "file"
@@ -161,8 +164,9 @@ class OutputBinFile(BufferedWriter):
 class LazyOutputBinFile(OutputBinFile):
     """`OutputBinFile` sub-class that does not auto-initialize.
 
-    Useful for "default" files, which only need to be created if an alternative is not
-    provided. `init` must be called on instances before they can be used.
+    Useful for "default" files, which only need to be created if an
+    alternative is not provided. `init` must be called on instances
+    before they can be used.
     """
 
     __slots__ = ("_path",)

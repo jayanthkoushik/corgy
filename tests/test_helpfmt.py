@@ -20,7 +20,8 @@ from corgy.types import KeyValuePairs
 _COLOR_HELPER = ColorHelper(skip_tty_check=True)
 _CRAYONS = _COLOR_HELPER.crayons
 
-# Shortcuts for color functions to make ground truths in assert statements concise.
+# Shortcuts for color functions to make ground truths in assert
+# statements concise.
 _M = lambda s: _COLOR_HELPER.colorize(s, CorgyHelpFormatter.color_metavars)
 _K = lambda s: _COLOR_HELPER.colorize(s, CorgyHelpFormatter.color_keywords)
 _C = lambda s: _COLOR_HELPER.colorize(s, CorgyHelpFormatter.color_choices)
@@ -36,8 +37,9 @@ CorgyHelpFormatter.max_help_position = 80
 
 
 def setUpModule():
-    # The default choice list end markers, `{`, `}`, make f-strings messy, since they
-    # need to be escaped. So, we  replace them with `[`, `]`.
+    # The default choice list end markers, `{`, `}`, make f-strings
+    # messy, since they need to be escaped. So, we  replace them with
+    # `[`, `]`.
     CorgyHelpFormatter.marker_choices_begin = "["
     CorgyHelpFormatter.marker_choices_end = "]"
 
@@ -296,7 +298,7 @@ class TestCorgyHelpFormatterSingleArgs(TestCase):
         self.maxDiff = None  # color codes can lead to very long diffs
 
     def _get_arg_help(self, *args, **kwargs):
-        """Add a parser argument using `args` and `kwargs`, and return the help output.
+        """Add a parser argument, and return the help output.
 
         Only the output for the particular argument is returned.
         """
@@ -803,7 +805,7 @@ class TestCorgyHelpFormatterMultiArgs(TestCase):
                 #   -h/--help
                 #       show this help message and exit
                 #   -x/--ex float
-                #       helphelphelphelphelphelphelphelphelphelp (optional)
+                #       helphelphelphelphelphelphelphelphelphelp (optional)  # noqa
                 f"options:\n"
                 f"  {_O('-h')}/{_O('--help')}\n"
                 f"      show this help message and exit\n"
@@ -1282,7 +1284,7 @@ class TestCorgyHelpFormatterUsage(TestCase):
 
 
 class _NoColorTestMeta(type):
-    """Metaclass to create versions of test classes that don't use colors."""
+    """Metaclass to create test class variants that don't use colors."""
 
     def __new__(mcs, name, bases, namespace, **kwds):  # pylint: disable=duplicate-code
         for _item in dir(bases[0]):
@@ -1299,8 +1301,8 @@ class _NoColorTestMeta(type):
 class TestCorgyHelpFormatterSingleArgsNoColor(
     TestCorgyHelpFormatterSingleArgs, metaclass=_NoColorTestMeta
 ):
-    # The metaclass removes the base class from the inheritance chain, so we need to
-    # manually inherit needed base class methods.
+    # The metaclass removes the base class from the inheritance chain,
+    # so we need to manually inherit needed base class methods.
     _get_arg_help = TestCorgyHelpFormatterSingleArgs._get_arg_help
 
     def setUp(self):

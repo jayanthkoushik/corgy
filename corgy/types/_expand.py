@@ -15,11 +15,12 @@ else:
 
 
 def _expand_mixin_base(class_: Type, mod_new: bool) -> Type:
-    """Mixin to add support for expanding user directory and environment variables.
+    """Mixin to add support for expanding user directory and env vars.
 
-    Two concrete implementations of this mixin are provided: `_expand_with_new` and
-    `_expand_with_init`. The former is used for classes that have a custom `__new__`
-    method, and the latter is used for classes that have a custom `__init__` method.
+    Two concrete implementations of this mixin are provided:
+    `_expand_with_new` and `_expand_with_init`. The former is used for
+    classes that have a custom `__new__` method, and the latter is used
+    for classes that have a custom `__init__` method.
 
     The mixins are used as decorators. For example::
 
@@ -32,9 +33,9 @@ def _expand_mixin_base(class_: Type, mod_new: bool) -> Type:
     # Extra docstring to add to the class.
     doc_extra = """
 
-    User directory and environment variable expansion is performed on the path.
-    To disable this behavior, set class attributes `do_expanduser` and `do_expandvars`
-    to `False` respectively."""
+    User directory and environment variable expansion is performed on
+    the path. To disable this behavior, set class attributes
+    `do_expanduser` and `do_expandvars` to `False` respectively."""
 
     class ExpandMixin(class_):
         do_expanduser: bool = True

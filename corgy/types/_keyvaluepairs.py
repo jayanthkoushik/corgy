@@ -31,7 +31,7 @@ class _KeyValuePairsMeta(type):
 class KeyValuePairs(  # type: ignore[misc]
     dict, Generic[_KT, _VT], metaclass=_KeyValuePairsMeta
 ):
-    """Dictionary sub-class that is initialized from a string of key-value pairs.
+    """Dictionary sub-class initialized from string of key-value pairs.
 
     Examples:
         >>> from corgy.types import KeyValuePairs
@@ -39,28 +39,32 @@ class KeyValuePairs(  # type: ignore[misc]
         >>> print(MapType("a=1,b=2"))
         {'a': 1, 'b': 2}
 
-    This class supports the class indexing syntax to specify the types for keys and
-    values. `KeyValuePairs[KT, VT]` returns a new `KeyValuePairs` type where the key
-    and value types are `KT` and `VT`, respectively. Using the class directly is
-    equivalent to using `KeyValuePairs[str, str]`.
+    This class supports the class indexing syntax to specify the types
+    for keys and values. `KeyValuePairs[KT, VT]` returns a new
+    `KeyValuePairs` type where the key and value types are `KT` and
+    `VT`, respectively. Using the class directly is equivalent to using
+    `KeyValuePairs[str, str]`.
 
-    When called, the class expects a single string argument, with comma-separated
-    `key=value` pairs (see below for how to change the separators). The string is
-    parsed, and a dictionary is created with the keys and values cast to their
-    respective types. `ValueError` is raised if this fails. This class is
-    useful for parsing dictionaries from command-line arguments.
+    When called, the class expects a single string argument, with
+    comma-separated `key=value` pairs (see below for how to change the
+    separators). The string is parsed, and a dictionary is created with
+    the keys and values cast to their respective types. `ValueError` is
+    raised if this fails. This class is useful for parsing dictionaries
+    from command-line arguments.
 
-    By default, the class expects a string of the form `key1=value1,key2=value2,...`.
-    This can be changed by setting the following class attributes:
+    By default, the class expects a string of the form
+    `key1=value1,key2=value2,...`. This can be changed by setting the
+    following class attributes:
 
-    * sequence_separator: The string that separates individual key-value pairs. The
-        default is `,`.
+    * sequence_separator: The string that separates individual key-value
+      pairs. The default is `,`.
 
-    * item_separator: The string that separates keys and values. The default is `=`.
+    * item_separator: The string that separates keys and values.
+      The default is `=`.
 
     Note:
-        Types returned by the `KeyValuePairs[...]` syntax are cached using the key and
-        value types.
+        Types returned by the `KeyValuePairs[...]` syntax are cached
+        using the key and value types.
 
     Examples:
         >>> MapType = KeyValuePairs[str, int]
@@ -70,8 +74,9 @@ class KeyValuePairs(  # type: ignore[misc]
         ';'
         >>> MapType2.sequence_separator = ","
 
-    `KeyValuePairs` instances can also be initialized with a dictionary. However, note
-    that the dictionary is not type-checked and is used as-is.
+    `KeyValuePairs` instances can also be initialized with a dictionary.
+    However, note that the dictionary is not type-checked and is used
+    as-is.
     """
 
     sequence_separator: str = ","
