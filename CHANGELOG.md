@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [9.3.0](https://github.com/jayanthkoushik/corgy/compare/v9.2.0...v9.3.0) (2024-03-08)
+
+
+### Features
+
+* ignore variable arguments with `types.InitArgs` ([7cfce69](https://github.com/jayanthkoushik/corgy/commit/7cfce69c5e5f0567925cdfc3303a06acbcf3bc06))
+
 ## [9.2.0](https://github.com/jayanthkoushik/corgy/compare/v9.1.7...v9.2.0) (2024-03-02)
 
 
