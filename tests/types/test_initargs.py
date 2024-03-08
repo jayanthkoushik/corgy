@@ -88,3 +88,30 @@ class TestInitArgs(TestCase):
                 _iat = pickle.load(_f)
 
             self.assertEqual(_iat, _IAT(x=1))
+
+    def test_init_args_handles_no_args(self):
+        class A:
+            def __init__(self):
+                ...
+
+        type_ = InitArgs[A]
+        self.assertDictEqual(type_.attrs(), {})
+        a_args = type_()
+        a = A(**a_args.as_dict())
+        self.assertIsInstance(a, A)
+
+    def test_init_args_ignores_variable_args(self):
+        class A:
+            def __init__(self, x: int, *args, **kwargs):
+                ...
+
+        type_ = InitArgs[A]
+        self.assertDictEqual(type_.attrs(), {"x": int})
+
+    def test_init_args_handles_only_variable_args(self):
+        class A:
+            def __init__(self, *args, **kwargs):
+                ...
+
+        type_ = InitArgs[A]
+        self.assertDictEqual(type_.attrs(), {})

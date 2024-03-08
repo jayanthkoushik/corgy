@@ -55,7 +55,16 @@ class InitArgs(Corgy, Generic[_T], corgy_required_by_default=True):
     the same rules as for other `Corgy` classes. Positional only
     arguments are not supported, since they are not associated with an
     argument name. `TypeError` is raised if either of these conditions
-    is not met.
+    is not met. Variable arguments, `*args` and `**kwargs`, are ignored.
+
+    Examples:
+        >>> class Spam:
+        ...     def __init__(self, a: int, *args, **kwargs):
+        ...         ...
+        >>> SpamInitArgs = InitArgs[Spam]
+        >>> SpamInitArgs.attrs()
+        {'a': <class 'int'>}
+
     """
 
     __slots__ = ()
@@ -70,6 +79,13 @@ class InitArgs(Corgy, Generic[_T], corgy_required_by_default=True):
         item_sig = inspect.signature(item)
         item_annotations, item_defaults = {}, {}
         for param_name, param in item_sig.parameters.items():
+            if param.kind in [
+                inspect.Parameter.VAR_POSITIONAL,
+                inspect.Parameter.VAR_KEYWORD,
+            ]:
+                # Ignore `*args` and `**kwargs`.
+                continue
+
             if param.annotation is inspect.Parameter.empty:
                 raise TypeError(
                     f"`{item}` is missing annotation for parameter `{param_name}`"

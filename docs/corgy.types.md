@@ -404,4 +404,15 @@ All arguments of the `__init__` method must be annotated, following
 the same rules as for other `Corgy` classes. Positional only
 arguments are not supported, since they are not associated with an
 argument name. `TypeError` is raised if either of these conditions
-is not met.
+is not met. Variable arguments, `*args` and `**kwargs`, are ignored.
+
+### Examples
+
+```python
+>>> class Spam:
+...     def __init__(self, a: int, *args, **kwargs):
+...         ...
+>>> SpamInitArgs = InitArgs[Spam]
+>>> SpamInitArgs.attrs()
+{'a': <class 'int'>}
+```
