@@ -1,0 +1,2927 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for Python package 'corgy'.">
+      
+      
+        <meta name="author" content="Jayanth Koushik">
+      
+      
+        <link rel="canonical" href="https://jkoushik.me/corgy/latest/usage/corgy.html">
+      
+      
+        <link rel="prev" href="../index.html">
+      
+      
+        <link rel="next" href="corgy.types.html">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.2.7">
+    
+    
+      
+        <title>corgy - corgy</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.046329b4.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.85d0ee34.min.css">
+      
+      
+
+
+    
+    
+      
+        <script src="https://unpkg.com/iframe-worker/shim"></script>
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#corgy.Corgy" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../index.html" title="corgy" class="md-header__button md-logo" aria-label="corgy" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m19 3-4 4 3 3 1-1 1 1 2-2-3-3V3M3 7 2 8l3 3v3l-1 1v6h2v-3l2-3h7v6h2V11l-3-3-1 1H5L3 7Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            corgy
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              corgy
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5c-.84 0-1.65.15-2.39.42L12 2M3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29L3.34 7m.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14L3.36 17M20.65 7l-1.77 3.79a7.023 7.023 0 0 0-2.38-4.15l4.15.36m-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29L20.64 17M12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44L12 22Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3 3.19.09m3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95 2.06.05m-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/jayanthkoushik/corgy" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../index.html" title="corgy" class="md-nav__button md-logo" aria-label="corgy" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m19 3-4 4 3 3 1-1 1 1 2-2-3-3V3M3 7 2 8l3 3v3l-1 1v6h2v-3l2-3h7v6h2V11l-3-3-1 1H5L3 7Z"/></svg>
+
+    </a>
+    corgy
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/jayanthkoushik/corgy" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Usage
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Usage
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    corgy
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="corgy.html" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    corgy
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#corgy.Corgy" class="md-nav__link">
+    Corgy
+  </a>
+  
+    <nav class="md-nav" aria-label="Corgy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#corgy._corgy.Corgy.add_args_to_parser" class="md-nav__link">
+    add_args_to_parser()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._corgy.Corgy.as_dict" class="md-nav__link">
+    as_dict()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._corgy.Corgy.attrs" class="md-nav__link">
+    attrs()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._corgy.Corgy.freeze" class="md-nav__link">
+    freeze()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._corgy.Corgy.from_dict" class="md-nav__link">
+    from_dict()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._corgy.Corgy.is_attr_set" class="md-nav__link">
+    is_attr_set()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._corgy.Corgy.load_dict" class="md-nav__link">
+    load_dict()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._corgy.Corgy.parse_from_cmdline" class="md-nav__link">
+    parse_from_cmdline()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._corgy.Corgy.parse_from_toml" class="md-nav__link">
+    parse_from_toml()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#corgy.corgyparser" class="md-nav__link">
+    corgyparser()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#corgy.corgychecker" class="md-nav__link">
+    corgychecker()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#corgy.CorgyHelpFormatter" class="md-nav__link">
+    CorgyHelpFormatter
+  </a>
+  
+    <nav class="md-nav" aria-label="CorgyHelpFormatter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#corgy._helpfmt.CorgyHelpFormatter.using_colors" class="md-nav__link">
+    using_colors
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._helpfmt.CorgyHelpFormatter.FullHelpAction" class="md-nav__link">
+    FullHelpAction
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._helpfmt.CorgyHelpFormatter.ShortHelpAction" class="md-nav__link">
+    ShortHelpAction
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._helpfmt.CorgyHelpFormatter.add_short_full_helps" class="md-nav__link">
+    add_short_full_helps()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="corgy.types.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    corgy.types
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#corgy.Corgy" class="md-nav__link">
+    Corgy
+  </a>
+  
+    <nav class="md-nav" aria-label="Corgy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#corgy._corgy.Corgy.add_args_to_parser" class="md-nav__link">
+    add_args_to_parser()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._corgy.Corgy.as_dict" class="md-nav__link">
+    as_dict()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._corgy.Corgy.attrs" class="md-nav__link">
+    attrs()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._corgy.Corgy.freeze" class="md-nav__link">
+    freeze()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._corgy.Corgy.from_dict" class="md-nav__link">
+    from_dict()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._corgy.Corgy.is_attr_set" class="md-nav__link">
+    is_attr_set()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._corgy.Corgy.load_dict" class="md-nav__link">
+    load_dict()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._corgy.Corgy.parse_from_cmdline" class="md-nav__link">
+    parse_from_cmdline()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._corgy.Corgy.parse_from_toml" class="md-nav__link">
+    parse_from_toml()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#corgy.corgyparser" class="md-nav__link">
+    corgyparser()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#corgy.corgychecker" class="md-nav__link">
+    corgychecker()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#corgy.CorgyHelpFormatter" class="md-nav__link">
+    CorgyHelpFormatter
+  </a>
+  
+    <nav class="md-nav" aria-label="CorgyHelpFormatter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#corgy._helpfmt.CorgyHelpFormatter.using_colors" class="md-nav__link">
+    using_colors
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._helpfmt.CorgyHelpFormatter.FullHelpAction" class="md-nav__link">
+    FullHelpAction
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._helpfmt.CorgyHelpFormatter.ShortHelpAction" class="md-nav__link">
+    ShortHelpAction
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corgy._helpfmt.CorgyHelpFormatter.add_short_full_helps" class="md-nav__link">
+    add_short_full_helps()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+  <h1>corgy</h1>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="corgy.Corgy" class="doc doc-heading">
+        <span class="doc doc-object-name doc-class-name">corgy.Corgy</span>
+
+
+<a href="#corgy.Corgy" class="headerlink" title="Permanent link">#</a></h2>
+
+
+  <div class="doc doc-contents first">
+
+  
+      <p>Base class for collections of attributes.</p>
+<p>To use, subclass <code>Corgy</code>, and declare attributes using type
+annotations.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">corgy</span> <span class="kn">import</span> <span class="n">Corgy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">... </span>    <span class="n">y</span><span class="p">:</span> <span class="nb">float</span>
+</code></pre></div>
+      <p>At runtime, class <code>A</code> will have <code>x</code>, and <code>y</code> as properties, so that
+the class can be used similar to Python dataclasses.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span>
+<span class="go">1</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">y</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">   </span><span class="c">...</span>
+<span class="gr">AttributeError</span>: <span class="n">no value available for attribute `y`</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="mf">1.1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">y</span>
+<span class="go">2.1</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">a</span><span class="o">.</span><span class="n">x</span>  <span class="c1"># unset x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">   </span><span class="c">...</span>
+<span class="gr">AttributeError</span>: <span class="n">no value available for attribute `x`</span>
+</code></pre></div>
+
+<details class="note" open>
+  <summary>Note</summary>
+  <p>The class's <code>__init__</code> method only accepts keyword arguments,
+and ignores arguments without a corresponding attribute. The
+following are all valid.</p>
+</details>
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">2.1</span><span class="p">)</span>
+<span class="go">A(x=1, y=2.1)</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>  <span class="c1"># y is not set, and z is ignored</span>
+<span class="go">A(x=1)</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="mf">2.1</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">})</span>
+<span class="go">A(x=1, y=2.1)</span>
+</code></pre></div>
+      <p>Attribute values are type-checked, and <code>ValueError</code> is raised on
+type mismatch.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s2">&quot;1&quot;</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">ValueError</span>: <span class="n">error setting `x`: invalid value for type</span>
+<span class="x">&#39;&lt;class &#39;int&#39;&gt;&#39;: &#39;1&#39;</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">ValueError</span>: <span class="n">error setting `x`: invalid value for type</span>
+<span class="x">&#39;&lt;class &#39;int&#39;&gt;&#39;: &#39;1&#39;</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">ValueError</span>: <span class="n">default value type mismatch for &#39;x&#39;</span>
+</code></pre></div>
+      <p>Any type which supports type checking with <code>isinstance</code> can be used
+as an attribute type (along with some special type annotations that
+are discussed below). This includes other corgy classes.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">... </span>    <span class="n">y</span><span class="p">:</span> <span class="nb">float</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">B</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">... </span>    <span class="n">a</span><span class="p">:</span> <span class="n">A</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span>
+<span class="go">B(x=1, a=A(x=10))</span>
+</code></pre></div>
+      <p><code>Corgy</code> classes have their <code>__slots__</code> set to the annotated
+attributes. So, if you want to use additional attributes not tracked
+by <code>Corgy</code>, define them (and only them) in <code>__slots__</code>.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,)</span>
+<span class="gp">... </span>    <span class="n">y</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># `Corgy` attribute</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># custom attribute</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
+<span class="go">A(y=1)</span>
+</code></pre></div>
+      <p>To allow arbitrary instance attributes, add <code>__dict__</code> to
+<code>__slots__</code>. Names added through custom <code>__slots__</code> are not
+processed by <code>Corgy</code>. Alternatively, to disable setting <code>__slots__</code>
+completely, set <code>corgy_make_slots</code> to <code>False</code> in the class
+definition.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">,</span> <span class="n">corgy_make_slots</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">y</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># `Corgy` attribute</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># custom attribute</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
+<span class="go">A(y=1)</span>
+</code></pre></div>
+      <p>Names marked with the <code>ClassVar</code> type will be added as class
+variables, and will not be available as <code>Corgy</code> attributes.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">ClassVar</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">x</span>
+<span class="go">3</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">x</span>
+<span class="go">4</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span>
+<span class="go">4</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">AttributeError</span>: <span class="n">&#39;A&#39; object attribute &#39;x&#39; is read-only</span>
+</code></pre></div>
+
+<details class="note" open>
+  <summary>Note</summary>
+  <p>Class variables need to be assigned to a value during
+definition, and this value will not be type checked by <code>Corgy</code>.</p>
+</details>      <p>Inheritance works as expected, whether base classes are themselves
+<code>Corgy</code> classes or not, with sub-classes inheriting the attributes
+of the base class, and overriding any redefined attributes.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">B</span><span class="p">(</span><span class="n">Corgy</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">y</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="gp">... </span>    <span class="n">z</span><span class="p">:</span> <span class="nb">str</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">C</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">y</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span>
+<span class="gp">... </span>    <span class="n">z</span><span class="p">:</span> <span class="nb">str</span>
+<span class="gp">... </span>    <span class="n">w</span><span class="p">:</span> <span class="nb">float</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">C</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+<span class="go">C(x=&lt;unset&gt;, y=2.0, z=&lt;unset&gt;, w=&lt;unset&gt;)</span>
+</code></pre></div>
+      <p>Tracking of base class attributes can be disabled by setting
+<code>corgy_track_bases</code> to <code>False</code> in the class definition. Properties
+will still be inherited following standard inheritance rules, but
+<code>Corgy</code> will ignore them.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">B</span><span class="p">(</span><span class="n">Corgy</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">corgy_track_bases</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">y</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="gp">... </span>    <span class="n">z</span><span class="p">:</span> <span class="nb">str</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">B</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="go">B(y=1.0, z=&lt;unset&gt;)</span>
+</code></pre></div>
+      <p><code>Corgy</code> instances can be frozen (preventing any further changes)
+using the <code>freeze</code> method. This method can be called automatically
+after <code>__init__</code> by by setting <code>corgy_freeze_after_init</code> to <code>True</code>
+in the class definition.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">,</span> <span class="n">corgy_freeze_after_init</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">x</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">TypeError</span>: <span class="n">cannot set `x`: object is frozen</span>
+</code></pre></div>
+      <p><code>Corgy</code> recognizes a number of special annotations, which are used
+to control how attribute values are processed.</p>
+
+<details class="note" open>
+  <summary>Note</summary>
+  <p>If any of the following annotations are unavailable in the
+Python version being used, you can import them from
+<code>typing_extensions</code> (which is available on PyPI).</p>
+</details>      <p><em>Annotations</em>
+<code>typing.Annotated</code> can be used to add additional metadata to
+attributes, akin to doc strings. It is primarily used to control how
+attributes are added to <code>ArgumentParser</code> instances.
+<code>typing.Annotated</code> is stripped on class creation, leaving only the
+base type.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">9</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">Literal</span>
+<span class="gp">... </span><span class="k">else</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">Literal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;this is x&quot;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">attrs</span><span class="p">()</span>
+<span class="go">{&#39;x&#39;: &lt;class &#39;int&#39;&gt;}</span>
+</code></pre></div>
+      <p><code>Annotated</code> should always be the outermost type annotation for an
+attribute. Refer to the docs for <code>Corgy.add_args_to_parser</code> for
+details on usage.</p>
+<p><em>Required/NotRequired</em>
+By default, <code>Corgy</code> attributes are not required, and can be unset.
+This can be changed by setting <code>corgy_required_by_default</code> to <code>True</code>
+in the class definition.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">,</span> <span class="n">corgy_required_by_default</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="p">()</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">ValueError</span>: <span class="n">missing required attribute: `x`</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">a</span><span class="o">.</span><span class="n">x</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">TypeError</span>: <span class="n">attribute `x` cannot be unset</span>
+</code></pre></div>
+      <p>Attributes can also explicitly be marked as required/not-required
+using <code>corgy.Required</code> and <code>corgy.NotRequired</code> annotations.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">corgy</span> <span class="kn">import</span> <span class="n">Required</span><span class="p">,</span> <span class="n">NotRequired</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="n">Required</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="n">y</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="n">z</span><span class="p">:</span> <span class="nb">int</span>  <span class="c1"># not required by default</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">A(x=1, y=&lt;unset&gt;, z=&lt;unset&gt;)</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">B</span><span class="p">(</span><span class="n">Corgy</span><span class="p">,</span> <span class="n">corgy_required_by_default</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="n">Required</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="n">y</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="n">z</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="go">B(x=1, y=&lt;unset&gt;, z=2)</span>
+</code></pre></div>
+      <p><em>Optional</em>
+Annotating an attribute with <code>typing.Optional</code> allows it to be
+<code>None</code>.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="kc">None</span>
+</code></pre></div>
+      <p>In Python &gt;= 3.10, instead of using <code>typing.Annotated</code>, <code>| None</code> can
+be used, i.e., <code>x: int | None</code> for example.</p>
+
+<details class="note" open>
+  <summary>Note</summary>
+  <p><code>Optional</code> is not the same as <code>NotRequired</code>. <code>Optional</code> allows
+an attribute to be <code>None</code>, while <code>NotRequired</code> allows an
+attribute to be unset. A <code>Required</code> <code>Optional</code> attribute will
+need a value (which can be <code>None</code>).</p>
+</details>
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="n">Required</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="p">()</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">ValueError</span>: <span class="n">missing required attribute: `x`</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">A(x=None)</span>
+</code></pre></div>
+      <p><em>Collections</em>
+Several collection types can be used to annotate attributes, which
+will restrict the type of accepted values. Values in the collection
+will be checked to ensure that they match the annotated collection
+types. The following collection types are supported:</p>
+<ol>
+<li><code>collections.abc.Sequence</code> (<code>typing.Sequence</code> on Python &lt; 3.9)</li>
+<li><code>tuple</code> (<code>typing.Tuple</code> on Python &lt; 3.9)</li>
+<li><code>list</code> (<code>typing.List</code> on Python &lt; 3.9)</li>
+<li><code>set</code> (<code>typing.Set</code> on Python &lt; 3.9)</li>
+</ol>
+<p>There are a few different ways to use these types, each resulting in
+different validation conditions. The simplest case is a plain
+(possibly empty) collection of a single type.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="n">y</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="n">z</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="n">w</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="p">{</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">w</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
+<span class="go">A(x=[1, 2], y=(&#39;1&#39;, &#39;2&#39;), z={1.0, 2.0}, w=[1, 2])</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">]</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">ValueError</span>: <span class="n">error setting `x`: invalid value for type</span>
+<span class="x">&#39;&lt;class &#39;int&#39;&gt;&#39;: &#39;2&#39;</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>      <span class="c1"># `Sequence` accepts any sequence type</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="c1"># `Tuple` only accepts tuples</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">]</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">ValueError</span>: <span class="n">error setting `y`: invalid value for type</span>
+<span class="x">&#39;typing.Tuple[str]&#39;: [&#39;1&#39;, &#39;2&#39;]</span>
+</code></pre></div>
+      <p>The collection length can be controlled by the arguments of the type
+annotation.</p>
+
+<details class="note" open>
+  <summary>Note</summary>
+  <p><code>typing.Sequence/typing.List/typing.Set</code> do not accept multiple
+arguments, and so, cannot be used if collection length has to be
+specified. On Python &lt; 3.9, only <code>typing.Tuple</code> can be used to
+control collection lengths.</p>
+</details>      <p>To specify that a collection must be non-empty, use ellipsis (<code>...</code>)
+as the second argument of the type.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">()</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">ValueError</span>: <span class="n">error setting `x`: expected non-empty collection for</span>
+<span class="x">type &#39;typing.Tuple[int, ...]&#39;</span>
+</code></pre></div>
+      <p>Collections can also be restricted to be of a fixed length.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="n">y</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">ValueError</span>: <span class="n">error setting `x`: invalid value for type</span>
+<span class="x">&#39;&lt;class &#39;str&#39;&gt;&#39;: 1</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">ValueError</span>: <span class="n">error setting `y`: invalid value for type</span>
+<span class="x">&#39;typing.Tuple[int, int, int]&#39;: (1, 1): expected exactly &#39;3&#39;</span>
+<span class="x">elements</span>
+</code></pre></div>
+      <p><em>Literals</em>
+<code>typing.Literal</code> can be used to specify that an attribute takes one
+of a fixed set of values.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="s2">&quot;2&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">ValueError</span>: <span class="n">error setting `x`: invalid value for type</span>
+<span class="x">&#39;typing.Literal[0, 1, &#39;2&#39;]&#39;: &#39;1&#39;</span>
+</code></pre></div>
+      <p>Type annotations can be nested; for instance,
+<code>Sequence[Literal[0, 1, 2], Literal[0, 1, 2]]</code> represents a sequence
+of length 2, where each element is either 0, 1, or 2.</p>
+<p>A fixed set of attribute values can also be specified by adding a
+<code>__choices__</code> attribute to the argument type, containing a
+collection of choices.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">T</span><span class="p">(</span><span class="nb">int</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">__choices__</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="n">T</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">ValueError</span>: <span class="n">error setting `x`: invalid value for type</span>
+<span class="x">&#39;&lt;class &#39;T&#39;&gt;&#39;: 3: expected one of: (1, 2)</span>
+</code></pre></div>
+
+<details class="note" open>
+  <summary>Note</summary>
+  <p>Choices specified in this way are not type-checked to ensure
+that they match the argument type; in the above example,
+<code>__choices__</code> could be set to <code>(1, "2")</code>.</p>
+</details>      <p><em>Self</em>
+<code>Corgy</code> classes can have attributes of their own type, annotated
+using <code>typing.Self</code>.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">11</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Self</span>
+<span class="gp">... </span><span class="k">else</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Self</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">C</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">... </span>    <span class="n">c</span><span class="p">:</span> <span class="n">Self</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">C</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">C</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span>
+<span class="go">C(x=1, c=C(x=2))</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">D</span><span class="p">(</span><span class="n">C</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="o">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">D</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">ValueError</span>: <span class="n">error setting `c`: invalid value for type</span>
+<span class="x">&#39;Self (bound to &lt;class &#39;C&#39;&gt;)&#39;: D(x=3)</span>
+</code></pre></div>
+
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="corgy._corgy.Corgy.add_args_to_parser" class="doc doc-heading">
+        <span class="doc doc-object-name doc-function-name">add_args_to_parser</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#corgy._corgy.Corgy.add_args_to_parser" class="headerlink" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">add_args_to_parser</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">name_prefix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">flatten_subgrps</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">defaults</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Add the class' <code>Corgy</code> attributes to the given parser.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>parser</code></td>
+          <td>
+                <code><span title="argparse._ActionsContainer">_ActionsContainer</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Argument parser/group to which the attributes will
+be added.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>name_prefix</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Prefix for argument names. Arguments will be
+named <code>--&lt;name-prefix&gt;:&lt;attr-name&gt;</code>. If custom flags are
+present, <code>--&lt;name-prefix&gt;:&lt;flag&gt;</code> will be used instead
+(one for each flag).</p>
+            </div>
+          </td>
+          <td>
+                <code>&#39;&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>flatten_subgrps</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Whether to add sub-groups to the main
+parser instead of creating argument groups. Note that
+sub-sub-groups are always added with this argument set
+to <code>True</code>, since <code>argparse</code> in unable to properly
+display nested group arguments.</p>
+            </div>
+          </td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>defaults</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.Mapping">Mapping</span>[str, <span title="typing.Any">Any</span>]]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Optional mapping with default values for
+arguments. Any value specified here will override
+default values specified in the class. Values for
+groups can be specified either as <code>Corgy</code> instances, or
+as individual values using the same syntax as for
+<code>Corgy.from_dict</code>.</p>
+            </div>
+          </td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+      <p>Type annotations control how attributes are added to the parser.
+A number of special annotations are parsed and stripped from
+attribute types to determine the parameters for calling
+<code>ArgumentParser.add_argument</code>. These special annotations are
+described below.</p>
+
+<details class="note" open>
+  <summary>Note</summary>
+  <p><code>add_args_to_parser</code> cannot be used if the type annotation
+for any attribute of the class includes <code>Self</code>, unless a
+custom parser is defined for such attributes. See docs for
+<code>corgyparser</code> on how to define custom parsers.</p>
+</details>      <p><em>Annotated</em>
+<code>typing.Annotated</code> can be used to add a help message for the
+argument.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">argparse</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">corgy</span> <span class="kn">import</span> <span class="n">CorgyHelpFormatter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;help for x&quot;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">formatter_class</span><span class="o">=</span><span class="n">CorgyHelpFormatter</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">add_help</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">usage</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">SUPPRESS</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">add_args_to_parser</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
+<span class="go">options:</span>
+<span class="go">  --x int  help for x (optional)</span>
+</code></pre></div>
+      <p>This annotation can also be used to modify the parser flags for
+the argument. By default, the attribute name is used, prefixed
+with <code>--</code>, and with <code>_</code> replaced by <code>-</code>. If the custom flag does
+not have a leading <code>-</code>, a positional argument will be created.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;help for x&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;-x&quot;</span><span class="p">,</span> <span class="s2">&quot;--ex&quot;</span><span class="p">]]</span>
+<span class="gp">... </span>    <span class="n">y</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;help for y&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">formatter_class</span><span class="o">=</span><span class="n">CorgyHelpFormatter</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">add_help</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">usage</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">SUPPRESS</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">add_args_to_parser</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
+<span class="go">positional arguments:</span>
+<span class="go">  y int        help for y</span>
+
+<span class="go">options:</span>
+<span class="go">  -x/--ex int  help for x (optional)</span>
+</code></pre></div>
+      <p><code>Annotated</code> can accept multiple arguments, but only the first
+three are used by <code>Corgy</code>. The first argument is the attribute
+type, the second is the help message (which must be a string),
+and the third is a sequence of flags.</p>
+<p><em>Required/NotRequired</em>
+Every corgy attribute is either required or not required. The
+default status depends on the class parameter
+<code>corgy_required_by_default</code> (<code>False</code> by default). Attributes
+can also be explicitly marked as required or not required, and
+will control whether the argument will be added with
+<code>required=True</code>.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">corgy</span> <span class="kn">import</span> <span class="n">Required</span><span class="p">,</span> <span class="n">NotRequired</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="n">Required</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="n">y</span><span class="p">:</span> <span class="n">NotRequired</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="n">z</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">formatter_class</span><span class="o">=</span><span class="n">CorgyHelpFormatter</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">add_help</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">usage</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">SUPPRESS</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">add_args_to_parser</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
+<span class="go">options:</span>
+<span class="go">  --x int  (required)</span>
+<span class="go">  --y int  (optional)</span>
+<span class="go">  --z int  (optional)</span>
+</code></pre></div>
+      <p>Attributes which are not required, and don't have a default
+value are added with <code>default=argparse.SUPPRESS</code>, and so will
+not be in the parsed namespace.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s2">&quot;--x&quot;</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;--y&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">])</span>
+<span class="go">Namespace(x=1, y=2)</span>
+</code></pre></div>
+      <p><em>Optional</em>
+Attributes marked with <code>typing.Optional</code> are allowed to be
+<code>None</code>. The arguments for these attributes can be passed with no
+values (i.e. <code>--x</code> instead of <code>--x=1</code> or <code>--x 1</code>) to indicate
+that the value should be <code>None</code>.</p>
+
+<details class="note" open>
+  <summary>Note</summary>
+  <p>Attributes with default values are also "optional" in the
+sense that they can be omitted from the command line.
+However, they are not the same as attributes marked with
+<code>Optional</code>, since the former are not allowed to be <code>None</code>.
+Furthermore, <code>Required</code> <code>Optional</code> attributes without
+default values <em>will</em> need to be passed on the command line
+(possibly with no values).</p>
+</details>
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="n">Required</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">add_args_to_parser</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s2">&quot;--x&quot;</span><span class="p">])</span>
+<span class="go">Namespace(x=None)</span>
+</code></pre></div>
+      <p><em>Boolean</em>
+<code>bool</code> types (when not in a collection) are converted to a pair
+of options.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">arg</span><span class="p">:</span> <span class="nb">bool</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">formatter_class</span><span class="o">=</span><span class="n">CorgyHelpFormatter</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">add_help</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">usage</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">SUPPRESS</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">add_args_to_parser</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
+<span class="go">options:</span>
+<span class="go">  --arg/--no-arg</span>
+</code></pre></div>
+      <p><em>Collection</em>
+Collection types are added to the parser by setting <code>nargs</code>. The
+value for <code>nargs</code> is determined by the collection type. Plain
+collections, such as <code>Sequence[int]</code>, will be added with
+<code>nargs=*</code>; Non-empty collections, such as <code>Sequence[int, ...]</code>,
+will be added with <code>nargs=+</code>; Finally, fixed-length collections,
+such as <code>Sequence[int, int, int]</code>, will be added with <code>nargs</code>
+set to the length of the collection.</p>
+<p>In all cases, collection types can only be added to a parser if
+they are single type. Heterogenous collections, such as
+<code>Sequence[int, str]</code> cannot be added, and will raise
+<code>ValueError</code>. Untyped collections (e.g., <code>x: Sequence</code>), also
+cannot be added.</p>
+<p>Arguments for optional collections will also accept no values to
+indicate <code>None</code>. Due to this, it is not possible to parse an
+empty collection for an optional collection argument.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span>
+<span class="gp">... </span>    <span class="n">y</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">add_args_to_parser</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s2">&quot;--x&quot;</span><span class="p">,</span> <span class="s2">&quot;--y&quot;</span><span class="p">])</span>
+<span class="go">Namespace(x=None, y=[])</span>
+</code></pre></div>
+      <p><em>Enum</em>
+<code>Enum</code> types work as expected; the members of the enum are
+passed to the <code>choices</code> argument of
+<code>ArgumentParser.add_argument</code>.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Color</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">RED</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">... </span>    <span class="n">GREEN</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="gp">... </span>    <span class="n">BLUE</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="n">Color</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">formatter_class</span><span class="o">=</span><span class="n">CorgyHelpFormatter</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">add_help</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">usage</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">SUPPRESS</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">add_args_to_parser</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
+<span class="go">options:</span>
+<span class="go">  --x Color  ({RED/GREEN/BLUE} optional)</span>
+</code></pre></div>
+      <p><em>Literal</em>
+For <code>Literal</code> types, the provided values are passed to the
+<code>choices</code> argument of <code>ArgumentParser.add_argument</code>. All values
+must be of the same type, which will be inferred from the type
+of the first value. If the first value has a <code>__bases__</code>
+attribute, the type will be inferred as the first base type, and
+all other choices must be subclasses of that type.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">T</span><span class="p">:</span> <span class="o">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">T1</span><span class="p">(</span><span class="n">T</span><span class="p">):</span> <span class="o">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">T2</span><span class="p">(</span><span class="n">T</span><span class="p">):</span> <span class="o">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="n">T1</span><span class="p">,</span> <span class="n">T2</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">formatter_class</span><span class="o">=</span><span class="n">CorgyHelpFormatter</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">add_help</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">usage</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">SUPPRESS</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">add_args_to_parser</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
+<span class="go">options:</span>
+<span class="go">  --x T  ({T1/T2} optional)</span>
+</code></pre></div>
+      <p>For types which specify choices by defining <code>__choices__</code>, the
+values are passed to the <code>choices</code> argument as with <code>Literal</code>,
+but no type inference is performed, and the base attribute type
+will be used as the argument type.</p>
+<p><strong>Single-value Literals</strong>
+A special case for <code>Literal</code> types is when there is only one
+choice. In this case, the argument is added as a <code>store_const</code>
+action, with the value as the <code>const</code> argument. A further
+special case is when the choice is <code>True/False</code>, in which case
+the action is <code>store_true</code>/<code>store_false</code> respectively.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="n">y</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="n">z</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">42</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">add_args_to_parser</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s2">&quot;--x&quot;</span><span class="p">])</span>  <span class="c1"># Note `y`, `z` are absent</span>
+<span class="go">Namespace(x=True)</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s2">&quot;--y&quot;</span><span class="p">])</span>
+<span class="go">Namespace(y=False)</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s2">&quot;--z&quot;</span><span class="p">])</span>
+<span class="go">Namespace(z=42)</span>
+</code></pre></div>
+
+<details class="note" open>
+  <summary>Note</summary>
+  <p>This special case only applies to <code>Literal</code> types, and not
+types which define <code>__choices__</code>.</p>
+</details>      <p><em>Corgy</em>
+Attributes which are themselves <code>Corgy</code> types are treated as
+argument groups. Group arguments are added to the command line
+parser with the group attribute name prefixed.</p>
+
+<details class="note" open>
+  <summary>Note</summary>
+  <p>Groups will ignore any custom flags when computing the
+prefix; elements within the group will use custom flags, but
+because they are prefixed with <code>--</code>, they will not be
+positional.</p>
+</details>
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">G</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="gp">... </span>    <span class="n">y</span><span class="p">:</span> <span class="nb">float</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">... </span>    <span class="n">g</span><span class="p">:</span> <span class="n">G</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">formatter_class</span><span class="o">=</span><span class="n">CorgyHelpFormatter</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">add_help</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">usage</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">SUPPRESS</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">add_args_to_parser</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
+<span class="go">options:</span>
+<span class="go">  --x int      (optional)</span>
+
+<span class="go">g:</span>
+<span class="go">  --g:x int    (default: 0)</span>
+<span class="go">  --g:y float  (optional)</span>
+</code></pre></div>
+      <p><strong>Custom parsers</strong></p>
+<p>Attributes for which a custom parser is defined using
+<code>@corgyparser</code> will be added with a custom action that will call
+the parser. Refer to the documentation for <code>corgyparser</code> for
+details.</p>
+<p><strong>Metavar</strong></p>
+<p>This function will not explicitly pass a value for the <code>metavar</code>
+argument of <code>ArgumentParser.add_argument</code>, unless an attribute's
+type defines <code>__metavar__</code>, in which case, it will be passed as
+is. To change the metavar for attributes with custom parsers,
+set the <code>metavar</code> argument of <code>corgyparser</code>.</p>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="corgy._corgy.Corgy.as_dict" class="doc doc-heading">
+        <span class="doc doc-object-name doc-function-name">as_dict</span>
+
+
+<a href="#corgy._corgy.Corgy.as_dict" class="headerlink" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">as_dict</span><span class="p">(</span><span class="n">recursive</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">flatten</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Return the object as a dictionary.</p>
+<p>The returned dictionary maps attribute names to their values.
+Unset attributes are omitted, unless they have default values.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>recursive</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>whether to recursively call <code>as_dict</code> on
+attributes which are <code>Corgy</code> instances. Otherwise, they
+are returned as is.</p>
+            </div>
+          </td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>flatten</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>whether to flatten group arguments into <code>:</code>
+separated strings. Only takes effect if <code>recursive</code> is
+<code>True</code>.</p>
+            </div>
+          </td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">G</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">G</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
+<span class="go">{&#39;x&#39;: 1}</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="nb">str</span>
+<span class="gp">... </span>    <span class="n">g</span><span class="p">:</span> <span class="n">G</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s2">&quot;one&quot;</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="n">g</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(</span><span class="n">recursive</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">{&#39;x&#39;: &#39;one&#39;, &#39;g&#39;: G(x=1)}</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
+<span class="go">{&#39;x&#39;: &#39;one&#39;, &#39;g&#39;: {&#39;x&#39;: 1}}</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(</span><span class="n">flatten</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">{&#39;x&#39;: &#39;one&#39;, &#39;g:x&#39;: 1}</span>
+</code></pre></div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="corgy._corgy.Corgy.attrs" class="doc doc-heading">
+        <span class="doc doc-object-name doc-function-name">attrs</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#corgy._corgy.Corgy.attrs" class="headerlink" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">attrs</span><span class="p">()</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Return a dictionary mapping attributes to their types.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="n">y</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">attrs</span><span class="p">()</span>
+<span class="go">{&#39;x&#39;: &lt;class &#39;int&#39;&gt;, &#39;y&#39;: typing.Sequence[str]}</span>
+</code></pre></div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="corgy._corgy.Corgy.freeze" class="doc doc-heading">
+        <span class="doc doc-object-name doc-function-name">freeze</span>
+
+
+<a href="#corgy._corgy.Corgy.freeze" class="headerlink" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">freeze</span><span class="p">()</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Freeze the object, preventing any further changes.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">... </span>    <span class="n">y</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">freeze</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">TypeError</span>: <span class="n">cannot set `x`: object is frozen</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">a</span><span class="o">.</span><span class="n">y</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">TypeError</span>: <span class="n">cannot delete `y`: object is frozen</span>
+</code></pre></div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="corgy._corgy.Corgy.from_dict" class="doc doc-heading">
+        <span class="doc doc-object-name doc-function-name">from_dict</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#corgy._corgy.Corgy.from_dict" class="headerlink" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">from_dict</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">try_cast</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Return a new instance of the class using a dictionary.</p>
+<p>This is roughly equivalent to <code>cls(**d)</code>, with the main
+exception being that groups can be specified as dictionaries
+themselves, and will be processed recursively.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>d</code></td>
+          <td>
+                <code><span title="typing.Mapping">Mapping</span>[str, <span title="typing.Any">Any</span>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Dictionary to create the instance from.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>try_cast</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Whether to try and cast values which don't match
+attribute types.</p>
+            </div>
+          </td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">G</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="nb">str</span>
+<span class="gp">... </span>    <span class="n">g</span><span class="p">:</span> <span class="n">G</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">from_dict</span><span class="p">({</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;one&quot;</span><span class="p">,</span> <span class="s2">&quot;g&quot;</span><span class="p">:</span> <span class="n">G</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">)})</span>
+<span class="go">A(x=&#39;one&#39;, g=G(x=1))</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">from_dict</span><span class="p">({</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;one&quot;</span><span class="p">,</span> <span class="s2">&quot;g&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}})</span>
+<span class="go">A(x=&#39;one&#39;, g=G(x=1))</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">from_dict</span><span class="p">({</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;g&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;1&quot;</span><span class="p">}},</span> <span class="n">try_cast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">A(x=&#39;1&#39;, g=G(x=1))</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">from_dict</span><span class="p">({</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;1&quot;</span><span class="p">})</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">ValueError</span>: <span class="n">error setting `x`: invalid value for type</span>
+<span class="x">&#39;&lt;class &#39;int&#39;&gt;&#39;: &#39;1&#39;</span>
+</code></pre></div>
+      <p>Group attributes can also be passed directly in the dictionary
+by prefixing their names with the group name and a colon.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">from_dict</span><span class="p">({</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;one&quot;</span><span class="p">,</span> <span class="s2">&quot;g:x&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
+<span class="go">A(x=&#39;one&#39;, g=G(x=1))</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">B</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="nb">float</span>
+<span class="gp">... </span>    <span class="n">a</span><span class="p">:</span> <span class="n">A</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">from_dict</span><span class="p">({</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mf">1.1</span><span class="p">,</span> <span class="s2">&quot;a:x&quot;</span><span class="p">:</span> <span class="s2">&quot;one&quot;</span><span class="p">,</span> <span class="s2">&quot;a:g:x&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
+<span class="go">B(x=1.1, a=A(x=&#39;one&#39;, g=G(x=1)))</span>
+</code></pre></div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="corgy._corgy.Corgy.is_attr_set" class="doc doc-heading">
+        <span class="doc doc-object-name doc-function-name">is_attr_set</span>
+
+
+<a href="#corgy._corgy.Corgy.is_attr_set" class="headerlink" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">is_attr_set</span><span class="p">(</span><span class="n">attr_name</span><span class="p">)</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Check if a <code>Corgy</code> attribute is set.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>attr_name</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Name of the attribute to check.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Raises:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code>AttributeError</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>if the attribute is not a <code>Corgy</code> attribute.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="corgy._corgy.Corgy.load_dict" class="doc doc-heading">
+        <span class="doc doc-object-name doc-function-name">load_dict</span>
+
+
+<a href="#corgy._corgy.Corgy.load_dict" class="headerlink" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">load_dict</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">try_cast</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Load a dictionary into an instance of the class.</p>
+<p>Previous attributes are overwritten. Sub-dictionaries will be
+parsed recursively if the corresponding attribute already
+exists, else will be parsed using <code>from_dict</code>. As with
+<code>from_dict</code>, items in the dictionary without corresponding
+attributes are ignored.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>d</code></td>
+          <td>
+                <code><span title="typing.Dict">Dict</span>[str, <span title="typing.Any">Any</span>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Dictionary to load.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>try_cast</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Whether to try and cast values which don't match
+attribute types.</p>
+            </div>
+          </td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>strict</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>If <code>True</code>, attributes with existing values that are
+not in the dictionary will be unset.</p>
+            </div>
+          </td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">... </span>    <span class="n">y</span><span class="p">:</span> <span class="nb">str</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_i</span> <span class="o">=</span> <span class="nb">id</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">load_dict</span><span class="p">({</span><span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;two&quot;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
+<span class="go">A(x=1, y=&#39;two&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_i</span> <span class="o">==</span> <span class="nb">id</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">True</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">load_dict</span><span class="p">({</span><span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;three&quot;</span><span class="p">},</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
+<span class="go">A(y=&#39;three&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_i</span> <span class="o">==</span> <span class="nb">id</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">True</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">load_dict</span><span class="p">({</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;1&quot;</span><span class="p">})</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">    </span><span class="o">...</span>
+<span class="gr">ValueError</span>: <span class="n">error setting `x`: invalid value for type</span>
+<span class="x">&#39;&lt;class &#39;int&#39;&gt;&#39;: &#39;1&#39;</span>
+</code></pre></div>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">load_dict</span><span class="p">({</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;1&quot;</span><span class="p">},</span> <span class="n">try_cast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
+<span class="go">A(x=1)</span>
+</code></pre></div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="corgy._corgy.Corgy.parse_from_cmdline" class="doc doc-heading">
+        <span class="doc doc-object-name doc-function-name">parse_from_cmdline</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#corgy._corgy.Corgy.parse_from_cmdline" class="headerlink" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">parse_from_cmdline</span><span class="p">(</span><span class="n">parser</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">defaults</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">parser_args</span><span class="p">)</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Return an instance of the class parsed from the command line.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>parser</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="argparse.ArgumentParser">ArgumentParser</span>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>An instance of <code>argparse.ArgumentParser</code> or <code>None</code>.
+If <code>None</code>, a new instance is created.</p>
+            </div>
+          </td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>defaults</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.Mapping">Mapping</span>[str, <span title="typing.Any">Any</span>]]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A dictionary of default values for the attributes,
+passed to <code>add_args_to_parser</code>. Refer to the docs for
+<code>add_args_to_parser</code> for more details.</p>
+            </div>
+          </td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>parser_args</code></td>
+          <td>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Arguments to be passed to
+<code>argparse.ArgumentParser()</code>. Ignored if <code>parser</code> is not
+<code>None</code>.</p>
+            </div>
+          </td>
+          <td>
+                <code>{}</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Raises:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code>ArgumentTypeError</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Error parsing command line arguments.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="corgy._corgy.Corgy.parse_from_toml" class="doc doc-heading">
+        <span class="doc doc-object-name doc-function-name">parse_from_toml</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#corgy._corgy.Corgy.parse_from_toml" class="headerlink" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">parse_from_toml</span><span class="p">(</span><span class="n">toml_file</span><span class="p">,</span> <span class="n">defaults</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Parse an object of the class from a toml file.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>toml_file</code></td>
+          <td>
+                <code><span title="typing.IO">IO</span>[bytes]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A file-like object containing the class
+attributes in toml.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>defaults</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.Mapping">Mapping</span>[str, <span title="typing.Any">Any</span>]]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A dictionary of default values, overriding any
+values specified in the class.</p>
+            </div>
+          </td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Raises:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code>TOMLDecodeError</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Error parsing the toml file.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">BytesIO</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">G</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">... </span>    <span class="n">y</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="nb">str</span>
+<span class="gp">... </span>    <span class="n">g</span><span class="p">:</span> <span class="n">G</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">    x = &#39;one&#39;</span>
+<span class="gp">... </span><span class="s1">    [g]</span>
+<span class="gp">... </span><span class="s1">    x = 1</span>
+<span class="gp">... </span><span class="s1">    y = [1, 2, 3]</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">parse_from_toml</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="go">A(x=&#39;one&#39;, g=G(x=1, y=[1, 2, 3]))</span>
+</code></pre></div>
+
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h2 id="corgy.corgyparser" class="doc doc-heading">
+        <span class="doc doc-object-name doc-function-name">corgy.corgyparser</span>
+
+
+<a href="#corgy.corgyparser" class="headerlink" title="Permanent link">#</a></h2>
+<div class="highlight"><pre><span></span><code><span class="n">corgy</span><span class="o">.</span><span class="n">corgyparser</span><span class="p">(</span><span class="o">*</span><span class="n">var_names</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+
+  <div class="doc doc-contents first">
+  
+      <p>Decorate a function as a custom attribute parser.</p>
+<p>To use a custom function for parsing a <code>Corgy</code> attribute, use this
+decorator. Parsing functions must be static, and should only accept
+a single argument. Decorating the function with <code>@staticmethod</code> is
+optional, but prevents type errors.  <code>@corgyparser</code> must be the
+final decorator in the decorator chain.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>var_names</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The attributes associated with the decorated parser.</p>
+            </div>
+          </td>
+          <td>
+                <code>()</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>metavar</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Keyword only argument to set the metavar when adding
+the associated attribute(s) to an <code>ArgumentParser</code> instance.</p>
+            </div>
+          </td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>nargs</code></td>
+          <td>
+                <code><span title="typing.Union">Union</span>[None, <span title="typing_extensions.Literal">Literal</span>[&#39;*&#39;, &#39;+&#39;], int]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Keyword only argument to set the number of arguments to
+be used for the associated attribute(s). Must be <code>None</code>,
+<code>'*'</code>, <code>'+'</code>, or a positive number. This value is passed as
+the <code>nargs</code> argument to <code>ArgumentParser.add_argument</code>, and
+controls the number of arguments that will be read from the
+command line, and passed to the parsing function. For all
+values other than <code>None</code>, the parsing function will receive
+a list of strings.</p>
+            </div>
+          </td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">argparse</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">corgy</span> <span class="kn">import</span> <span class="n">Corgy</span><span class="p">,</span> <span class="n">CorgyHelpFormatter</span><span class="p">,</span> <span class="n">corgyparser</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">time</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="nd">@corgyparser</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s2">&quot;int:int:int&quot;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="nd">@staticmethod</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">parse_time</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">formatter_class</span><span class="o">=</span><span class="n">CorgyHelpFormatter</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">add_help</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">usage</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">SUPPRESS</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">add_args_to_parser</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s2">&quot;--time&quot;</span><span class="p">,</span> <span class="s2">&quot;1:2:3&quot;</span><span class="p">])</span>
+<span class="go">Namespace(time=(1, 2, 3))</span>
+</code></pre></div>
+      <p>Multiple arguments can be passed to the decorator, and will all be
+associated with the same parser.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">... </span>    <span class="n">y</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">... </span>    <span class="nd">@corgyparser</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="nd">@staticmethod</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">parse_x_y</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+</code></pre></div>
+      <p>The <code>@corgyparser</code> decorator can also be chained to use the same
+parser for multiple arguments.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">... </span>    <span class="n">y</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">... </span>    <span class="nd">@corgyparser</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="nd">@corgyparser</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="nd">@staticmethod</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">parse_x_y</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+</code></pre></div>
+
+<details class="note" open>
+  <summary>Note</summary>
+  <p>When chaining, the outer-most non-<code>None</code> value of <code>metavar</code> will
+be used.</p>
+</details>      <p>Custom parsers can control the number of arguments they receive,
+independent of the argument type.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">... </span>    <span class="nd">@corgyparser</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="nd">@staticmethod</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">parse_x</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="c1"># `s` will be a list of 3 strings.</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">formatter_class</span><span class="o">=</span><span class="n">CorgyHelpFormatter</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">add_help</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">usage</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">SUPPRESS</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">add_args_to_parser</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s2">&quot;--x&quot;</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">])</span>
+<span class="go">Namespace(x=6)</span>
+</code></pre></div>
+      <p>When chaining, <code>nargs</code> must be the same for all decorators,
+otherwise <code>TypeError</code> is raised.</p>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h2 id="corgy.corgychecker" class="doc doc-heading">
+        <span class="doc doc-object-name doc-function-name">corgy.corgychecker</span>
+
+
+<a href="#corgy.corgychecker" class="headerlink" title="Permanent link">#</a></h2>
+<div class="highlight"><pre><span></span><code><span class="n">corgy</span><span class="o">.</span><span class="n">corgychecker</span><span class="p">(</span><span class="o">*</span><span class="n">var_names</span><span class="p">)</span>
+</code></pre></div>
+
+  <div class="doc doc-contents first">
+  
+      <p>Decorate a function as a custom attribute checker.</p>
+<p>To use a custom function for checking the value of a <code>Corgy</code>
+attribute, use this decorator. Checking functions must be static,
+and should only accept a single argument, the value to be checked.
+They should raise <code>ValueError</code> to indicate value mismatch.
+Decorating the function with <code>@staticmethod</code> is optional, but
+prevents type errors. <code>@corgychecker</code> must be the final decorator in
+the decorator chain.</p>
+<p>Custom checkers are called <em>after</em> type checking, so the values
+passed to them will be of type corresponding to one of the assigned
+attributes.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>var_names</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The attributes associated with the decorated checker.</p>
+            </div>
+          </td>
+          <td>
+                <code>()</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">corgy</span> <span class="kn">import</span> <span class="n">Corgy</span><span class="p">,</span> <span class="n">corgychecker</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">... </span>    <span class="nd">@corgychecker</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="nd">@staticmethod</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">check_x</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">if</span> <span class="n">val</span> <span class="o">%</span> <span class="mi">2</span><span class="p">:</span>
+<span class="gp">... </span>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&#39; is not even&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">A</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">   </span><span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">error setting `x`: &#39;3&#39; is not even</span>
+</code></pre></div>
+      <p>Multiple attributes can use the same checker, either by chaining
+<code>corgychecker</code>, or by passing all attribute names directly.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Sequence</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="n">Corgy</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">... </span>    <span class="n">y</span><span class="p">:</span> <span class="nb">float</span>
+<span class="gp">... </span>    <span class="n">z</span><span class="p">:</span> <span class="nb">str</span>
+<span class="gp">... </span>    <span class="n">w</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="nd">@corgychecker</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="nd">@corgychecker</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">check_num</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">if</span> <span class="n">val</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+<span class="gp">... </span>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;should be non-negative&quot;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="nd">@corgychecker</span><span class="p">(</span><span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">check_seq</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
+<span class="gp">... </span>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;too long&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="corgy.CorgyHelpFormatter" class="doc doc-heading">
+        <span class="doc doc-object-name doc-class-name">corgy.CorgyHelpFormatter</span>
+
+
+<a href="#corgy.CorgyHelpFormatter" class="headerlink" title="Permanent link">#</a></h2>
+
+
+  <div class="doc doc-contents first">
+      <p class="doc doc-class-bases">
+        Bases: <code><span title="argparse.HelpFormatter">HelpFormatter</span></code></p>
+
+  
+      <p>Formatter class for <code>argparse</code> with cleaner layout and colors.</p>
+<p><code>Corgy.parse_from_cmdline</code> uses this formatter by default, unless a
+different <code>formatter_class</code> argument is provided.
+<code>CorgyHelpFormatter</code> can also be used independently of <code>Corgy</code>.
+Simply pass it as the <code>formatter_class</code> argument to
+<code>argparse.ArgumentParser()</code>.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">argparse</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">corgy</span> <span class="kn">import</span> <span class="n">CorgyHelpFormatter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">formatter_class</span><span class="o">=</span><span class="n">CorgyHelpFormatter</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">usage</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">SUPPRESS</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--x&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s2">&quot;--y&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
+<span class="go">options:</span>
+<span class="go">  -h/--help      show this help message and exit</span>
+<span class="go">  --x int        (required)</span>
+<span class="go">  --y [str ...]  (required)</span>
+</code></pre></div>
+      <p>To configure <code>CorgyHelpFormatter</code>, you can set a number of
+attributes on the class.</p>
+
+<details class="note" open>
+  <summary>Note</summary>
+  <p>You do not need to create an instance of the class; that is done
+by the parser itself. The following public attributes are
+available:</p>
+</details>      <p>Color-related attributes:</p>
+<ul>
+<li>
+<p><code>enable_colors</code>: If <code>None</code> (the default), colors are enabled if
+    the <code>crayons</code> package is available, and the output is a tty. To
+    explicitly enable or disable colors, set to <code>True</code> or <code>False</code>.</p>
+</li>
+<li>
+<p><code>color_&lt;choices/keywords/metavars/defaults/options&gt;</code>: These
+    attributes control the colors used for various parts of the
+    output (see below for reference). Available colors are <code>red</code>,
+    <code>green</code>, <code>yellow</code>, <code>blue</code>, <code>black</code>, <code>magenta</code>, <code>cyan</code>, and
+    <code>white</code>. Specifying the name in all caps will make the color
+    bold. You can also use the special value <code>BOLD</code> to make the
+    output bold without changing the color. The default value are
+    <code>blue</code> for choices, <code>green</code> for keywords, <code>RED</code> for metavars,
+    <code>YELLOW</code> for defaults, and <code>BOLD</code> for options. Format::</p>
+<div class="highlight"><pre><span></span><code> -a/--arg str       help for arg ({&#39;a&#39;/&#39;b&#39;/&#39;c&#39;} default: &#39;a&#39;)  # noqa
+   |      |                          |            |      |
+ options  metavars                 choices      keywords defaults
+</code></pre></div>
+</li>
+</ul>
+<p>Layout-related attributes:</p>
+<ul>
+<li>
+<p><code>output_width</code>: The number of columns used for the output. If
+    <code>None</code> (the default), the current terminal width is used.</p>
+</li>
+<li>
+<p><code>max_help_position</code>: How far to the right (from the start), the
+    help string can start from. If <code>None</code>, there is no limit. The
+    default is to use half the current terminal width.</p>
+</li>
+</ul>
+<p>Marker-related attributes:</p>
+<ul>
+<li>
+<p><code>marker_extras_&lt;begin/end&gt;</code>: The strings used to enclose the extra
+    help text (choices, default values etc.). The defaults are
+    <code>(</code> and <code>)</code>.</p>
+</li>
+<li>
+<p><code>marker_choices_&lt;begin/end&gt;</code>: The strings used to enclose the list
+    of choices for an argument. The defaults are <code>{</code> and <code>}</code>.</p>
+</li>
+<li>
+<p><code>marker_choices_sep</code>: The string used to separate individual
+    choices in the choice list. The default is <code>/</code>.</p>
+</li>
+</ul>
+<p>Misc. attributes:</p>
+<ul>
+<li><code>show_full_help</code>: Whether to show the full help, including
+    choices, indicators for required arguments, and the usage
+    string. The default is <code>True</code>.</li>
+</ul>
+<p>Formatting of individual arguments can be customized with magic
+attributes defined on the argument type. The following attributes
+are recognized:</p>
+<ul>
+<li><code>__metavar__</code>: This can be set to a string on the argument type to
+    override the default metavar.</li>
+</ul>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">T</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">__metavar__</span> <span class="o">=</span> <span class="s2">&quot;METAVAR&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">formatter_class</span><span class="o">=</span><span class="n">CorgyHelpFormatter</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">add_help</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">usage</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">SUPPRESS</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--arg&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">T</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
+<span class="go">options:</span>
+<span class="go">  --arg METAVAR  (default: None)</span>
+</code></pre></div>
+
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="corgy._helpfmt.CorgyHelpFormatter.using_colors" class="doc doc-heading">
+        <span class="doc doc-object-name doc-attribute-name">using_colors</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#corgy._helpfmt.CorgyHelpFormatter.using_colors" class="headerlink" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">using_colors</span><span class="p">:</span> <span class="nb">bool</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Whether colors are enabled.</p>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="corgy._helpfmt.CorgyHelpFormatter.FullHelpAction" class="doc doc-heading">
+        <span class="doc doc-object-name doc-class-name">FullHelpAction</span>
+
+
+<a href="#corgy._helpfmt.CorgyHelpFormatter.FullHelpAction" class="headerlink" title="Permanent link">#</a></h3>
+
+
+  <div class="doc doc-contents ">
+      <p class="doc doc-class-bases">
+        Bases: <code><span title="argparse.Action">Action</span></code></p>
+
+  
+      <p><code>argparse.Action</code> that displays the full help, and exits.</p>
+
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="corgy._helpfmt.CorgyHelpFormatter.ShortHelpAction" class="doc doc-heading">
+        <span class="doc doc-object-name doc-class-name">ShortHelpAction</span>
+
+
+<a href="#corgy._helpfmt.CorgyHelpFormatter.ShortHelpAction" class="headerlink" title="Permanent link">#</a></h3>
+
+
+  <div class="doc doc-contents ">
+      <p class="doc doc-class-bases">
+        Bases: <code><span title="argparse.Action">Action</span></code></p>
+
+  
+      <p><code>argparse.Action</code> that displays the short help, and exits.</p>
+
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="corgy._helpfmt.CorgyHelpFormatter.add_short_full_helps" class="doc doc-heading">
+        <span class="doc doc-object-name doc-function-name">add_short_full_helps</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#corgy._helpfmt.CorgyHelpFormatter.add_short_full_helps" class="headerlink" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">add_short_full_helps</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">short_help_flags</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;-h&#39;</span><span class="p">,</span> <span class="s1">&#39;--help&#39;</span><span class="p">),</span> <span class="n">full_help_flags</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;--helpfull&#39;</span><span class="p">),</span> <span class="n">short_help_msg</span><span class="o">=</span><span class="s1">&#39;show help message and exit&#39;</span><span class="p">,</span> <span class="n">full_help_msg</span><span class="o">=</span><span class="s1">&#39;show full help message and exit&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Add arguments for displaying the short or full help.</p>
+<p>The parser must be created with <code>add_help=False</code> to prevent a
+clash with the added arguments.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>parser</code></td>
+          <td>
+                <code><span title="argparse.ArgumentParser">ArgumentParser</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p><code>ArgumentParser</code> instance to add the arguments to.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>short_help_flags</code></td>
+          <td>
+                <code><span title="typing.Sequence">Sequence</span>[str]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Sequence of argument strings for the short
+help option. Default is <code>("-h", "--help")</code>.</p>
+            </div>
+          </td>
+          <td>
+                <code>(&#39;-h&#39;, &#39;--help&#39;)</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>full_help_flags</code></td>
+          <td>
+                <code><span title="typing.Sequence">Sequence</span>[str]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Sequence of argument strings for the full
+help option. Default is <code>("--helpfull")</code>.</p>
+            </div>
+          </td>
+          <td>
+                <code>(&#39;--helpfull&#39;)</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>short_help_msg</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>String to describe the short help option.
+Default is <code>"show help message and exit"</code>.</p>
+            </div>
+          </td>
+          <td>
+                <code>&#39;show help message and exit&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>full_help_msg</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>String to describe the full help option.
+Default is <code>"show full help message and exit"</code>.</p>
+            </div>
+          </td>
+          <td>
+                <code>&#39;show full help message and exit&#39;</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">formatter_class</span><span class="o">=</span><span class="n">CorgyHelpFormatter</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">add_help</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">usage</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">SUPPRESS</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">CorgyHelpFormatter</span><span class="o">.</span><span class="n">add_short_full_helps</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
+<span class="go">options:</span>
+<span class="go">  -h/--help   show help message and exit</span>
+<span class="go">  --helpfull  show full help message and exit</span>
+</code></pre></div>
+
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright (c) 2021-2023 Jayanth Koushik
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "navigation.expand", "content.code.copy"], "search": "../assets/javascripts/workers/search.dfff1995.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.dff1b7c8.min.js"></script>
+      
+    
+  </body>
+</html>
